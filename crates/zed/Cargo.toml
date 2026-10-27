@@ -57,8 +57,22 @@ workspace = true
 [features]
 tracy = ["ztracing/tracy"]
 track-project-leak = ["gpui/leak-detection"]
-test-support = ["gpui/test-support", "gpui_platform/screen-capture", "dep:image", "workspace/test-support", "project/test-support", "editor/test-support", "terminal_view/test-support", "image_viewer/test-support", "recent_projects/test-support", "repl/test-support", "title_bar/test-support"]
-visual-tests = ["gpui/test-support", "gpui_platform/screen-capture", "gpui_platform/test-support", "dep:image", "dep:tempfile", "dep:action_log", "dep:agent_servers", "dep:env_logger", "workspace/test-support", "project/test-support", "editor/test-support", "terminal_view/test-support", "image_viewer/test-support", "clock/test-support", "acp_thread/test-support", "action_log/test-support", "agent_ui/test-support", "db/test-support", "agent/test-support", "language_model/test-support", "fs/test-support", "recent_projects/test-support", "title_bar/test-support"]
+test-support = [
+    "gpui/test-support",
+    "gpui_platform/screen-capture",
+    "dep:image",
+    "workspace/test-support",
+    "project/test-support",
+    "editor/test-support",
+    "terminal_view/test-support",
+    "image_viewer/test-support",
+    "recent_projects/test-support",
+    "repl/test-support",
+    "title_bar/test-support",
+]
+visual-tests = [
+
+]
 
 [[bin]]
 name = "zed"
@@ -271,7 +285,23 @@ path = "../hang_telemetry"
 [dependencies.image]
 version = "0.25.1"
 default-features = false
-features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
+features = [
+    "bmp",
+    "dds",
+    "exr",
+    "ff",
+    "gif",
+    "hdr",
+    "ico",
+    "jpeg",
+    "png",
+    "pnm",
+    "qoi",
+    "rayon",
+    "tga",
+    "tiff",
+    "webp",
+]
 optional = true
 
 [dependencies.itertools]
@@ -329,12 +359,6 @@ path = "../language"
 
 [dependencies.language_extension]
 path = "../language_extension"
-
-[dependencies.language_model]
-path = "../language_model"
-
-[dependencies.language_models]
-path = "../language_models"
 
 [dependencies.language_onboarding]
 path = "../language_onboarding"
@@ -440,7 +464,14 @@ path = "../repl"
 git = "https://github.com/zed-industries/reqwest.git"
 rev = "33bc764aa15ff7b200bf7c93bd96e24878d53e14"
 default-features = false
-features = ["http2", "macos-system-configuration", "rustls-tls-native-roots", "socks", "stream", "multipart"]
+features = [
+    "http2",
+    "macos-system-configuration",
+    "rustls-tls-native-roots",
+    "socks",
+    "stream",
+    "multipart",
+]
 package = "zed-reqwest"
 version = "0.12.15-zed"
 
@@ -528,7 +559,14 @@ path = "../theme_settings"
 
 [dependencies.time]
 version = "0.3"
-features = ["macros", "parsing", "serde", "serde-well-known", "formatting", "local-offset"]
+features = [
+    "macros",
+    "parsing",
+    "serde",
+    "serde-well-known",
+    "formatting",
+    "local-offset",
+]
 
 [dependencies.time_format]
 path = "../time_format"
@@ -609,7 +647,25 @@ path = "../etw_tracing"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
 version = "0.62"
-features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_IO", "Win32_System_LibraryLoader", "Win32_System_Ole", "Win32_System_Threading", "Win32_System_Variant", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Win32_System_Console", "Win32_System_Pipes"]
+features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_IO",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Ole",
+    "Win32_System_Threading",
+    "Win32_System_Variant",
+    "Win32_UI_Shell",
+    "Win32_UI_Shell_Common",
+    "Win32_UI_Shell_PropertiesSystem",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Console",
+    "Win32_System_Pipes",
+]
 
 [target.'cfg(target_os = "windows")'.dependencies.gpui]
 path = "../gpui"
@@ -627,17 +683,56 @@ features = ["profiler", "wayland", "x11"]
 [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies.ashpd]
 version = "0.13"
 default-features = false
-features = ["async-io", "inhibit", "open_uri", "file_chooser", "settings", "notification"]
+features = [
+    "async-io",
+    "inhibit",
+    "open_uri",
+    "file_chooser",
+    "settings",
+    "notification",
+]
 
 [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies.image]
 version = "0.25.1"
 default-features = false
-features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
+features = [
+    "bmp",
+    "dds",
+    "exr",
+    "ff",
+    "gif",
+    "hdr",
+    "ico",
+    "jpeg",
+    "png",
+    "pnm",
+    "qoi",
+    "rayon",
+    "tga",
+    "tiff",
+    "webp",
+]
 
 [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.build-dependencies.image]
 version = "0.25.1"
 default-features = false
-features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
+features = [
+    "bmp",
+    "dds",
+    "exr",
+    "ff",
+    "gif",
+    "hdr",
+    "ico",
+    "jpeg",
+    "png",
+    "pnm",
+    "qoi",
+    "rayon",
+    "tga",
+    "tiff",
+    "webp",
+]
 
 [target.'cfg(target_os = "linux")'.build-dependencies]
 pkg-config = "0.3.22"
@@ -712,7 +807,23 @@ features = ["test-support"]
 [dev-dependencies.image]
 version = "0.25.1"
 default-features = false
-features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
+features = [
+    "bmp",
+    "dds",
+    "exr",
+    "ff",
+    "gif",
+    "hdr",
+    "ico",
+    "jpeg",
+    "png",
+    "pnm",
+    "qoi",
+    "rayon",
+    "tga",
+    "tiff",
+    "webp",
+]
 
 [dev-dependencies.agent_ui]
 path = "../agent_ui"

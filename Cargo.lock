@@ -22438,8 +22438,6 @@ dependencies = [
  "keymap_editor",
  "language",
  "language_extension",
- "language_model",
- "language_models",
  "language_onboarding",
  "language_selector",
  "language_tools",
