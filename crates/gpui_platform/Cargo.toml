@@ -1,9 +1,13 @@
 [package]
 name = "gpui_platform"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -14,8 +18,6 @@ doctest = false
 
 [features]
 default = ["multithreaded"]
-# Threads in the browser: needs a nightly toolchain and a cross-origin-isolated
-# page. Off, gpui_web builds on stable.
 multithreaded = ["gpui_web/multithreaded"]
 bench-support = ["gpui/bench-support", "gpui_macos/bench-support", "gpui_wgpu/bench-support"]
 font-kit = ["gpui_macos/font-kit"]
@@ -47,30 +49,47 @@ name = "randomized_element_tree"
 harness = false
 required-features = ["bench-support"]
 
-[dependencies]
-anyhow.workspace = true
-gpui.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-bench_metrics.workspace = true
-criterion.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
 
-[target.'cfg(target_os = "macos")'.dependencies]
-gpui_macos.workspace = true
+[dev-dependencies.bench_metrics]
+path = "../bench_metrics"
 
-[target.'cfg(target_os = "ios")'.dependencies]
-gpui_ios.workspace = true
+[dev-dependencies.criterion]
+version = "0.8.2"
+features = ["html_reports"]
 
-[target.'cfg(target_os = "windows")'.dependencies]
-gpui_windows.workspace = true
-gpui = { workspace = true, features = ["windows-manifest"] }
+[target.'cfg(target_os = "macos")'.dependencies.gpui_macos]
+path = "../gpui_macos"
+default-features = false
 
-[target.'cfg(all(any(target_os = "linux", target_os = "freebsd"), not(target_env = "ohos")))'.dependencies]
-gpui_linux.workspace = true
+[target.'cfg(target_os = "ios")'.dependencies.gpui_ios]
+path = "../gpui_ios"
 
-[target.'cfg(target_os = "linux")'.dependencies]
-gpui_wgpu = { workspace = true, optional = true }
+[target.'cfg(target_os = "windows")'.dependencies.gpui_windows]
+path = "../gpui_windows"
+default-features = false
 
-[target.'cfg(target_family = "wasm")'.dependencies]
-gpui_web.workspace = true
-console_error_panic_hook.workspace = true
+[target.'cfg(target_os = "windows")'.dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["windows-manifest"]
+
+[target.'cfg(all(any(target_os = "linux", target_os = "freebsd"), not(target_env = "ohos")))'.dependencies.gpui_linux]
+path = "../gpui_linux"
+default-features = false
+
+[target.'cfg(target_os = "linux")'.dependencies.gpui_wgpu]
+path = "../gpui_wgpu"
+optional = true
+
+[target.'cfg(target_family = "wasm")'.dependencies.gpui_web]
+path = "../gpui_web"
+default-features = false
+
+[target.'cfg(target_family = "wasm")'.dependencies.console_error_panic_hook]
+version = "0.1.7"

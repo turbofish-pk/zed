@@ -1,9 +1,13 @@
 [package]
 name = "path"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lib]
 path = "src/path.rs"
@@ -12,16 +16,22 @@ doctest = false
 [features]
 test-support = []
 
-[dependencies]
-anyhow.workspace = true
-dunce.workspace = true
-serde = { workspace = true, features = ["derive"], optional = true }
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(windows)'.dependencies]
-tendril.workspace = true
+[dependencies.dunce]
+version = "1.0"
 
-[dev-dependencies]
-tempfile.workspace = true
+[dependencies.serde]
+version = "1.0"
+features = ["rc", "derive"]
+optional = true
+
+[target."cfg(windows)".dependencies.tendril]
+version = "0.5"
+
+[dev-dependencies.tempfile]
+version = "3.20.0"
 
 [lints]
 workspace = true

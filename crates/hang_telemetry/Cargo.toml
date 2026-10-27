@@ -1,9 +1,13 @@
 [package]
 name = "hang_telemetry"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,9 +16,23 @@ workspace = true
 path = "src/hang_telemetry.rs"
 doctest = false
 
-[dependencies]
-gpui = { workspace = true, features = ["profiler"] }
-log.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-telemetry_events.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["profiler"]
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.telemetry_events]
+path = "../telemetry_events"

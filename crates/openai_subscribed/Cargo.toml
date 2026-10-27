@@ -1,9 +1,13 @@
 [package]
 name = "openai_subscribed"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,26 +16,72 @@ workspace = true
 path = "src/openai_subscribed.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-base64.workspace = true
-credentials_provider.workspace = true
-futures.workspace = true
-gpui.workspace = true
-gpui_util.workspace = true
-http_client.workspace = true
-language_model.workspace = true
-log.workspace = true
-oauth_callback_server.workspace = true
-open_ai.workspace = true
-rand.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-sha2.workspace = true
-smol.workspace = true
-url.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
-http_client = { workspace = true, features = ["test-support"] }
-parking_lot.workspace = true
+[dependencies.base64]
+version = "0.22"
+
+[dependencies.credentials_provider]
+path = "../credentials_provider"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.gpui_util]
+path = "../gpui_util"
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.language_model]
+path = "../language_model"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.oauth_callback_server]
+path = "../oauth_callback_server"
+
+[dependencies.open_ai]
+path = "../open_ai"
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.sha2]
+version = "0.10"
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.url]
+version = "2.2"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.http_client]
+path = "../http_client"
+features = ["test-support"]
+
+[dev-dependencies.parking_lot]
+version = "0.12.1"

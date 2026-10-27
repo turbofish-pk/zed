@@ -1,19 +1,27 @@
 [package]
 name = "gpui_util"
 version = "0.1.0"
-publish.workspace = true
-edition.workspace = true
 license = "Apache-2.0"
+
+[package.publish]
+workspace = true
+
+[package.edition]
+workspace = true
 
 [lib]
 doctest = false
 
-[dependencies]
-log = { workspace = true, features = ["serde"] }
-anyhow.workspace = true
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
 
-[target.'cfg(target_os = "windows")'.dependencies]
-which.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[target.'cfg(target_os = "windows")'.dependencies.which]
+version = "8"
 
 [lints]
 workspace = true

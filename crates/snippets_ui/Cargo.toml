@@ -1,9 +1,13 @@
 [package]
 name = "snippets_ui"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,15 +17,36 @@ path = "src/snippets_ui.rs"
 test = false
 doctest = false
 
-[dependencies]
-file_icons.workspace = true
-fuzzy.workspace = true
-gpui.workspace = true
-language.workspace = true
-open_path_prompt.workspace = true
-paths.workspace = true
-picker.workspace = true
-settings.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.open_path_prompt]
+path = "../open_path_prompt"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"

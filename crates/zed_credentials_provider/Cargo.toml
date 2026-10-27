@@ -1,9 +1,13 @@
 [package]
 name = "zed_credentials_provider"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,11 +17,25 @@ path = "src/zed_credentials_provider.rs"
 test = false
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-credentials_provider.workspace = true
-futures.workspace = true
-gpui.workspace = true
-paths.workspace = true
-release_channel.workspace = true
-serde_json.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.credentials_provider]
+path = "../credentials_provider"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]

@@ -1,10 +1,12 @@
 [package]
 name = "util_macros"
 version = "0.1.0"
-edition.workspace = true
 publish = false
 license = "Apache-2.0"
 description = "Utility macros for Zed"
+
+[package.edition]
+workspace = true
 
 [lints]
 workspace = true
@@ -14,10 +16,17 @@ path = "src/util_macros.rs"
 proc-macro = true
 test = false
 
-[dependencies]
-quote.workspace = true
-syn = { workspace = true, features = ["full", "extra-traits", "clone-impls", "parsing", "printing"] }
-perf.workspace = true
+[dependencies.quote]
+version = "1.0.9"
+
+[dependencies.syn]
+version = "2.0"
+default-features = false
+features = ["proc-macro", "full", "extra-traits", "clone-impls", "parsing", "printing"]
+
+[dependencies.perf]
+path = "../../tooling/perf"
+default-features = false
 
 [features]
 perf-enabled = []

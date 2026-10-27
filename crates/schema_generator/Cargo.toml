@@ -1,19 +1,41 @@
 [package]
 name = "schema_generator"
 version = "0.1.0"
-publish.workspace = true
-edition.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.publish]
+workspace = true
+
+[package.edition]
+workspace = true
 
 [lints]
 workspace = true
 
-[dependencies]
-anyhow.workspace = true
-clap.workspace = true
-env_logger.workspace = true
-schemars.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.clap]
+version = "4.4"
+features = ["derive", "wrap_help"]
+
+[dependencies.env_logger]
+version = "0.11"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"

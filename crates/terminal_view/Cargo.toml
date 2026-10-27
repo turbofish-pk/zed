@@ -1,9 +1,13 @@
 [package]
 name = "terminal_view"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,46 +19,139 @@ test-support = ["editor/test-support", "gpui/test-support"]
 path = "src/terminal_view.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-async-recursion.workspace = true
-breadcrumbs.workspace = true
-collections.workspace = true
-db.workspace = true
-dirs.workspace = true
-editor.workspace = true
-futures.workspace = true
-gpui.workspace = true
-itertools.workspace = true
-language.workspace = true
-log.workspace = true
-menu.workspace = true
-project.workspace = true
-regex.workspace = true
-schemars.workspace = true
-task.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-shellexpand.workspace = true
-shlex.workspace = true
-terminal.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
+[dependencies.async-recursion]
+version = "1.0.0"
 
-[dev-dependencies]
-editor = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
-project = { workspace = true, features = ["test-support"] }
-remote = { workspace = true, features = ["test-support"] }
-release_channel.workspace = true
-rpc = { workspace = true, features = ["test-support"] }
-semver.workspace = true
-terminal = { workspace = true, features = ["test-support"] }
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.breadcrumbs]
+path = "../breadcrumbs"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.dirs]
+version = "6.0"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.shellexpand]
+version = "3.1"
+
+[dependencies.shlex]
+version = "2.0"
+
+[dependencies.terminal]
+path = "../terminal"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.remote]
+path = "../remote"
+features = ["test-support"]
+
+[dev-dependencies.release_channel]
+path = "../release_channel"
+
+[dev-dependencies.rpc]
+path = "../rpc"
+features = ["test-support"]
+
+[dev-dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dev-dependencies.terminal]
+path = "../terminal"
+features = ["test-support"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

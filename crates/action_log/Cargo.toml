@@ -1,9 +1,13 @@
 [package]
 name = "action_log"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lib]
 path = "src/action_log.rs"
@@ -15,38 +19,116 @@ workspace = true
 [features]
 test-support = []
 
-[dependencies]
-anyhow.workspace = true
-buffer_diff.workspace = true
-log.workspace = true
-clock.workspace = true
-collections.workspace = true
-fs.workspace = true
-futures.workspace = true
-gpui.workspace = true
-language.workspace = true
-project.workspace = true
-telemetry.workspace = true
-text.workspace = true
-util.workspace = true
-watch.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
+[dependencies.buffer_diff]
+path = "../buffer_diff"
 
-[dev-dependencies]
-buffer_diff = { workspace = true, features = ["test-support"] }
-clock = { workspace = true, features = ["test-support"] }
-collections = { workspace = true, features = ["test-support"] }
-ctor.workspace = true
-git.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-indoc.workspace = true
-language = { workspace = true, features = ["test-support"] }
-log.workspace = true
-pretty_assertions.workspace = true
-project = { workspace = true, features = ["test-support"] }
-rand.workspace = true
-serde_json.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-text = { workspace = true, features = ["test-support"] }
-util = { workspace = true, features = ["test-support"] }
-zlog.workspace = true
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.clock]
+path = "../clock"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.watch]
+path = "../watch"
+
+[dev-dependencies.buffer_diff]
+path = "../buffer_diff"
+features = ["test-support"]
+
+[dev-dependencies.clock]
+path = "../clock"
+features = ["test-support"]
+
+[dev-dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+features = ["test-support"]
+
+[dev-dependencies.ctor]
+version = "1.0.12"
+
+[dev-dependencies.git]
+path = "../git"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.text]
+path = "../text"
+features = ["test-support"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"

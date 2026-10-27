@@ -1,10 +1,14 @@
 [package]
 description = "Shared protocol for communication between the Zed app and the zed.dev server"
-edition.workspace = true
 name = "proto"
 version = "0.1.0"
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [features]
 test-support = []
@@ -16,13 +20,21 @@ workspace = true
 path = "src/proto.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-prost.workspace = true
-serde = { workspace = true, features = ["derive"] }
+[dependencies.anyhow]
+version = "1.0.86"
 
-[build-dependencies]
-prost-build.workspace = true
-protox.workspace = true
+[dependencies.prost]
+version = "0.14"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc", "derive"]
+
+[build-dependencies.prost-build]
+version = "0.14"
+default-features = false
+
+[build-dependencies.protox]
+version = "0.9"
 
 [dev-dependencies]

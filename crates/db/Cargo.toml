@@ -1,9 +1,13 @@
 [package]
 name = "db"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,20 +19,50 @@ doctest = false
 [features]
 test-support = []
 
-[dependencies]
-anyhow.workspace = true
-gpui.workspace = true
-indoc.workspace = true
-inventory.workspace = true
-log.workspace = true
-paths.workspace = true
-release_channel.workspace = true
-sqlez.workspace = true
-sqlez_macros.workspace = true
-util.workspace = true
-uuid = { workspace = true, features = ["v5", "v7"] }
-zed_env_vars.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
-tempfile.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.indoc]
+version = "2"
+
+[dependencies.inventory]
+version = "0.3.19"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.sqlez]
+path = "../sqlez"
+
+[dependencies.sqlez_macros]
+path = "../sqlez_macros"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde", "v5", "v7"]
+
+[dependencies.zed_env_vars]
+path = "../zed_env_vars"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.tempfile]
+version = "3.20.0"

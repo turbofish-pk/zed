@@ -1,11 +1,12 @@
 [package]
 name = "derive_refineable"
 version = "0.1.0"
-edition.workspace = true
 publish = false
 license = "Apache-2.0"
 description = "A derive macro for creating refinement types in Rust"
 
+[package.edition]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,7 +17,13 @@ proc-macro = true
 doctest = false
 test = false
 
-[dependencies]
-proc-macro2.workspace = true
-quote.workspace = true
-syn = { workspace = true, default-features = true }
+[dependencies.proc-macro2]
+version = "1.0.93"
+
+[dependencies.quote]
+version = "1.0.9"
+
+[dependencies.syn]
+version = "2.0"
+default-features = false
+features = ["proc-macro"]

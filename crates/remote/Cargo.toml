@@ -1,10 +1,14 @@
 [package]
 name = "remote"
 description = "Client-side subsystem for remote editing"
-edition.workspace = true
 version = "0.1.0"
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -18,31 +22,90 @@ default = []
 build-remote-server-binary = []
 test-support = ["fs/test-support"]
 
-[dependencies]
-anyhow.workspace = true
-askpass.workspace = true
-async-trait.workspace = true
-base64.workspace = true
-collections.workspace = true
-fs = { workspace = true, optional = true }
-futures.workspace = true
-gpui.workspace = true
-log = { workspace = true, features = ["kv_unstable_std"] }
-parking_lot.workspace = true
-paths.workspace = true
-release_channel.workspace = true
-rpc = { workspace = true, features = ["gpui"] }
-schemars.workspace = true
-semver.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings_content.workspace = true
-smol.workspace = true
-telemetry.workspace = true
-tempfile.workspace = true
-thiserror.workspace = true
-util.workspace = true
-which.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
+[dependencies.askpass]
+path = "../askpass"
+
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.base64]
+version = "0.22"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.fs]
+path = "../fs"
+optional = true
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std", "kv_unstable_std"]
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.rpc]
+path = "../rpc"
+features = ["gpui"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings_content]
+path = "../settings_content"
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.tempfile]
+version = "3.20.0"
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.which]
+version = "8"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]

@@ -1,9 +1,13 @@
 [package]
 name = "copilot"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -14,54 +18,143 @@ doctest = false
 
 [features]
 default = []
-test-support = [
-    "collections/test-support",
-    "gpui/test-support",
-    "language/test-support",
-    "lsp/test-support",
-    "settings/test-support",
-    "util/test-support",
-]
+test-support = ["collections/test-support", "gpui/test-support", "language/test-support", "lsp/test-support", "settings/test-support", "util/test-support"]
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-command_palette_hooks.workspace = true
-copilot_chat.workspace = true
-fs.workspace = true
-futures.workspace = true
-gpui.workspace = true
-edit_prediction_types.workspace = true
-icons.workspace = true
-language.workspace = true
-log.workspace = true
-lsp.workspace = true
-node_runtime.workspace = true
-parking_lot.workspace = true
-paths.workspace = true
-project.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-sum_tree.workspace = true
-util.workspace = true
-workspace.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-collections = { workspace = true, features = ["test-support"] }
-editor = { workspace = true, features = ["test-support"] }
-fs = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-indoc.workspace = true
-language = { workspace = true, features = ["test-support"] }
-lsp = { workspace = true, features = ["test-support"] }
-node_runtime = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
-project = { workspace = true, features = ["test-support"] }
-rpc = { workspace = true, features = ["test-support"] }
-serde_json.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-theme = { workspace = true, features = ["test-support"] }
-util = { workspace = true, features = ["test-support"] }
-zlog.workspace = true
-theme_settings.workspace = true
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.command_palette_hooks]
+path = "../command_palette_hooks"
+
+[dependencies.copilot_chat]
+path = "../copilot_chat"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.edit_prediction_types]
+path = "../edit_prediction_types"
+
+[dependencies.icons]
+path = "../icons"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.lsp]
+path = "../lsp"
+
+[dependencies.node_runtime]
+path = "../node_runtime"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dev-dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+features = ["test-support"]
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.fs]
+path = "../fs"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.lsp]
+path = "../lsp"
+features = ["test-support"]
+
+[dev-dependencies.node_runtime]
+path = "../node_runtime"
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.rpc]
+path = "../rpc"
+features = ["test-support"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.theme]
+path = "../theme"
+features = ["test-support"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"
+
+[dev-dependencies.theme_settings]
+path = "../theme_settings"

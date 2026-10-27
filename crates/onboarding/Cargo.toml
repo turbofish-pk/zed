@@ -1,9 +1,16 @@
 [package]
 name = "onboarding"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["component", "documented"]
 
 [lints]
 workspace = true
@@ -16,36 +23,89 @@ doctest = false
 [features]
 default = []
 
-[dependencies]
-anyhow.workspace = true
-client.workspace = true
-cloud_api_types.workspace = true
-collections.workspace = true
-component.workspace = true
-db.workspace = true
-documented.workspace = true
-fs.workspace = true
-fuzzy.workspace = true
-gpui.workspace = true
-menu.workspace = true
-notifications.workspace = true
-picker.workspace = true
-project.workspace = true
-schemars.workspace = true
-serde.workspace = true
-settings.workspace = true
-telemetry.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-util.workspace = true
-vim_mode_setting.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
-zlog.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-db = {workspace = true, features = ["test-support"]}
+[dependencies.client]
+path = "../client"
 
-[package.metadata.cargo-shear]
-ignored = ["component", "documented"]
+[dependencies.cloud_api_types]
+path = "../cloud_api_types"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.component]
+path = "../component"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.documented]
+version = "0.10"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.notifications]
+path = "../notifications"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.vim_mode_setting]
+path = "../vim_mode_setting"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dependencies.zlog]
+path = "../zlog"
+
+[dev-dependencies.db]
+path = "../db"
+features = ["test-support"]

@@ -1,11 +1,12 @@
 [package]
 name = "util"
 version = "0.1.0"
-edition.workspace = true
 publish = false
 license = "Apache-2.0"
 description = "A collection of utility structs and functions used by Zed and GPUI"
 
+[package.edition]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,62 +17,150 @@ doctest = true
 
 [features]
 test-support = ["rand", "util_macros", "path/test-support", "dep:tempfile"]
-# Embed `fs_embed!` assets at compile time even in debug builds.
 debug-embed = ["rust-embed/debug-embed"]
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-dunce.workspace = true
-globset.workspace = true
-itertools.workspace = true
-rand = { workspace = true, optional = true }
-regex = { workspace = true, features = ["unicode-bool", "unicode-gencat"] }
-rust-embed.workspace = true
-schemars = { workspace = true, features = ["derive"] }
-serde = { workspace = true, features = ["derive"] }
-serde_json.workspace = true
-serde_json_lenient.workspace = true
-tempfile = { workspace = true, optional = true }
-unicase.workspace = true
-url.workspace = true
-percent-encoding.workspace = true
-util_macros = { workspace = true, optional = true }
-gpui_util.workspace = true
-path = { workspace = true, features = ["serde"] }
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-async_zip.workspace = true
-futures-lite.workspace = true
-futures.workspace = true
-shlex.workspace = true
-smol.workspace = true
-async-fs.workspace = true
-walkdir.workspace = true
-dirs.workspace = true
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
 
-[target.'cfg(any(unix, not(target_family = "wasm")))'.dependencies]
-log.workspace = true
+[dependencies.dunce]
+version = "1.0"
 
-[target.'cfg(unix)'.dependencies]
+[dependencies.globset]
+version = "0.4"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+optional = true
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf", "unicode-bool", "unicode-gencat"]
+
+[dependencies.rust-embed]
+version = "8.11"
+features = ["include-exclude", "compression"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2", "derive"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc", "derive"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.serde_json_lenient]
+version = "0.2"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.tempfile]
+version = "3.20.0"
+optional = true
+
+[dependencies.unicase]
+version = "2.6"
+
+[dependencies.url]
+version = "2.2"
+
+[dependencies.percent-encoding]
+version = "2.3.2"
+
+[dependencies.util_macros]
+path = "../util_macros"
+optional = true
+
+[dependencies.gpui_util]
+path = "../gpui_util"
+
+[dependencies.path]
+path = "../path"
+features = ["serde"]
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.async_zip]
+version = "0.0.18"
+features = ["deflate", "deflate64"]
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.futures-lite]
+version = "2"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.futures]
+version = "0.3.34"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.shlex]
+version = "2.0"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.smol]
+version = "2.0"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.async-fs]
+version = "2.1"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.walkdir]
+version = "2.5"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.dirs]
+version = "6.0"
+
+[target.'cfg(any(unix, not(target_family = "wasm")))'.dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[target."cfg(unix)".dependencies]
 command-fds = "0.3.1"
-libc.workspace = true
-nix = { workspace = true, features = ["resource", "user"] }
-tempfile.workspace = true
 
-[target.'cfg(target_os = "macos")'.dependencies]
-mach2.workspace = true
-which.workspace = true
+[target."cfg(unix)".dependencies.libc]
+version = "0.2"
 
-[target.'cfg(windows)'.dependencies]
-which.workspace = true
-windows = { workspace = true, features = ["Win32_System_JobObjects"] }
+[target."cfg(unix)".dependencies.nix]
+version = "0.30"
+features = ["resource", "user"]
 
-[dev-dependencies]
-rand.workspace = true
-tempfile.workspace = true
-util_macros.workspace = true
-path = { workspace = true, features = ["test-support"] }
+[target."cfg(unix)".dependencies.tempfile]
+version = "3.20.0"
 
-[target.'cfg(unix)'.dev-dependencies]
-which.workspace = true
+[target."cfg(unix)".dev-dependencies.which]
+version = "8"
+
+[target.'cfg(target_os = "macos")'.dependencies.mach2]
+version = "0.6"
+
+[target.'cfg(target_os = "macos")'.dependencies.which]
+version = "8"
+
+[target."cfg(windows)".dependencies.which]
+version = "8"
+
+[target."cfg(windows)".dependencies.windows]
+version = "0.62"
+features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_IO", "Win32_System_LibraryLoader", "Win32_System_Ole", "Win32_System_Threading", "Win32_System_Variant", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Win32_System_JobObjects"]
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dev-dependencies.tempfile]
+version = "3.20.0"
+
+[dev-dependencies.util_macros]
+path = "../util_macros"
+
+[dev-dependencies.path]
+path = "../path"
+features = ["test-support"]

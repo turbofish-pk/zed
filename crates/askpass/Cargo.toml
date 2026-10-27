@@ -1,9 +1,13 @@
 [package]
 name = "askpass"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,22 +16,44 @@ workspace = true
 path = "src/askpass.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-futures.workspace = true
-gpui.workspace = true
-net.workspace = true
-smol.workspace = true
-log.workspace = true
-tempfile.workspace = true
-util.workspace = true
-zeroize.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(not(target_os = "windows"))'.dependencies]
-which.workspace = true
+[dependencies.futures]
+version = "0.3.34"
 
-[target.'cfg(target_os = "windows")'.dependencies]
-windows = { workspace = true, features = ["Win32_Security_Cryptography"] }
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
+[dependencies.net]
+path = "../net"
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.tempfile]
+version = "3.20.0"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.zeroize]
+version = "1.8"
+
+[target.'cfg(not(target_os = "windows"))'.dependencies.which]
+version = "8"
+
+[target.'cfg(target_os = "windows")'.dependencies.windows]
+version = "0.62"
+features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_IO", "Win32_System_LibraryLoader", "Win32_System_Ole", "Win32_System_Threading", "Win32_System_Variant", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Win32_Security_Cryptography"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]

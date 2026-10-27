@@ -1,9 +1,13 @@
 [package]
 name = "vim"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,63 +19,204 @@ doctest = false
 [features]
 neovim = ["nvim-rs", "async-compat", "async-trait", "tokio"]
 
-[dependencies]
-anyhow.workspace = true
-async-compat = { workspace = true, "optional" = true }
-async-trait = { workspace = true, "optional" = true }
-collections.workspace = true
-command_palette.workspace = true
-command_palette_hooks.workspace = true
-db.workspace = true
-editor.workspace = true
-futures.workspace = true
-fuzzy.workspace = true
-gpui.workspace = true
-itertools.workspace = true
-language.workspace = true
-log.workspace = true
-multi_buffer.workspace = true
-nvim-rs = { git = "https://github.com/KillTheMule/nvim-rs", rev = "764dd270c642f77f10f3e19d05cc178a6cbe69f3", features = ["use_tokio"], optional = true }
-picker.workspace = true
-project.workspace = true
-regex.workspace = true
-schemars.workspace = true
-search.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-task.workspace = true
-text.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-menu.workspace = true
-tokio = { version = "1.15", features = ["full"], optional = true }
-ui.workspace = true
-util.workspace = true
-vim_mode_setting.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-command_palette = { workspace = true, features = ["test-support"] }
-editor = { workspace = true, features = ["test-support"] }
-env_logger.workspace = true
-git_ui = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-indoc.workspace = true
-language = { workspace = true, features = ["test-support"] }
-project = { workspace = true, features = ["test-support"] }
-lsp = { workspace = true, features = ["test-support"] }
-markdown_preview.workspace = true
-parking_lot.workspace = true
-project_panel.workspace = true
-outline_panel.workspace = true
-release_channel.workspace = true
-semver.workspace = true
-settings_ui.workspace = true
-settings.workspace = true
-perf = { workspace = true, features = ["cli"] }
-util = { workspace = true, features = ["test-support"] }
-util_macros.workspace = true
-workspace = { workspace = true, features = ["test-support"] }
-search = { workspace = true, features = ["test-support"] }
+[dependencies.async-compat]
+version = "0.2.1"
+optional = true
+
+[dependencies.async-trait]
+version = "0.1"
+optional = true
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.command_palette]
+path = "../command_palette"
+
+[dependencies.command_palette_hooks]
+path = "../command_palette_hooks"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.multi_buffer]
+path = "../multi_buffer"
+
+[dependencies.nvim-rs]
+git = "https://github.com/KillTheMule/nvim-rs"
+rev = "764dd270c642f77f10f3e19d05cc178a6cbe69f3"
+features = ["use_tokio"]
+optional = true
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.search]
+path = "../search"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.tokio]
+version = "1.15"
+features = ["full"]
+optional = true
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.vim_mode_setting]
+path = "../vim_mode_setting"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.command_palette]
+path = "../command_palette"
+features = ["test-support"]
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.env_logger]
+version = "0.11"
+
+[dev-dependencies.git_ui]
+path = "../git_ui"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.lsp]
+path = "../lsp"
+features = ["test-support"]
+
+[dev-dependencies.markdown_preview]
+path = "../markdown_preview"
+
+[dev-dependencies.parking_lot]
+version = "0.12.1"
+
+[dev-dependencies.project_panel]
+path = "../project_panel"
+
+[dev-dependencies.outline_panel]
+path = "../outline_panel"
+
+[dev-dependencies.release_channel]
+path = "../release_channel"
+
+[dev-dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dev-dependencies.settings_ui]
+path = "../settings_ui"
+
+[dev-dependencies.settings]
+path = "../settings"
+
+[dev-dependencies.perf]
+path = "../../tooling/perf"
+default-features = false
+features = ["cli"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.util_macros]
+path = "../util_macros"
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]
+
+[dev-dependencies.search]
+path = "../search"
+features = ["test-support"]

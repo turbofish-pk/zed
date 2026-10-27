@@ -1,9 +1,13 @@
 [package]
 name = "install_cli"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,14 +20,29 @@ doctest = false
 [features]
 test-support = []
 
-[dependencies]
-anyhow.workspace = true
-client.workspace = true
-gpui.workspace = true
-log.workspace = true
-release_channel.workspace = true
-smol.workspace = true
-util.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(not(target_os = "windows"))'.dependencies]
-workspace.workspace = true
+[dependencies.client]
+path = "../client"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.util]
+path = "../util"
+
+[target.'cfg(not(target_os = "windows"))'.dependencies.workspace]
+path = "../workspace"

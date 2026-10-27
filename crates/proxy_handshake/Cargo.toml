@@ -1,10 +1,14 @@
 [package]
 name = "proxy_handshake"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "Apache-2.0"
 description = "Sans-IO client handshakes for HTTP CONNECT and SOCKS proxies"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -18,17 +22,40 @@ default = []
 futures-io = ["dep:futures"]
 tokio = ["dep:tokio"]
 
-[dependencies]
-base64.workspace = true
-futures = { workspace = true, optional = true }
-httparse.workspace = true
-percent-encoding.workspace = true
-thiserror.workspace = true
-tokio = { workspace = true, features = ["io-util"], optional = true }
-url.workspace = true
+[dependencies.base64]
+version = "0.22"
 
-[dev-dependencies]
-futures.workspace = true
-piper.workspace = true
-proptest.workspace = true
-tokio = { workspace = true, features = ["io-util", "macros", "rt"] }
+[dependencies.futures]
+version = "0.3.34"
+optional = true
+
+[dependencies.httparse]
+version = "1.10"
+
+[dependencies.percent-encoding]
+version = "2.3.2"
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.tokio]
+version = "1"
+features = ["io-util"]
+optional = true
+
+[dependencies.url]
+version = "2.2"
+
+[dev-dependencies.futures]
+version = "0.3.34"
+
+[dev-dependencies.piper]
+version = "0.2"
+
+[dev-dependencies.proptest]
+version = "1.12.0"
+features = ["attr-macro"]
+
+[dev-dependencies.tokio]
+version = "1"
+features = ["io-util", "macros", "rt"]

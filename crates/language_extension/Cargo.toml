@@ -1,9 +1,16 @@
 [package]
 name = "language_extension"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["tracing"]
 
 [lints]
 workspace = true
@@ -12,22 +19,53 @@ workspace = true
 path = "src/language_extension.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-async-trait.workspace = true
-collections.workspace = true
-extension.workspace = true
-futures.workspace = true
-gpui.workspace = true
-language.workspace = true
-log.workspace = true
-lsp.workspace = true
-project.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-tracing.workspace = true
-util.workspace = true
-ztracing.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[package.metadata.cargo-shear]
-ignored = ["tracing"]
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.lsp]
+path = "../lsp"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.tracing]
+version = "0.1.40"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.ztracing]
+path = "../ztracing"

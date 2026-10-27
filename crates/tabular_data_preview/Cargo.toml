@@ -1,34 +1,83 @@
 [package]
 name = "tabular_data_preview"
 version = "0.1.0"
-publish.workspace = true
-edition.workspace = true
+
+[package.publish]
+workspace = true
+
+[package.edition]
+workspace = true
 
 [lib]
 path = "src/tabular_data_preview.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-fuzzy.workspace = true
-gpui.workspace = true
-editor.workspace = true
-picker.workspace = true
-ui.workspace = true
-workspace.workspace = true
-log.workspace = true
-indexmap.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-schemars.workspace = true
-text.workspace = true
-util.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
-project = { workspace = true, features = ["test-support"] }
-proptest.workspace = true
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.indexmap]
+version = "2.7.0"
+features = ["serde"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.util]
+path = "../util"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.proptest]
+version = "1.12.0"
+features = ["attr-macro"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]
 
 [features]
 dev-tools = []

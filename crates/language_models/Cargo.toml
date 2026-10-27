@@ -1,9 +1,16 @@
 [package]
 name = "language_models"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["component"]
 
 [lints]
 workspace = true
@@ -15,73 +22,229 @@ doctest = false
 [features]
 test-support = []
 
-[dependencies]
-ai_onboarding.workspace = true
-anthropic = { workspace = true, features = ["schemars"] }
-anyhow.workspace = true
-aws-config.workspace = true
-aws-credential-types.workspace = true
-aws-sigv4.workspace = true
-aws_http_client.workspace = true
-base64.workspace = true
-bedrock = { workspace = true, features = ["schemars"] }
-client.workspace = true
-cloud_api_client.workspace = true
-cloud_api_types.workspace = true
-collections.workspace = true
-component.workspace = true
-convert_case.workspace = true
-copilot_chat.workspace = true
-copilot_ui.workspace = true
-credentials_provider.workspace = true
-deepseek = { workspace = true, features = ["schemars"] }
-extension.workspace = true
-extension_host.workspace = true
-fs.workspace = true
-futures.workspace = true
-google_ai.workspace = true
-gpui.workspace = true
-gpui_tokio.workspace = true
-http_client.workspace = true
-language_model.workspace = true
-language_models_cloud.workspace = true
-llama_cpp = { workspace = true, features = ["schemars"] }
-lmstudio = { workspace = true, features = ["schemars"] }
-log.workspace = true
-menu.workspace = true
-mistral = { workspace = true, features = ["schemars"] }
-ollama = { workspace = true, features = ["schemars"] }
-open_ai = { workspace = true, features = ["schemars"] }
-openai_subscribed.workspace = true
-opencode = { workspace = true, features = ["schemars"] }
-open_router.workspace = true
-paths.workspace = true
-rand.workspace = true
-release_channel.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-sha2.workspace = true
-strum.workspace = true
-ui.workspace = true
-ui_input.workspace = true
-util.workspace = true
-x_ai = { workspace = true, features = ["schemars"] }
-x_ai_subscribed.workspace = true
+[dependencies.ai_onboarding]
+path = "../ai_onboarding"
 
-[dev-dependencies]
-client = { workspace = true, features = ["test-support"] }
-clock = { workspace = true, features = ["test-support"] }
-cloud_llm_client.workspace = true
-credentials_provider = { workspace = true, features = ["test-support"] }
-db = { workspace = true, features = ["test-support"] }
-feature_flags.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-http_client = { workspace = true, features = ["test-support"] }
-language_model = { workspace = true, features = ["test-support"] }
-parking_lot.workspace = true
-settings = { workspace = true, features = ["test-support"] }
+[dependencies.anthropic]
+path = "../anthropic"
+features = ["schemars"]
 
-[package.metadata.cargo-shear]
-ignored = ["component"]
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.aws-config]
+version = "1.8.10"
+default-features = false
+features = ["behavior-version-latest", "credentials-process", "rt-tokio", "sso"]
+
+[dependencies.aws-credential-types]
+version = "1.2.8"
+features = ["hardcoded-credentials"]
+
+[dependencies.aws-sigv4]
+version = "1.4.0"
+features = ["http1"]
+
+[dependencies.aws_http_client]
+path = "../aws_http_client"
+
+[dependencies.base64]
+version = "0.22"
+
+[dependencies.bedrock]
+path = "../bedrock"
+features = ["schemars"]
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.cloud_api_client]
+path = "../cloud_api_client"
+
+[dependencies.cloud_api_types]
+path = "../cloud_api_types"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.component]
+path = "../component"
+
+[dependencies.convert_case]
+version = "0.11.0"
+
+[dependencies.copilot_chat]
+path = "../copilot_chat"
+
+[dependencies.copilot_ui]
+path = "../copilot_ui"
+
+[dependencies.credentials_provider]
+path = "../credentials_provider"
+
+[dependencies.deepseek]
+path = "../deepseek"
+features = ["schemars"]
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.extension_host]
+path = "../extension_host"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.google_ai]
+path = "../google_ai"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.gpui_tokio]
+path = "../gpui_tokio"
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.language_model]
+path = "../language_model"
+
+[dependencies.language_models_cloud]
+path = "../language_models_cloud"
+
+[dependencies.llama_cpp]
+path = "../llama_cpp"
+features = ["schemars"]
+
+[dependencies.lmstudio]
+path = "../lmstudio"
+features = ["schemars"]
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.mistral]
+path = "../mistral"
+features = ["schemars"]
+
+[dependencies.ollama]
+path = "../ollama"
+features = ["schemars"]
+
+[dependencies.open_ai]
+path = "../open_ai"
+features = ["schemars"]
+
+[dependencies.openai_subscribed]
+path = "../openai_subscribed"
+
+[dependencies.opencode]
+path = "../opencode"
+features = ["schemars"]
+
+[dependencies.open_router]
+path = "../open_router"
+features = ["schemars"]
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.sha2]
+version = "0.10"
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.ui_input]
+path = "../ui_input"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.x_ai]
+path = "../x_ai"
+features = ["schemars"]
+
+[dependencies.x_ai_subscribed]
+path = "../x_ai_subscribed"
+
+[dev-dependencies.client]
+path = "../client"
+features = ["test-support"]
+
+[dev-dependencies.clock]
+path = "../clock"
+features = ["test-support"]
+
+[dev-dependencies.cloud_llm_client]
+path = "../cloud_llm_client"
+
+[dev-dependencies.credentials_provider]
+path = "../credentials_provider"
+features = ["test-support"]
+
+[dev-dependencies.db]
+path = "../db"
+features = ["test-support"]
+
+[dev-dependencies.feature_flags]
+path = "../feature_flags"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.http_client]
+path = "../http_client"
+features = ["test-support"]
+
+[dev-dependencies.language_model]
+path = "../language_model"
+features = ["test-support"]
+
+[dev-dependencies.parking_lot]
+version = "0.12.1"
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]

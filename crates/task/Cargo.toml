@@ -1,15 +1,16 @@
 [package]
 name = "task"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
 
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
 [features]
-test-support = [
-    "gpui/test-support",
-    "util/test-support"
-]
+test-support = ["gpui/test-support", "util/test-support"]
 
 [lib]
 path = "src/task.rs"
@@ -18,24 +19,68 @@ doctest = false
 [lints]
 workspace = true
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-futures.workspace = true
-gpui.workspace = true
-hex.workspace = true
-log.workspace = true
-parking_lot.workspace = true
-proto.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-serde_json_lenient.workspace = true
-sha2.workspace = true
-shellexpand.workspace = true
-util.workspace = true
-zed_actions.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.hex]
+version = "0.4.3"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.proto]
+path = "../proto"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.serde_json_lenient]
+version = "0.2"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.sha2]
+version = "0.10"
+
+[dependencies.shellexpand]
+version = "3.1"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]

@@ -1,9 +1,13 @@
 [package]
 name = "snippet"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,6 +16,9 @@ workspace = true
 path = "src/snippet.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-smallvec.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]

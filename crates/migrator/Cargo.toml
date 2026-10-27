@@ -1,9 +1,13 @@
 [package]
 name = "migrator"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,19 +16,51 @@ workspace = true
 path = "src/migrator.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-convert_case.workspace = true
-log.workspace = true
-streaming-iterator.workspace = true
-tree-sitter-json.workspace = true
-tree-sitter = { workspace = true, features = ["wasm"] }
-serde_json_lenient.workspace = true
-serde_json.workspace = true
-settings_content.workspace = true
-settings_json = { workspace = true, features = ["editing"] }
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-indoc.workspace = true
-pretty_assertions.workspace = true
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.convert_case]
+version = "0.11.0"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.streaming-iterator]
+version = "0.1"
+
+[dependencies.tree-sitter-json]
+version = "0.24"
+
+[dependencies.tree-sitter]
+git = "https://github.com/tree-sitter/tree-sitter"
+rev = "803c6ebaac27d69e1808b45058482e868d073ceb"
+features = ["wasm"]
+
+[dependencies.serde_json_lenient]
+version = "0.2"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings_content]
+path = "../settings_content"
+
+[dependencies.settings_json]
+path = "../settings_json"
+default-features = false
+features = ["editing"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]

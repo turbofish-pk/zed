@@ -1,9 +1,13 @@
 [package]
 name = "ztracing_macro"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lib]
 proc-macro = true

@@ -1,9 +1,13 @@
 [package]
 name = "tasks_ui"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,32 +16,91 @@ workspace = true
 path = "src/tasks_ui.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-editor.workspace = true
-file_icons.workspace = true
-fuzzy.workspace = true
-itertools.workspace = true
-gpui.workspace = true
-menu.workspace = true
-picker.workspace = true
-project.workspace = true
-task.workspace = true
-tree-sitter.workspace = true
-tree-sitter-json.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
-language.workspace = true
-zed_actions.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-editor = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-language = { workspace = true, features = ["test-support"] }
-project = { workspace = true, features = ["test-support"] }
-serde_json.workspace = true
-tree-sitter-rust.workspace = true
-tree-sitter-typescript.workspace = true
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.tree-sitter]
+git = "https://github.com/tree-sitter/tree-sitter"
+rev = "803c6ebaac27d69e1808b45058482e868d073ceb"
+
+[dependencies.tree-sitter-json]
+version = "0.24"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.tree-sitter-rust]
+version = "0.24.2"
+
+[dev-dependencies.tree-sitter-typescript]
+git = "https://github.com/zed-industries/tree-sitter-typescript"
+rev = "e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899"
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

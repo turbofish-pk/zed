@@ -1,9 +1,13 @@
 [package]
 name = "markdown"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,42 +17,114 @@ path = "src/markdown.rs"
 doctest = false
 
 [features]
-test-support = [
-    "gpui/test-support",
-    "util/test-support"
-]
+test-support = ["gpui/test-support", "util/test-support"]
 
-[dependencies]
-anyhow.workspace = true
-base64.workspace = true
-collections.workspace = true
-gpui.workspace = true
-html5ever.workspace = true
-language.workspace = true
-linkify.workspace = true
-log.workspace = true
-markup5ever_rcdom.workspace = true
-mermaid_render.workspace = true
-pulldown-cmark.workspace = true
-settings.workspace = true
-smallvec.workspace = true
-stacksafe.workspace = true
-sum_tree.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-util.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-assets.workspace = true
-env_logger.workspace = true
-fs = {workspace = true, features = ["test-support"]}
-gpui = { workspace = true, features = ["test-support"] }
-gpui_platform = { workspace = true, features = ["wayland", "x11"] }
-image.workspace = true
-indoc.workspace = true
-language = { workspace = true, features = ["test-support"] }
-languages = { workspace = true, features = ["load-grammars"] }
-node_runtime.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-util = { workspace = true, features = ["test-support"] }
+[dependencies.base64]
+version = "0.22"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.html5ever]
+version = "0.39"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.linkify]
+version = "0.10.0"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.markup5ever_rcdom]
+version = "0.39"
+
+[dependencies.mermaid_render]
+path = "../mermaid_render"
+
+[dependencies.pulldown-cmark]
+version = "0.13.0"
+default-features = false
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.stacksafe]
+version = "1.0"
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dev-dependencies.assets]
+path = "../assets"
+
+[dev-dependencies.env_logger]
+version = "0.11"
+
+[dev-dependencies.fs]
+path = "../fs"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.gpui_platform]
+path = "../gpui_platform"
+default-features = false
+features = ["wayland", "x11"]
+
+[dev-dependencies.image]
+version = "0.25.1"
+default-features = false
+features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.languages]
+path = "../languages"
+features = ["load-grammars"]
+
+[dev-dependencies.node_runtime]
+path = "../node_runtime"
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]

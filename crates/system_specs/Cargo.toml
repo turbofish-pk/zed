@@ -1,9 +1,13 @@
 [package]
 name = "system_specs"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,14 +20,31 @@ doctest = false
 [features]
 default = []
 
-[dependencies]
-anyhow.workspace = true
-gpui.workspace = true
-human_bytes.workspace = true
-release_channel.workspace = true
-semver.workspace = true
-serde.workspace = true
-sysinfo.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
-pciid-parser.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.human_bytes]
+version = "0.4.1"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.sysinfo]
+version = "0.39"
+default-features = false
+features = ["system"]
+
+[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies.pciid-parser]
+version = "0.8.0"

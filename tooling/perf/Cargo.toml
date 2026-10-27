@@ -2,36 +2,48 @@
 name = "perf"
 version = "0.1.0"
 publish = false
-edition.workspace = true
 license = "Apache-2.0"
 description = "A tool for measuring Zed test performance, with too many Clippy lints"
 
-# Some personal lint preferences :3
+[package.edition]
+workspace = true
+
 [lints.rust]
 missing_docs = "warn"
 
 [lints.clippy]
-needless_continue = "allow" # For a convenience macro
+needless_continue = "allow"
 all = "warn"
 pedantic = "warn"
 style = "warn"
 missing_docs_in_private_items = "warn"
 as_underscore = "deny"
 allow_attributes = "deny"
-allow_attributes_without_reason = "deny" # This covers `expect` also, since we deny `allow`
+allow_attributes_without_reason = "deny"
 let_underscore_must_use = "forbid"
 undocumented_unsafe_blocks = "forbid"
 missing_safety_doc = "forbid"
-disallowed_methods = { level = "allow", priority = 1}
+
+[lints.clippy.disallowed_methods]
+level = "allow"
+priority = 1
 
 [features]
 default = ["cli"]
 cli = ["dep:serde_json"]
 
-[dependencies]
-collections.workspace = true
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true, optional = true }
+[dependencies.collections]
+path = "../../crates/collections"
+version = "0.1.0"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc", "derive"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+optional = true
 
 [lib]
 test = false

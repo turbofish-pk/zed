@@ -1,30 +1,72 @@
 [package]
 name = "open_path_prompt"
 version = "0.1.0"
-publish.workspace = true
-edition.workspace = true
 license = "GPL-3.0-or-later"
 
-[dependencies]
-file_icons.workspace = true
-futures.workspace = true
-fuzzy.workspace = true
-gpui.workspace = true
-picker.workspace = true
-project.workspace = true
-serde.workspace = true
-settings.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
+[package.publish]
+workspace = true
 
-[dev-dependencies]
-editor = {workspace = true, features = ["test-support"]}
-gpui = {workspace = true, features = ["test-support"]}
-serde_json.workspace = true
-theme = {workspace = true, features = ["test-support"]}
-theme_settings.workspace = true
-workspace = {workspace = true, features = ["test-support"]}
+[package.edition]
+workspace = true
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.theme]
+path = "../theme"
+features = ["test-support"]
+
+[dev-dependencies.theme_settings]
+path = "../theme_settings"
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]
 
 [lints]
 workspace = true

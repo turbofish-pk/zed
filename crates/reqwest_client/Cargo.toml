@@ -1,9 +1,13 @@
 [package]
 name = "reqwest_client"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,16 +19,42 @@ test-support = []
 path = "src/reqwest_client.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-bytes.workspace = true
-futures.workspace = true
-http_client.workspace = true
-log.workspace = true
-tokio = { workspace = true, features = ["rt-multi-thread"] }
-regex.workspace = true
-reqwest.workspace = true
-gpui_util.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-http_client_tls.workspace = true
+[dependencies.bytes]
+version = "1.0"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.tokio]
+version = "1"
+features = ["rt-multi-thread"]
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.reqwest]
+git = "https://github.com/zed-industries/reqwest.git"
+rev = "33bc764aa15ff7b200bf7c93bd96e24878d53e14"
+default-features = false
+features = ["http2", "macos-system-configuration", "rustls-tls-native-roots", "socks", "stream"]
+package = "zed-reqwest"
+version = "0.12.15-zed"
+
+[dependencies.gpui_util]
+path = "../gpui_util"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.http_client_tls]
+path = "../http_client_tls"

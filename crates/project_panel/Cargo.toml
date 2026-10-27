@@ -1,9 +1,13 @@
 [package]
 name = "project_panel"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,49 +20,150 @@ harness = false
 path = "src/project_panel.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-editor.workspace = true
-file_icons.workspace = true
-futures.workspace = true
-git_ui_core.workspace = true
-git.workspace = true
-gpui.workspace = true
-itertools.workspace = true
-menu.workspace = true
-project.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-smallvec.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-rayon.workspace = true
-ui.workspace = true
-util.workspace = true
-client.workspace = true
-worktree.workspace = true
-workspace.workspace = true
-language.workspace = true
-markdown.workspace = true
-markdown_preview.workspace = true
-zed_actions.workspace = true
-telemetry.workspace = true
-notifications.workspace = true
-fs.workspace = true
-log.workspace = true
-svg_preview.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-client = { workspace = true, features = ["test-support"] }
-criterion.workspace = true
-editor = { workspace = true, features = ["test-support"] }
-git_ui = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-language = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
-serde_json.workspace = true
-tempfile.workspace = true
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.git_ui_core]
+path = "../git_ui_core"
+
+[dependencies.git]
+path = "../git"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.rayon]
+version = "1.8"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.worktree]
+path = "../worktree"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.markdown]
+path = "../markdown"
+
+[dependencies.markdown_preview]
+path = "../markdown_preview"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.notifications]
+path = "../notifications"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.svg_preview]
+path = "../svg_preview"
+
+[dev-dependencies.client]
+path = "../client"
+features = ["test-support"]
+
+[dev-dependencies.criterion]
+version = "0.8.2"
+features = ["html_reports"]
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.git_ui]
+path = "../git_ui"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.tempfile]
+version = "3.20.0"
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

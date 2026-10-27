@@ -1,9 +1,13 @@
 [package]
 name = "telemetry"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,7 +16,12 @@ workspace = true
 path = "src/telemetry.rs"
 test = false
 
-[dependencies]
-serde_json.workspace = true
-telemetry_events.workspace = true
-futures.workspace = true
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.telemetry_events]
+path = "../telemetry_events"
+
+[dependencies.futures]
+version = "0.3.34"

@@ -1,9 +1,13 @@
 [package]
 name = "file_finder"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,42 +16,120 @@ workspace = true
 path = "src/file_finder.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-channel.workspace = true
-client.workspace = true
-collections.workspace = true
-editor.workspace = true
-file_icons.workspace = true
-futures.workspace = true
-fuzzy.workspace = true
-fuzzy_nucleo.workspace = true
-gpui.workspace = true
-language.workspace = true
-menu.workspace = true
-open_path_prompt.workspace = true
-picker.workspace = true
-picker_preview.workspace = true
-project.workspace = true
-settings.workspace = true
-theme.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-ctor.workspace = true
-editor = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
+[dependencies.channel]
+path = "../channel"
 
-picker = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
-release_channel.workspace = true
-remote = { workspace = true, features = ["test-support"] }
-remote_server = { workspace = true, features = ["test-support"] }
-serde_json.workspace = true
-theme = { workspace = true, features = ["test-support"] }
-workspace = { workspace = true, features = ["test-support"] }
-zlog.workspace = true
-theme_settings = { workspace = true, features = ["test-support"] }
+[dependencies.client]
+path = "../client"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.fuzzy_nucleo]
+path = "../fuzzy_nucleo"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.open_path_prompt]
+path = "../open_path_prompt"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.picker_preview]
+path = "../picker_preview"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.ctor]
+version = "1.0.12"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.picker]
+path = "../picker"
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.release_channel]
+path = "../release_channel"
+
+[dev-dependencies.remote]
+path = "../remote"
+features = ["test-support"]
+
+[dev-dependencies.remote_server]
+path = "../remote_server"
+features = ["test-support"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.theme]
+path = "../theme"
+features = ["test-support"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"
+
+[dev-dependencies.theme_settings]
+path = "../theme_settings"
+features = ["test-support"]

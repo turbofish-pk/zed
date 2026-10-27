@@ -1,9 +1,13 @@
 [package]
 name = "assets"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lib]
 path = "src/assets.rs"
@@ -13,7 +17,12 @@ doctest = false
 [lints]
 workspace = true
 
-[dependencies]
-anyhow.workspace = true
-gpui.workspace = true
-util.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.util]
+path = "../util"

@@ -1,9 +1,16 @@
 [package]
 name = "ai_onboarding"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["component"]
 
 [lints]
 workspace = true
@@ -16,16 +23,31 @@ doctest = false
 [features]
 default = []
 
-[dependencies]
-client.workspace = true
-cloud_api_types.workspace = true
-component.workspace = true
-gpui.workspace = true
-language_model.workspace = true
-smallvec.workspace = true
-telemetry.workspace = true
-ui.workspace = true
-zed_actions.workspace = true
+[dependencies.client]
+path = "../client"
 
-[package.metadata.cargo-shear]
-ignored = ["component"]
+[dependencies.cloud_api_types]
+path = "../cloud_api_types"
+
+[dependencies.component]
+path = "../component"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language_model]
+path = "../language_model"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.zed_actions]
+path = "../zed_actions"

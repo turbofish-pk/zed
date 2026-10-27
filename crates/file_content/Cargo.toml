@@ -1,9 +1,13 @@
 [package]
 name = "file_content"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,8 +16,14 @@ workspace = true
 path = "src/file_content.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-chardetng.workspace = true
-encoding_rs.workspace = true
-futures-lite.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.chardetng]
+version = "0.1"
+
+[dependencies.encoding_rs]
+version = "0.8"
+
+[dependencies.futures-lite]
+version = "2"

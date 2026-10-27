@@ -1,9 +1,16 @@
 [package]
 name = "outline_panel"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["log"]
 
 [lints]
 workspace = true
@@ -12,40 +19,105 @@ workspace = true
 path = "src/outline_panel.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-async-channel.workspace = true
-collections.workspace = true
-db.workspace = true
-editor.workspace = true
-file_icons.workspace = true
-fuzzy.workspace = true
-futures.workspace = true
-git.workspace = true
-gpui.workspace = true
-language.workspace = true
-log.workspace = true
-menu.workspace = true
-outline.workspace = true
-project.workspace = true
-search.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-smallvec.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
-worktree.workspace = true
-zed_actions.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-buffer_diff.workspace = true
-lsp.workspace = true
-search = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
+[dependencies.async-channel]
+version = "2.5"
+default-features = false
 
-[package.metadata.cargo-shear]
-ignored = ["log"]
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.git]
+path = "../git"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.outline]
+path = "../outline"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.search]
+path = "../search"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.worktree]
+path = "../worktree"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.buffer_diff]
+path = "../buffer_diff"
+
+[dev-dependencies.lsp]
+path = "../lsp"
+
+[dev-dependencies.search]
+path = "../search"
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]

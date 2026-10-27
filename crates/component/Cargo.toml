@@ -1,9 +1,13 @@
 [package]
 name = "component"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,16 +16,29 @@ workspace = true
 path = "src/component.rs"
 test = false
 
-[dependencies]
-collections.workspace = true
-gpui.workspace = true
-inventory.workspace = true
-parking_lot.workspace = true
-strum.workspace = true
-theme.workspace = true
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
 
-[dev-dependencies]
-documented.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.inventory]
+version = "0.3.19"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.theme]
+path = "../theme"
+
+[dev-dependencies.documented]
+version = "0.10"
 
 [features]
 default = []

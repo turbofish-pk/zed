@@ -1,9 +1,13 @@
 [package]
 name = "eval_cli"
 version = "0.1.0"
-publish.workspace = true
-edition.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.publish]
+workspace = true
+
+[package.edition]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,42 +16,124 @@ workspace = true
 name = "eval-cli"
 path = "src/main.rs"
 
-[dependencies]
-acp_thread.workspace = true
-agent.workspace = true
-agent-client-protocol.workspace = true
-agent_ui.workspace = true
-anyhow.workspace = true
-clap.workspace = true
-client.workspace = true
-ctrlc = { version = "3.5", features = ["termination"] }
-db.workspace = true
-debug_adapter_extension.workspace = true
-env_logger.workspace = true
-extension.workspace = true
-feature_flags.workspace = true
-fs.workspace = true
-futures.workspace = true
-gpui.workspace = true
-gpui_platform.workspace = true
-gpui_tokio.workspace = true
-language.workspace = true
-language_extension.workspace = true
-language_model.workspace = true
-language_models.workspace = true
-languages = { workspace = true, features = ["load-grammars"] }
-node_runtime.workspace = true
-paths.workspace = true
-project.workspace = true
-prompt_store.workspace = true
-release_channel.workspace = true
-reqwest_client.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-shellexpand.workspace = true
-terminal_view.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-util.workspace = true
-watch.workspace = true
+[dependencies.acp_thread]
+path = "../acp_thread"
+
+[dependencies.agent]
+path = "../agent"
+
+[dependencies.agent-client-protocol]
+version = "=3.5.0"
+features = ["schemars", "unstable", "unstable_protocol_v2"]
+
+[dependencies.agent_ui]
+path = "../agent_ui"
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.clap]
+version = "4.4"
+features = ["derive", "wrap_help"]
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.ctrlc]
+version = "3.5"
+features = ["termination"]
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.debug_adapter_extension]
+path = "../debug_adapter_extension"
+
+[dependencies.env_logger]
+version = "0.11"
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.feature_flags]
+path = "../feature_flags"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.gpui_platform]
+path = "../gpui_platform"
+default-features = false
+
+[dependencies.gpui_tokio]
+path = "../gpui_tokio"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.language_extension]
+path = "../language_extension"
+
+[dependencies.language_model]
+path = "../language_model"
+
+[dependencies.language_models]
+path = "../language_models"
+
+[dependencies.languages]
+path = "../languages"
+features = ["load-grammars"]
+
+[dependencies.node_runtime]
+path = "../node_runtime"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.prompt_store]
+path = "../prompt_store"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.reqwest_client]
+path = "../reqwest_client"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.shellexpand]
+version = "3.1"
+
+[dependencies.terminal_view]
+path = "../terminal_view"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.watch]
+path = "../watch"

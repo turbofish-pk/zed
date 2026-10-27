@@ -1,22 +1,51 @@
 [package]
 name = "editor_benchmarks"
 version = "0.1.0"
-publish.workspace = true
-edition.workspace = true
 
-[dependencies]
-anyhow.workspace = true
-editor.workspace = true
-gpui.workspace = true
-gpui_platform.workspace = true
-language.workspace = true
-multi_buffer.workspace = true
-project.workspace = true
-release_channel.workspace = true
-semver.workspace = true
-settings.workspace = true
-theme.workspace = true
-workspace.workspace = true
+[package.publish]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.gpui_platform]
+path = "../gpui_platform"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.multi_buffer]
+path = "../multi_buffer"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.workspace]
+path = "../workspace"
 
 [lints]
 workspace = true

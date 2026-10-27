@@ -1,9 +1,13 @@
 [package]
 name = "editor"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,132 +17,366 @@ path = "src/editor.rs"
 doctest = false
 
 [features]
-test-support = [
-    "text/test-support",
-    "language/test-support",
-    "gpui/test-support",
-    "multi_buffer/test-support",
-    "project/test-support",
-    "theme/test-support",
-    "util/test-support",
-    "workspace/test-support",
-    "tree-sitter-c",
-    "tree-sitter-rust",
-    "tree-sitter-typescript",
-    "tree-sitter-html",
-    "proptest",
-    "unindent",
-    "dep:pretty_assertions",
-    "dep:assets",
-    "dep:indoc",
-]
+test-support = ["text/test-support", "language/test-support", "gpui/test-support", "multi_buffer/test-support", "project/test-support", "theme/test-support", "util/test-support", "workspace/test-support", "tree-sitter-c", "tree-sitter-rust", "tree-sitter-typescript", "tree-sitter-html", "proptest", "unindent", "dep:pretty_assertions", "dep:assets", "dep:indoc"]
 
-[dependencies]
-aho-corasick.workspace = true
-anyhow.workspace = true
-assets = { workspace = true, optional = true }
-base64.workspace = true
-breadcrumbs.workspace = true
-client.workspace = true
-clock.workspace = true
-collections.workspace = true
-convert_case.workspace = true
-dap.workspace = true
-db.workspace = true
-buffer_diff.workspace = true
-emojis.workspace = true
-feature_flags.workspace = true
-file_icons.workspace = true
-futures.workspace = true
-futures-lite.workspace = true
-fuzzy.workspace = true
-fs.workspace = true
-git.workspace = true
-gpui.workspace = true
-indoc = { workspace = true, optional = true }
-edit_prediction_types.workspace = true
-itertools.workspace = true
-language.workspace = true
-language_detection.workspace = true
-linkify.workspace = true
-log.workspace = true
-lsp.workspace = true
-markdown.workspace = true
-menu.workspace = true
-multi_buffer.workspace = true
-ordered-float.workspace = true
-parking_lot.workspace = true
-pretty_assertions = { workspace = true, optional = true }
-project.workspace = true
-proptest = { workspace = true, optional = true }
-proptest-derive = { workspace = true, optional = true }
-rand.workspace = true
-regex.workspace = true
-rpc.workspace = true
-rope.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-smallvec.workspace = true
-snippet.workspace = true
-sum_tree.workspace = true
-task.workspace = true
-telemetry.workspace = true
-text.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-tree-sitter-c = { workspace = true, optional = true }
-tree-sitter-html = { workspace = true, optional = true }
-tree-sitter-rust = { workspace = true, optional = true }
-tree-sitter-typescript = { workspace = true, optional = true }
-tree-sitter-python = { workspace = true, optional = true }
-ztracing.workspace = true
-unicode-segmentation.workspace = true
-unicode-script.workspace = true
-unindent = { workspace = true, optional = true }
-ui.workspace = true
-ui_input.workspace = true
-url.workspace = true
-urlencoding.workspace = true
-util.workspace = true
-uuid.workspace = true
-vim_mode_setting.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
+[dependencies.aho-corasick]
+version = "1.1"
 
-[dev-dependencies]
-assets.workspace = true
-ctor.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-indoc.workspace = true
-language = { workspace = true, features = ["test-support"] }
-languages = {workspace = true, features = ["test-support"] }
-lsp = { workspace = true, features = ["test-support"] }
-markdown = { workspace = true, features = ["test-support"] }
-multi_buffer = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
-project = { workspace = true, features = ["test-support"] }
-proptest.workspace = true
-proptest-derive.workspace = true
-release_channel.workspace = true
-rand.workspace = true
-semver.workspace = true
-settings = { workspace = true, features = ["test-support"] }
+[dependencies.anyhow]
+version = "1.0.86"
 
-text = { workspace = true, features = ["test-support"] }
-theme = { workspace = true, features = ["test-support"] }
-tree-sitter-c.workspace = true
-tree-sitter-go.workspace = true
-tree-sitter-html.workspace = true
-tree-sitter-rust.workspace = true
-tree-sitter-typescript.workspace = true
-tree-sitter-yaml.workspace = true
-tree-sitter-bash.workspace = true
-tree-sitter-md.workspace = true
-unicode-width.workspace = true
-unindent.workspace = true
-util = { workspace = true, features = ["test-support"] }
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.assets]
+path = "../assets"
+optional = true
 
-zlog.workspace = true
+[dependencies.base64]
+version = "0.22"
+
+[dependencies.breadcrumbs]
+path = "../breadcrumbs"
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.clock]
+path = "../clock"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.convert_case]
+version = "0.11.0"
+
+[dependencies.dap]
+path = "../dap"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.buffer_diff]
+path = "../buffer_diff"
+
+[dependencies.emojis]
+version = "0.9"
+
+[dependencies.feature_flags]
+path = "../feature_flags"
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.futures-lite]
+version = "2"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.git]
+path = "../git"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.indoc]
+version = "2"
+optional = true
+
+[dependencies.edit_prediction_types]
+path = "../edit_prediction_types"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.language_detection]
+path = "../language_detection"
+
+[dependencies.linkify]
+version = "0.10.0"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.lsp]
+path = "../lsp"
+
+[dependencies.markdown]
+path = "../markdown"
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.multi_buffer]
+path = "../multi_buffer"
+
+[dependencies.ordered-float]
+version = "5"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+optional = true
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.proptest]
+version = "1.12.0"
+features = ["attr-macro"]
+optional = true
+
+[dependencies.proptest-derive]
+version = "0.8.0"
+optional = true
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.rpc]
+path = "../rpc"
+
+[dependencies.rope]
+path = "../rope"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.snippet]
+path = "../snippet"
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.tree-sitter-c]
+version = "0.24.1"
+optional = true
+
+[dependencies.tree-sitter-html]
+version = "0.23"
+optional = true
+
+[dependencies.tree-sitter-rust]
+version = "0.24.2"
+optional = true
+
+[dependencies.tree-sitter-typescript]
+git = "https://github.com/zed-industries/tree-sitter-typescript"
+rev = "e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899"
+optional = true
+
+[dependencies.tree-sitter-python]
+version = "0.25"
+optional = true
+
+[dependencies.ztracing]
+path = "../ztracing"
+
+[dependencies.unicode-segmentation]
+version = "1.10"
+
+[dependencies.unicode-script]
+version = "0.5.7"
+
+[dependencies.unindent]
+version = "0.2.0"
+optional = true
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.ui_input]
+path = "../ui_input"
+
+[dependencies.url]
+version = "2.2"
+
+[dependencies.urlencoding]
+version = "2.1.2"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde"]
+
+[dependencies.vim_mode_setting]
+path = "../vim_mode_setting"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.assets]
+path = "../assets"
+
+[dev-dependencies.ctor]
+version = "1.0.12"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.languages]
+path = "../languages"
+features = ["test-support"]
+
+[dev-dependencies.lsp]
+path = "../lsp"
+features = ["test-support"]
+
+[dev-dependencies.markdown]
+path = "../markdown"
+features = ["test-support"]
+
+[dev-dependencies.multi_buffer]
+path = "../multi_buffer"
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.proptest]
+version = "1.12.0"
+features = ["attr-macro"]
+
+[dev-dependencies.proptest-derive]
+version = "0.8.0"
+
+[dev-dependencies.release_channel]
+path = "../release_channel"
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dev-dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.text]
+path = "../text"
+features = ["test-support"]
+
+[dev-dependencies.theme]
+path = "../theme"
+features = ["test-support"]
+
+[dev-dependencies.tree-sitter-c]
+version = "0.24.1"
+
+[dev-dependencies.tree-sitter-go]
+git = "https://github.com/zed-industries/tree-sitter-go"
+rev = "6862a49e3c5a7567a6c576420e9a8f944e198a85"
+
+[dev-dependencies.tree-sitter-html]
+version = "0.23"
+
+[dev-dependencies.tree-sitter-rust]
+version = "0.24.2"
+
+[dev-dependencies.tree-sitter-typescript]
+git = "https://github.com/zed-industries/tree-sitter-typescript"
+rev = "e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899"
+
+[dev-dependencies.tree-sitter-yaml]
+git = "https://github.com/zed-industries/tree-sitter-yaml"
+rev = "baff0b51c64ef6a1fb1f8390f3ad6015b83ec13a"
+
+[dev-dependencies.tree-sitter-bash]
+version = "0.25.1"
+
+[dev-dependencies.tree-sitter-md]
+git = "https://github.com/zed-industries/tree-sitter-markdown"
+rev = "b596e737286780d7bfa9fcddceaeeb754574b352"
+
+[dev-dependencies.unicode-width]
+version = "0.2"
+
+[dev-dependencies.unindent]
+version = "0.2.0"
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"

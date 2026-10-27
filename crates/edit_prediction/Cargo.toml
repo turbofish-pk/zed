@@ -1,9 +1,13 @@
 [package]
 name = "edit_prediction"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,84 +19,261 @@ doctest = false
 [features]
 cli-support = []
 
-[dependencies]
-ai_onboarding.workspace = true
-anyhow.workspace = true
-heapless.workspace = true
-buffer_diff.workspace = true
-client.workspace = true
-clock.workspace = true
-cloud_api_client.workspace = true
-cloud_api_types.workspace = true
-cloud_llm_client = { workspace = true, features = ["predict-edits"] }
-collections.workspace = true
-copilot.workspace = true
-copilot_ui.workspace = true
-credentials_provider.workspace = true
-db.workspace = true
-edit_prediction_types.workspace = true
-edit_prediction_context.workspace = true
-edit_prediction_metrics.workspace = true
-feature_flags.workspace = true
-fs.workspace = true
-futures.workspace = true
-git.workspace = true
-gpui.workspace = true
-indoc.workspace = true
-itertools.workspace = true
-language.workspace = true
-language_model.workspace = true
-log.workspace = true
-lsp.workspace = true
-menu.workspace = true
-ollama.workspace = true
-open_ai.workspace = true
-postage.workspace = true
-project.workspace = true
-pulldown-cmark.workspace = true
-rand.workspace = true
-regex.workspace = true
-release_channel.workspace = true
-semver.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-strum.workspace = true
-telemetry.workspace = true
-telemetry_events.workspace = true
-text.workspace = true
-thiserror.workspace = true
-toml = { workspace = true, features = ["display"] }
-ui.workspace = true
-util.workspace = true
-uuid.workspace = true
-workspace.workspace = true
-worktree.workspace = true
-zed_actions.workspace = true
-zed_credentials_provider.workspace = true
-zeta_prompt.workspace = true
-zstd.workspace = true
+[dependencies.ai_onboarding]
+path = "../ai_onboarding"
 
-[dev-dependencies]
-criterion.workspace = true
-fs = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-languages = { workspace = true, features = ["load-grammars"] }
-node_runtime.workspace = true
-clock = { workspace = true, features = ["test-support"] }
-cloud_llm_client = { workspace = true, features = ["test-support"] }
-ctor.workspace = true
-indoc.workspace = true
-language = { workspace = true, features = ["test-support"] }
-language_model = { workspace = true, features = ["test-support"] }
-lsp.workspace = true
-parking_lot.workspace = true
-pretty_assertions.workspace = true
-project = { workspace = true, features = ["test-support"] }
-settings = { workspace = true, features = ["test-support"] }
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.anyhow]
+version = "1.0.86"
 
-zlog.workspace = true
+[dependencies.heapless]
+version = "0.9.2"
+
+[dependencies.buffer_diff]
+path = "../buffer_diff"
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.clock]
+path = "../clock"
+
+[dependencies.cloud_api_client]
+path = "../cloud_api_client"
+
+[dependencies.cloud_api_types]
+path = "../cloud_api_types"
+
+[dependencies.cloud_llm_client]
+path = "../cloud_llm_client"
+features = ["predict-edits"]
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.copilot]
+path = "../copilot"
+
+[dependencies.copilot_ui]
+path = "../copilot_ui"
+
+[dependencies.credentials_provider]
+path = "../credentials_provider"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.edit_prediction_types]
+path = "../edit_prediction_types"
+
+[dependencies.edit_prediction_context]
+path = "../edit_prediction_context"
+
+[dependencies.edit_prediction_metrics]
+path = "../edit_prediction_metrics"
+features = ["tree-sitter"]
+
+[dependencies.feature_flags]
+path = "../feature_flags"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.git]
+path = "../git"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.indoc]
+version = "2"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.language_model]
+path = "../language_model"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.lsp]
+path = "../lsp"
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.ollama]
+path = "../ollama"
+
+[dependencies.open_ai]
+path = "../open_ai"
+
+[dependencies.postage]
+version = "0.5"
+default-features = false
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.pulldown-cmark]
+version = "0.13.0"
+default-features = false
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.telemetry_events]
+path = "../telemetry_events"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.toml]
+version = "0.9"
+default-features = false
+features = ["std", "serde", "parse", "display"]
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde"]
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.worktree]
+path = "../worktree"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dependencies.zed_credentials_provider]
+path = "../zed_credentials_provider"
+
+[dependencies.zeta_prompt]
+path = "../zeta_prompt"
+
+[dependencies.zstd]
+version = "0.13"
+default-features = false
+features = ["legacy", "arrays"]
+
+[dev-dependencies.criterion]
+version = "0.8.2"
+features = ["html_reports"]
+
+[dev-dependencies.fs]
+path = "../fs"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.languages]
+path = "../languages"
+features = ["load-grammars"]
+
+[dev-dependencies.node_runtime]
+path = "../node_runtime"
+
+[dev-dependencies.clock]
+path = "../clock"
+features = ["test-support"]
+
+[dev-dependencies.cloud_llm_client]
+path = "../cloud_llm_client"
+features = ["test-support"]
+
+[dev-dependencies.ctor]
+version = "1.0.12"
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.language_model]
+path = "../language_model"
+features = ["test-support"]
+
+[dev-dependencies.lsp]
+path = "../lsp"
+
+[dev-dependencies.parking_lot]
+version = "0.12.1"
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"
 
 [[bench]]
 name = "kept_rate"

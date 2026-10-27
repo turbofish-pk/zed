@@ -1,9 +1,16 @@
 [package]
 name = "edit_prediction_cli"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["wasmtime", "workspace"]
 
 [lints]
 workspace = true
@@ -16,77 +23,205 @@ name = "ep"
 path = "src/main.rs"
 
 [dependencies]
-anyhow.workspace = true
-anthropic.workspace = true
-http_client.workspace = true
-chrono.workspace = true
 clap = "4"
-client.workspace = true
-cloud_llm_client = { workspace = true, features = ["predict-edits"] }
-collections.workspace = true
-db.workspace = true
-debug_adapter_extension.workspace = true
-dirs.workspace = true
-extension.workspace = true
-fs.workspace = true
-futures.workspace = true
-gpui.workspace = true
-gpui_platform.workspace = true
-gpui_tokio.workspace = true
-indoc.workspace = true
-language.workspace = true
-language_extension.workspace = true
-language_model.workspace = true
-language_models.workspace = true
-languages = { workspace = true, features = ["load-grammars"] }
-libc.workspace = true
-log.workspace = true
-node_runtime.workspace = true
-open_ai.workspace = true
-
-paths.workspace = true
-project.workspace = true
-prompt_store.workspace = true
-release_channel.workspace = true
-reqwest_client.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-shellexpand.workspace = true
-smol.workspace = true
-sqlez.workspace = true
-strum.workspace = true
-sqlez_macros.workspace = true
-terminal_view.workspace = true
-util.workspace = true
-watch.workspace = true
-edit_prediction = { workspace = true, features = ["cli-support"] }
-edit_prediction_context.workspace = true
-edit_prediction_metrics.workspace = true
-telemetry_events.workspace = true
-wasmtime.workspace = true
-zeta_prompt.workspace = true
-rand.workspace = true
-similar.workspace = true
 flate2 = "1.1.8"
-toml.workspace = true
 gaoya = "0.2.0"
 
-# Wasmtime is included as a dependency in order to enable the same
-# features that are enabled in Zed.
-#
-# If we don't enable these features we get crashes when creating
-# a Tree-sitter WasmStore.
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.anthropic]
+path = "../anthropic"
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.cloud_llm_client]
+path = "../cloud_llm_client"
+features = ["predict-edits"]
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.debug_adapter_extension]
+path = "../debug_adapter_extension"
+
+[dependencies.dirs]
+version = "6.0"
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.gpui_platform]
+path = "../gpui_platform"
+default-features = false
+
+[dependencies.gpui_tokio]
+path = "../gpui_tokio"
+
+[dependencies.indoc]
+version = "2"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.language_extension]
+path = "../language_extension"
+
+[dependencies.language_model]
+path = "../language_model"
+
+[dependencies.language_models]
+path = "../language_models"
+
+[dependencies.languages]
+path = "../languages"
+features = ["load-grammars"]
+
+[dependencies.libc]
+version = "0.2"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.node_runtime]
+path = "../node_runtime"
+
+[dependencies.open_ai]
+path = "../open_ai"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.prompt_store]
+path = "../prompt_store"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.reqwest_client]
+path = "../reqwest_client"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.shellexpand]
+version = "3.1"
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.sqlez]
+path = "../sqlez"
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.sqlez_macros]
+path = "../sqlez_macros"
+
+[dependencies.terminal_view]
+path = "../terminal_view"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.watch]
+path = "../watch"
+
+[dependencies.edit_prediction]
+path = "../edit_prediction"
+features = ["cli-support"]
+
+[dependencies.edit_prediction_context]
+path = "../edit_prediction_context"
+
+[dependencies.edit_prediction_metrics]
+path = "../edit_prediction_metrics"
+features = ["tree-sitter"]
+
+[dependencies.telemetry_events]
+path = "../telemetry_events"
+
+[dependencies.wasmtime]
+version = "48.0.7"
+default-features = false
+features = ["anyhow", "async", "demangle", "runtime", "cranelift", "component-model", "incremental-cache", "parallel-compilation"]
+
+[dependencies.zeta_prompt]
+path = "../zeta_prompt"
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dependencies.similar]
+version = "2.7"
+
+[dependencies.toml]
+version = "0.9"
+default-features = false
+features = ["std", "serde", "parse"]
+
 [features]
 dynamic_prompts = []
 
-[package.metadata.cargo-shear]
-ignored = ["wasmtime", "workspace"]
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
-indoc.workspace = true
-pretty_assertions.workspace = true
-project = { workspace = true, features = ["test-support"] }
-tempfile.workspace = true
-workspace = { workspace = true, features = ["test-support"] }
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.tempfile]
+version = "3.20.0"
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

@@ -1,9 +1,13 @@
 [package]
 name = "extension_cli"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,27 +16,84 @@ workspace = true
 name = "zed-extension"
 path = "src/main.rs"
 
-[dependencies]
-anyhow.workspace = true
-clap.workspace = true
-cloud_api_types.workspace = true
-env_logger.workspace = true
-extension.workspace = true
-futures.workspace = true
-fs.workspace = true
-gpui_platform.workspace = true
-http_client.workspace = true
-language.workspace = true
-log.workspace = true
-reqwest_client.workspace = true
-serde_json.workspace = true
-serde_json_lenient.workspace = true
-settings_content.workspace = true
-snippet_provider.workspace = true
-task.workspace = true
-theme_settings.workspace = true
-thiserror.workspace = true
-tokio = { workspace = true, features = ["fs", "macros", "parking_lot", "process", "sync", "time"] }
-toml.workspace = true
-tree-sitter = { workspace = true, features = ["wasm"] }
-wasmtime.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.clap]
+version = "4.4"
+features = ["derive", "wrap_help"]
+
+[dependencies.cloud_api_types]
+path = "../cloud_api_types"
+
+[dependencies.env_logger]
+version = "0.11"
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.gpui_platform]
+path = "../gpui_platform"
+default-features = false
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.reqwest_client]
+path = "../reqwest_client"
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.serde_json_lenient]
+version = "0.2"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings_content]
+path = "../settings_content"
+
+[dependencies.snippet_provider]
+path = "../snippet_provider"
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.tokio]
+version = "1"
+features = ["fs", "macros", "parking_lot", "process", "sync", "time"]
+
+[dependencies.toml]
+version = "0.9"
+default-features = false
+features = ["std", "serde", "parse"]
+
+[dependencies.tree-sitter]
+git = "https://github.com/tree-sitter/tree-sitter"
+rev = "803c6ebaac27d69e1808b45058482e868d073ceb"
+features = ["wasm"]
+
+[dependencies.wasmtime]
+version = "48.0.7"
+default-features = false
+features = ["anyhow", "async", "demangle", "runtime", "cranelift", "component-model", "incremental-cache", "parallel-compilation"]

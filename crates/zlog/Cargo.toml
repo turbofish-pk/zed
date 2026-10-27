@@ -1,9 +1,13 @@
 [package]
 name = "zlog"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,11 +19,22 @@ doctest = false
 [features]
 default = []
 
-[dependencies]
-collections.workspace = true
-chrono = { workspace = true, default-features = true }
-log = { workspace = true, features = ["kv_unstable_std"] }
-anyhow.workspace = true
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
 
-[dev-dependencies]
-tempfile.workspace = true
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std", "kv_unstable_std"]
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dev-dependencies.tempfile]
+version = "3.20.0"

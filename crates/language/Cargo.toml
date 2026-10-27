@@ -1,9 +1,16 @@
 [package]
 name = "language"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["tracing"]
 
 [lints]
 workspace = true
@@ -13,106 +20,287 @@ path = "src/language.rs"
 doctest = false
 
 [features]
-test-support = [
-    "rand",
-    "collections/test-support",
-    "grammars",
-    "lsp/test-support",
-    "text/test-support",
-    "tree-sitter-rust",
-    "tree-sitter-python",
-    "tree-sitter-typescript",
-    "tree-sitter-json",
-    "tree-sitter-md",
-    "settings/test-support",
-    "util/test-support",
-]
+test-support = ["rand", "collections/test-support", "grammars", "lsp/test-support", "text/test-support", "tree-sitter-rust", "tree-sitter-python", "tree-sitter-typescript", "tree-sitter-json", "tree-sitter-md", "settings/test-support", "util/test-support"]
 
-[dependencies]
-anyhow.workspace = true
-async-trait.workspace = true
-clock.workspace = true
-collections.workspace = true
-diffy.workspace = true
-ec4rs.workspace = true
-encoding_rs.workspace = true
-file_content.workspace = true
-fs.workspace = true
-futures.workspace = true
-futures-lite.workspace = true
-fuzzy_nucleo.workspace = true
-globset.workspace = true
-gpui.workspace = true
-http_client.workspace = true
-imara-diff.workspace = true
-language_core.workspace = true
-itertools.workspace = true
-log.workspace = true
-lsp.workspace = true
-parking_lot.workspace = true
-postage = { workspace = true, features = ["futures-traits", "logging", "blocking"] }
-rand = { workspace = true, optional = true }
-regex.workspace = true
-rpc.workspace = true
-semver.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-shellexpand.workspace = true
-smallvec.workspace = true
-streaming-iterator.workspace = true
-strsim.workspace = true
-sum_tree.workspace = true
-task.workspace = true
-text.workspace = true
-theme.workspace = true
-tracing.workspace = true
-grammars = { workspace = true, optional = true }
-tree-sitter-json = { workspace = true, optional = true }
-tree-sitter-md = { workspace = true, optional = true }
-tree-sitter-python = { workspace = true, optional = true }
-tree-sitter-rust = { workspace = true, optional = true }
-tree-sitter-typescript = { workspace = true, optional = true }
-tree-sitter = { workspace = true, features = ["wasm"] }
-unicase.workspace = true
-util.workspace = true
-watch.workspace = true
-zlog.workspace = true
-ztracing.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-collections = { workspace = true, features = ["test-support"] }
-ctor.workspace = true
-grammars.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-indoc.workspace = true
-lsp = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
-rand.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-text = { workspace = true, features = ["test-support"] }
-http_client = { workspace = true, features = ["test-support"] }
-tree-sitter-elixir.workspace = true
-tree-sitter-embedded-template.workspace = true
-tree-sitter-heex.workspace = true
-tree-sitter-html.workspace = true
-tree-sitter-json.workspace = true
-tree-sitter-md.workspace = true
-tree-sitter-python.workspace = true
-tree-sitter-ruby.workspace = true
-tree-sitter-c.workspace = true
-tree-sitter-rust.workspace = true
-tree-sitter-typescript.workspace = true
-toml.workspace = true
-unindent.workspace = true
-util = { workspace = true, features = ["test-support"] }
-zlog.workspace = true
-criterion.workspace = true
-theme_settings.workspace = true
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.clock]
+path = "../clock"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.diffy]
+version = "0.4.2"
+
+[dependencies.ec4rs]
+version = "1.2"
+features = ["allow-empty-values"]
+
+[dependencies.encoding_rs]
+version = "0.8"
+
+[dependencies.file_content]
+path = "../file_content"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.futures-lite]
+version = "2"
+
+[dependencies.fuzzy_nucleo]
+path = "../fuzzy_nucleo"
+
+[dependencies.globset]
+version = "0.4"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.imara-diff]
+version = "0.2"
+default-features = false
+
+[dependencies.language_core]
+path = "../language_core"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.lsp]
+path = "../lsp"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.postage]
+version = "0.5"
+default-features = false
+features = ["futures-traits", "logging", "blocking"]
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+optional = true
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.rpc]
+path = "../rpc"
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.shellexpand]
+version = "3.1"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.streaming-iterator]
+version = "0.1"
+
+[dependencies.strsim]
+version = "0.11"
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.tracing]
+version = "0.1.40"
+
+[dependencies.grammars]
+path = "../grammars"
+optional = true
+
+[dependencies.tree-sitter-json]
+version = "0.24"
+optional = true
+
+[dependencies.tree-sitter-md]
+git = "https://github.com/zed-industries/tree-sitter-markdown"
+rev = "b596e737286780d7bfa9fcddceaeeb754574b352"
+optional = true
+
+[dependencies.tree-sitter-python]
+version = "0.25"
+optional = true
+
+[dependencies.tree-sitter-rust]
+version = "0.24.2"
+optional = true
+
+[dependencies.tree-sitter-typescript]
+git = "https://github.com/zed-industries/tree-sitter-typescript"
+rev = "e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899"
+optional = true
+
+[dependencies.tree-sitter]
+git = "https://github.com/tree-sitter/tree-sitter"
+rev = "803c6ebaac27d69e1808b45058482e868d073ceb"
+features = ["wasm"]
+
+[dependencies.unicase]
+version = "2.6"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.watch]
+path = "../watch"
+
+[dependencies.zlog]
+path = "../zlog"
+
+[dependencies.ztracing]
+path = "../ztracing"
+
+[dev-dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+features = ["test-support"]
+
+[dev-dependencies.ctor]
+version = "1.0.12"
+
+[dev-dependencies.grammars]
+path = "../grammars"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.lsp]
+path = "../lsp"
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.text]
+path = "../text"
+features = ["test-support"]
+
+[dev-dependencies.http_client]
+path = "../http_client"
+features = ["test-support"]
+
+[dev-dependencies.tree-sitter-elixir]
+version = "0.3"
+
+[dev-dependencies.tree-sitter-embedded-template]
+version = "0.23.0"
+
+[dev-dependencies.tree-sitter-heex]
+git = "https://github.com/zed-industries/tree-sitter-heex"
+rev = "1dd45142fbb05562e35b2040c6129c9bca346592"
+
+[dev-dependencies.tree-sitter-html]
+version = "0.23"
+
+[dev-dependencies.tree-sitter-json]
+version = "0.24"
+
+[dev-dependencies.tree-sitter-md]
+git = "https://github.com/zed-industries/tree-sitter-markdown"
+rev = "b596e737286780d7bfa9fcddceaeeb754574b352"
+
+[dev-dependencies.tree-sitter-python]
+version = "0.25"
+
+[dev-dependencies.tree-sitter-ruby]
+version = "0.23"
+
+[dev-dependencies.tree-sitter-c]
+version = "0.24.1"
+
+[dev-dependencies.tree-sitter-rust]
+version = "0.24.2"
+
+[dev-dependencies.tree-sitter-typescript]
+git = "https://github.com/zed-industries/tree-sitter-typescript"
+rev = "e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899"
+
+[dev-dependencies.toml]
+version = "0.9"
+default-features = false
+features = ["std", "serde", "parse"]
+
+[dev-dependencies.unindent]
+version = "0.2.0"
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"
+
+[dev-dependencies.criterion]
+version = "0.8.2"
+features = ["html_reports"]
+
+[dev-dependencies.theme_settings]
+path = "../theme_settings"
 
 [[bench]]
 name = "highlight_map"
 harness = false
-
-[package.metadata.cargo-shear]
-ignored = ["tracing"]

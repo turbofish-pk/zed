@@ -1,9 +1,13 @@
 [package]
 name = "sqlez"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,17 +16,42 @@ workspace = true
 doctest = false
 
 [dependencies]
-anyhow.workspace = true
-collections.workspace = true
-futures.workspace = true
-indoc.workspace = true
-libsqlite3-sys.workspace = true
-log.workspace = true
-parking_lot.workspace = true
-path.workspace = true
-sqlformat.workspace = true
 thread_local = "1.1.4"
-uuid.workspace = true
 
-[dev-dependencies]
-pollster.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.indoc]
+version = "2"
+
+[dependencies.libsqlite3-sys]
+version = "0.30.1"
+features = ["bundled"]
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.path]
+path = "../path"
+
+[dependencies.sqlformat]
+version = "0.2"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde"]
+
+[dev-dependencies.pollster]
+version = "0.4.0"

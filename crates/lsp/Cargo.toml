@@ -1,9 +1,13 @@
 [package]
 name = "lsp"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,30 +19,93 @@ doctest = false
 [features]
 test-support = ["async-pipe"]
 
-[dependencies]
-anyhow.workspace = true
-async-channel = { workspace = true, features = ["std"] }
-async-pipe = { workspace = true, optional = true }
-collections.workspace = true
-futures-lite.workspace = true
-futures.workspace = true
-gpui.workspace = true
-gpui_util.workspace = true
-log.workspace = true
-lsp-types.workspace = true
-parking_lot.workspace = true
-postage.workspace = true
-release_channel.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-util.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-async-pipe.workspace = true
-gpui_util.workspace = true
-ctor.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-semver.workspace = true
-util = { workspace = true, features = ["test-support"] }
-zlog.workspace = true
+[dependencies.async-channel]
+version = "2.5"
+default-features = false
+features = ["std"]
+
+[dependencies.async-pipe]
+git = "https://github.com/zed-industries/async-pipe-rs"
+rev = "82d00a04211cf4e1236029aa03e6b6ce2a74c553"
+optional = true
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.futures-lite]
+version = "2"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.gpui_util]
+path = "../gpui_util"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.lsp-types]
+git = "https://github.com/zed-industries/lsp-types"
+rev = "82d7fc66ebdfabcfeb26ba16bbed9f3d26211fc3"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.postage]
+version = "0.5"
+default-features = false
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.util]
+path = "../util"
+
+[dev-dependencies.async-pipe]
+git = "https://github.com/zed-industries/async-pipe-rs"
+rev = "82d00a04211cf4e1236029aa03e6b6ce2a74c553"
+
+[dev-dependencies.gpui_util]
+path = "../gpui_util"
+
+[dev-dependencies.ctor]
+version = "1.0.12"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"

@@ -1,9 +1,13 @@
 [package]
 name = "google_ai"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,14 +16,31 @@ workspace = true
 path = "src/google_ai.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-futures.workspace = true
-http_client.workspace = true
-language_model_core.workspace = true
-log.workspace = true
-serde.workspace = true
-serde_json.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-http_client = { workspace = true, features = ["test-support"] }
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.language_model_core]
+path = "../language_model_core"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.http_client]
+path = "../http_client"
+features = ["test-support"]

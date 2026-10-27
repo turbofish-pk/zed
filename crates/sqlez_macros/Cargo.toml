@@ -1,9 +1,13 @@
 [package]
 name = "sqlez_macros"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -14,9 +18,13 @@ proc-macro = true
 doctest = false
 test = false
 
-[dependencies]
-sqlformat.workspace = true
-syn.workspace = true
+[dependencies.sqlformat]
+version = "0.2"
 
-[target.'cfg(not(any(target_os = "linux", target_os = "freebsd")))'.dependencies]
-sqlez.workspace = true
+[dependencies.syn]
+version = "2.0"
+default-features = false
+features = ["proc-macro"]
+
+[target.'cfg(not(any(target_os = "linux", target_os = "freebsd")))'.dependencies.sqlez]
+path = "../sqlez"

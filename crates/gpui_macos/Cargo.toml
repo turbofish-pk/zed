@@ -1,9 +1,13 @@
 [package]
 name = "gpui_macos"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -20,47 +24,144 @@ runtime_shaders = ["gpui_apple/runtime_shaders"]
 font-kit = ["gpui_apple/font-kit"]
 screen-capture = ["gpui/screen-capture", "dep:objc2-core-media", "dep:objc2-screen-capture-kit"]
 
-[dependencies]
-gpui.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
 
-[target.'cfg(target_os = "macos")'.dependencies]
-accesskit.workspace = true
-accesskit_macos.workspace = true
-anyhow.workspace = true
-block2.workspace = true
-collections.workspace = true
-core-foundation.workspace = true
-core-foundation-sys.workspace = true
-core-graphics.workspace = true
-ctor.workspace = true
-dispatch2 = { workspace = true, features = ["block2", "objc2"] }
-foreign-types.workspace = true
-futures.workspace = true
-gpui_apple.workspace = true
-gpui_util.workspace = true
-image.workspace = true
-itertools.workspace = true
-log.workspace = true
-objc2.workspace = true
-objc2-app-kit = { workspace = true, features = ["objc2-uniform-type-identifiers"] }
-objc2-core-graphics = { workspace = true, features = ["CGColor", "objc2"] }
-objc2-core-media = { workspace = true, optional = true }
-objc2-core-video = { workspace = true, features = ["CVHostTime"] }
-objc2-foundation.workspace = true
-objc2-screen-capture-kit = { workspace = true, optional = true }
-objc2-uniform-type-identifiers.workspace = true
-objc2-user-notifications.workspace = true
-parking_lot.workspace = true
-raw-window-handle.workspace = true
-scheduler.workspace = true
-semver.workspace = true
-smallvec.workspace = true
-strum.workspace = true
-uuid.workspace = true
+[target.'cfg(target_os = "macos")'.dependencies.accesskit]
+version = "0.24.0"
+features = ["enumn"]
 
-# The macOS test-only window implementation depends on test-only APIs from both
-# GPUI and the extracted renderer. A dependency does not inherit this crate's
-# `cfg(test)`, so dev-dependencies enable those APIs only for test builds.
-[target.'cfg(target_os = "macos")'.dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
-gpui_apple = { workspace = true, features = ["test-support"] }
+[target.'cfg(target_os = "macos")'.dependencies.accesskit_macos]
+version = "0.26.0"
+
+[target.'cfg(target_os = "macos")'.dependencies.anyhow]
+version = "1.0.86"
+
+[target.'cfg(target_os = "macos")'.dependencies.block2]
+version = "0.6"
+
+[target.'cfg(target_os = "macos")'.dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[target.'cfg(target_os = "macos")'.dependencies.core-foundation]
+version = "0.10"
+
+[target.'cfg(target_os = "macos")'.dependencies.core-foundation-sys]
+version = "0.8.6"
+
+[target.'cfg(target_os = "macos")'.dependencies.core-graphics]
+version = "0.24"
+
+[target.'cfg(target_os = "macos")'.dependencies.ctor]
+version = "1.0.12"
+
+[target.'cfg(target_os = "macos")'.dependencies.dispatch2]
+version = "0.3"
+default-features = false
+features = ["std", "block2", "objc2"]
+
+[target.'cfg(target_os = "macos")'.dependencies.foreign-types]
+version = "0.5"
+
+[target.'cfg(target_os = "macos")'.dependencies.futures]
+version = "0.3.34"
+
+[target.'cfg(target_os = "macos")'.dependencies.gpui_apple]
+path = "../gpui_apple"
+
+[target.'cfg(target_os = "macos")'.dependencies.gpui_util]
+path = "../gpui_util"
+
+[target.'cfg(target_os = "macos")'.dependencies.image]
+version = "0.25.1"
+default-features = false
+features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
+
+[target.'cfg(target_os = "macos")'.dependencies.itertools]
+version = "0.14.0"
+
+[target.'cfg(target_os = "macos")'.dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2]
+version = "0.6"
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-app-kit]
+version = "0.3.2"
+default-features = false
+features = ["NSAlert", "NSAppearance", "NSApplication", "NSButton", "NSCell", "NSColor", "NSControl", "NSCursor", "NSDocumentController", "NSDragging", "NSDraggingItem", "NSEvent", "NSGraphics", "NSImage", "NSMenu", "NSMenuItem", "NSOpenPanel", "NSPanel", "NSPasteboard", "NSResponder", "NSRunningApplication", "NSSavePanel", "NSScreen", "NSScroller", "NSTrackingArea", "NSView", "NSVisualEffectView", "NSWindow", "NSWorkspace", "block2", "objc2-core-foundation", "objc2-uniform-type-identifiers"]
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-core-graphics]
+version = "=0.3.2"
+default-features = false
+features = ["CGDirectDisplay", "CGColor", "objc2"]
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-core-media]
+version = "=0.3.2"
+default-features = false
+features = ["CMSampleBuffer", "objc2-core-video"]
+optional = true
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-core-video]
+version = "=0.3.2"
+default-features = false
+features = ["CVBuffer", "CVImageBuffer", "CVHostTime"]
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-foundation]
+version = "=0.3.2"
+default-features = false
+features = ["NSArray", "NSAttributedString", "NSBundle", "NSCoder", "NSData", "NSDate", "NSDictionary", "NSEnumerator", "NSError", "NSGeometry", "NSNull", "NSObjCRuntime", "NSObject", "NSProcessInfo", "NSRange", "NSRunLoop", "NSSet", "NSString", "NSURL", "NSValue", "objc2-core-foundation", "std"]
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-screen-capture-kit]
+version = "=0.3.2"
+default-features = false
+features = ["block2", "dispatch2", "objc2-core-graphics", "objc2-core-media", "SCShareableContent", "SCStream", "std"]
+optional = true
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-uniform-type-identifiers]
+version = "0.3"
+default-features = false
+features = ["std", "UTCoreTypes", "UTType"]
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-user-notifications]
+version = "0.3"
+default-features = false
+features = ["std", "block2", "UNNotification", "UNNotificationAction", "UNNotificationCategory", "UNNotificationContent", "UNNotificationRequest", "UNNotificationResponse", "UNNotificationTrigger", "UNUserNotificationCenter"]
+
+[target.'cfg(target_os = "macos")'.dependencies.parking_lot]
+version = "0.12.1"
+
+[target.'cfg(target_os = "macos")'.dependencies.raw-window-handle]
+version = "0.6"
+
+[target.'cfg(target_os = "macos")'.dependencies.scheduler]
+path = "../scheduler"
+
+[target.'cfg(target_os = "macos")'.dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[target.'cfg(target_os = "macos")'.dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[target.'cfg(target_os = "macos")'.dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[target.'cfg(target_os = "macos")'.dependencies.uuid]
+version = "1.1"
+features = ["serde"]
+
+[target.'cfg(target_os = "macos")'.dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[target.'cfg(target_os = "macos")'.dev-dependencies.gpui_apple]
+path = "../gpui_apple"
+features = ["test-support"]

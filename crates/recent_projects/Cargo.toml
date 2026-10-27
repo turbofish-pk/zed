@@ -1,9 +1,13 @@
 [package]
 name = "recent_projects"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,58 +20,170 @@ doctest = false
 default = []
 test-support = ["remote/test-support", "remote_connection/test-support", "project/test-support", "workspace/test-support"]
 
-[dependencies]
-anyhow.workspace = true
-chrono.workspace = true
-askpass.workspace = true
-db.workspace = true
-dev_container.workspace = true
-editor.workspace = true
-extension_host.workspace = true
-fs.workspace = true
-futures.workspace = true
-fuzzy_nucleo.workspace = true
-gpui.workspace = true
-language.workspace = true
-log.workspace = true
-menu.workspace = true
-node_runtime.workspace = true
-open_path_prompt.workspace = true
-ordered-float.workspace = true
-paths.workspace = true
-picker.workspace = true
-project.workspace = true
-release_channel.workspace = true
-remote.workspace = true
-remote_connection.workspace = true
-semver.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-telemetry.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
-worktree.workspace = true
-zed_actions.workspace = true
-indoc.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(target_os = "windows")'.dependencies]
-windows-registry.workspace = true
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
 
-[dev-dependencies]
-editor = { workspace = true, features = ["test-support"] }
-extension.workspace = true
-fs.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-http_client.workspace = true
-language = { workspace = true, features = ["test-support"] }
-picker = { workspace = true, features = ["test-support"] }
-project = { workspace = true, features = ["test-support"] }
-release_channel.workspace = true
-remote = { workspace = true, features = ["test-support"] }
-remote_connection = { workspace = true, features = ["test-support"] }
-remote_server.workspace = true
-rpc.workspace = true
-serde_json.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.askpass]
+path = "../askpass"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.dev_container]
+path = "../dev_container"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.extension_host]
+path = "../extension_host"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.fuzzy_nucleo]
+path = "../fuzzy_nucleo"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.node_runtime]
+path = "../node_runtime"
+
+[dependencies.open_path_prompt]
+path = "../open_path_prompt"
+
+[dependencies.ordered-float]
+version = "5"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.remote]
+path = "../remote"
+
+[dependencies.remote_connection]
+path = "../remote_connection"
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.worktree]
+path = "../worktree"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dependencies.indoc]
+version = "2"
+
+[target.'cfg(target_os = "windows")'.dependencies.windows-registry]
+version = "0.6.0"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.extension]
+path = "../extension"
+
+[dev-dependencies.fs]
+path = "../fs"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.http_client]
+path = "../http_client"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.picker]
+path = "../picker"
+features = ["test-support"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.release_channel]
+path = "../release_channel"
+
+[dev-dependencies.remote]
+path = "../remote"
+features = ["test-support"]
+
+[dev-dependencies.remote_connection]
+path = "../remote_connection"
+features = ["test-support"]
+
+[dev-dependencies.remote_server]
+path = "../remote_server"
+
+[dev-dependencies.rpc]
+path = "../rpc"
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

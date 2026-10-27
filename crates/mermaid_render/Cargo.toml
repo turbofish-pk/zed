@@ -1,9 +1,16 @@
 [package]
 name = "mermaid_render"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["tracing"]
 
 [lints]
 workspace = true
@@ -15,22 +22,40 @@ doctest = false
 [features]
 test-support = []
 
-[dependencies]
-anyhow.workspace = true
-gpui.workspace = true
-merman = { workspace = true, features = [
-    "layout-cytoscape",
-    "svg",
-] }
-quick-xml.workspace = true
-serde_json.workspace = true
-tracing.workspace = true
-ztracing.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
-mermaid_render = { workspace = true, features = ["test-support"] }
-usvg.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
 
-[package.metadata.cargo-shear]
-ignored = ["tracing"]
+[dependencies.merman]
+version = "=0.8.0-alpha.5"
+default-features = false
+features = ["layout-cytoscape", "svg"]
+
+[dependencies.quick-xml]
+version = "0.41"
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.tracing]
+version = "0.1.40"
+
+[dependencies.ztracing]
+path = "../ztracing"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.mermaid_render]
+path = ""
+features = ["test-support"]
+
+[dev-dependencies.usvg]
+version = "0.46.0"
+default-features = false

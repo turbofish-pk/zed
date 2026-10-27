@@ -1,9 +1,13 @@
 [package]
 name = "compliance"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -14,29 +18,62 @@ doctest = false
 [features]
 octo-client = ["dep:octocrab", "dep:jsonwebtoken", "dep:serde_json", "dep:tokio"]
 
-[dependencies]
-anyhow.workspace = true
-async-trait.workspace = true
-derive_more = { workspace = true, features = ["display"] }
-futures.workspace = true
-itertools.workspace = true
-jsonwebtoken = { version = "10.2", features = ["use_pem"], optional = true }
-octocrab = { workspace = true, features = [
-    "default-client",
-    "jwt-aws-lc-rs",
-    "retry",
-    "rustls",
-    "rustls-aws-lc-rs",
-    "stream",
-    "timeout"
-], optional = true }
-regex.workspace = true
-semver.workspace = true
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true, optional = true }
-tokio = { workspace = true, optional = true }
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-indoc.workspace = true
-serde_json.workspace = true
-tokio = { workspace = true, features = ["rt", "macros"] }
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.derive_more]
+version = "2.1"
+features = ["deref", "deref_mut", "from_str", "display"]
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.jsonwebtoken]
+version = "10.2"
+features = ["use_pem"]
+optional = true
+
+[dependencies.octocrab]
+version = "0.49"
+default-features = false
+features = ["default-client", "jwt-aws-lc-rs", "retry", "rustls", "rustls-aws-lc-rs", "stream", "timeout"]
+optional = true
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc", "derive"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+optional = true
+
+[dependencies.tokio]
+version = "1"
+optional = true
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.tokio]
+version = "1"
+features = ["rt", "macros"]

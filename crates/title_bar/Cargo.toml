@@ -1,9 +1,13 @@
 [package]
 name = "title_bar"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -14,67 +18,163 @@ doctest = false
 
 [features]
 default = []
-
-test-support = [
-    "call/test-support",
-    "client/test-support",
-
-    "gpui/test-support",
-
-    "project/test-support",
-    "remote/test-support",
-    "util/test-support",
-    "workspace/test-support",
-    "recent_projects/test-support",
-]
+test-support = ["call/test-support", "client/test-support", "gpui/test-support", "project/test-support", "remote/test-support", "util/test-support", "workspace/test-support", "recent_projects/test-support"]
 
 [dependencies]
-agent_settings.workspace = true
-anyhow.workspace = true
-auto_update.workspace = true
-fs.workspace = true
-platform_title_bar.workspace = true
-call.workspace = true
-channel.workspace = true
-chrono.workspace = true
-client.workspace = true
-cloud_api_types.workspace = true
-command_palette_hooks.workspace = true
-db.workspace = true
-
-git_ui_core.workspace = true
-gpui = { workspace = true, features = ["screen-capture"] }
-icons.workspace = true
-livekit_client.workspace = true
-path.workspace = true
-project.workspace = true
-recent_projects.workspace = true
-remote.workspace = true
-remote_connection.workspace = true
-rpc.workspace = true
-semver.workspace = true
-schemars.workspace = true
-serde.workspace = true
-settings.workspace = true
-smallvec.workspace = true
-telemetry.workspace = true
-theme.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
 arrayvec = "0.7.6"
 
-[dev-dependencies]
-call = { workspace = true, features = ["test-support"] }
-client = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-project = { workspace = true, features = ["test-support"] }
-recent_projects = { workspace = true, features = ["test-support"] }
-remote = { workspace = true, features = ["test-support"] }
-rpc = { workspace = true, features = ["test-support"] }
-semver.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-theme_settings.workspace = true
-util = { workspace = true, features = ["test-support"] }
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.agent_settings]
+path = "../agent_settings"
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.auto_update]
+path = "../auto_update"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.platform_title_bar]
+path = "../platform_title_bar"
+
+[dependencies.call]
+path = "../call"
+
+[dependencies.channel]
+path = "../channel"
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.cloud_api_types]
+path = "../cloud_api_types"
+
+[dependencies.command_palette_hooks]
+path = "../command_palette_hooks"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.git_ui_core]
+path = "../git_ui_core"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["screen-capture"]
+
+[dependencies.icons]
+path = "../icons"
+
+[dependencies.livekit_client]
+path = "../livekit_client"
+
+[dependencies.path]
+path = "../path"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.recent_projects]
+path = "../recent_projects"
+
+[dependencies.remote]
+path = "../remote"
+
+[dependencies.remote_connection]
+path = "../remote_connection"
+
+[dependencies.rpc]
+path = "../rpc"
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.call]
+path = "../call"
+features = ["test-support"]
+
+[dev-dependencies.client]
+path = "../client"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.recent_projects]
+path = "../recent_projects"
+features = ["test-support"]
+
+[dev-dependencies.remote]
+path = "../remote"
+features = ["test-support"]
+
+[dev-dependencies.rpc]
+path = "../rpc"
+features = ["test-support"]
+
+[dev-dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.theme_settings]
+path = "../theme_settings"
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

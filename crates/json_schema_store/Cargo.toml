@@ -1,9 +1,13 @@
 [package]
 name = "json_schema_store"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,28 +19,79 @@ doctest = false
 [features]
 default = []
 
-[dev-dependencies]
-fs = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-language = { workspace = true, features = ["test-support"] }
-project = { workspace = true, features = ["test-support"] }
-settings = { workspace = true, features = ["test-support"] }
+[dev-dependencies.fs]
+path = "../fs"
+features = ["test-support"]
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-dap.workspace = true
-parking_lot.workspace = true
-extension.workspace = true
-feature_flags.workspace = true
-gpui.workspace = true
-language.workspace = true
-paths.workspace = true
-project.workspace = true
-schemars.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-snippet_provider.workspace = true
-task.workspace = true
-theme.workspace = true
-util.workspace = true
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.dap]
+path = "../dap"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.feature_flags]
+path = "../feature_flags"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.snippet_provider]
+path = "../snippet_provider"
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.util]
+path = "../util"

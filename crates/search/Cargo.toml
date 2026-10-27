@@ -1,17 +1,16 @@
 [package]
 name = "search"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
 
-[features]
-test-support = [
+[package.edition]
+workspace = true
 
-    "editor/test-support",
-    "gpui/test-support",
-    "workspace/test-support",
-]
+[package.publish]
+workspace = true
+
+[features]
+test-support = ["editor/test-support", "gpui/test-support", "workspace/test-support"]
 
 [lints]
 workspace = true
@@ -20,46 +19,135 @@ workspace = true
 path = "src/search.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-any_vec.workspace = true
-bitflags.workspace = true
-collections.workspace = true
-db.workspace = true
-editor.workspace = true
-file_icons.workspace = true
-fs.workspace = true
-futures.workspace = true
-gpui.workspace = true
-language.workspace = true
-log.workspace = true
-menu.workspace = true
-multi_buffer.workspace = true
-picker.workspace = true
-picker_preview.workspace = true
-project.workspace = true
-regex.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-smol.workspace = true
-text.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
-itertools.workspace = true
-ztracing.workspace = true
-tracing.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-editor = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-language = { workspace = true, features = ["test-support"] }
-lsp.workspace = true
-pretty_assertions.workspace = true
-proto.workspace = true
-unindent.workspace = true
-util_macros.workspace = true
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.any_vec]
+version = "0.14"
+
+[dependencies.bitflags]
+version = "2.6.0"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.multi_buffer]
+path = "../multi_buffer"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.picker_preview]
+path = "../picker_preview"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.ztracing]
+path = "../ztracing"
+
+[dependencies.tracing]
+version = "0.1.40"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.lsp]
+path = "../lsp"
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.proto]
+path = "../proto"
+
+[dev-dependencies.unindent]
+version = "0.2.0"
+
+[dev-dependencies.util_macros]
+path = "../util_macros"
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

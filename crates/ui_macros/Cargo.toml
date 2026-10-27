@@ -1,9 +1,13 @@
 [package]
 name = "ui_macros"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,10 +17,16 @@ path = "src/ui_macros.rs"
 proc-macro = true
 test = false
 
-[dependencies]
-quote.workspace = true
-syn = { workspace = true, features = ["derive", "parsing", "printing"] }
+[dependencies.quote]
+version = "1.0.9"
 
-[dev-dependencies]
-component.workspace = true
-ui.workspace = true
+[dependencies.syn]
+version = "2.0"
+default-features = false
+features = ["proc-macro", "derive", "parsing", "printing"]
+
+[dev-dependencies.component]
+path = "../component"
+
+[dev-dependencies.ui]
+path = "../ui"

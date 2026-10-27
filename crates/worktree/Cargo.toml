@@ -1,9 +1,16 @@
 [package]
 name = "worktree"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["tracing"]
 
 [lib]
 path = "src/worktree.rs"
@@ -18,58 +25,145 @@ path = "tests/integration/worktree_tests.rs"
 workspace = true
 
 [features]
-test-support = [
-    "gpui/test-support",
+test-support = ["gpui/test-support", "language/test-support", "pretty_assertions", "settings/test-support", "text/test-support", "util/test-support"]
 
-    "language/test-support",
-    "pretty_assertions",
-    "settings/test-support",
-    "text/test-support",
-    "util/test-support",
-]
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dependencies]
-anyhow.workspace = true
-async-channel.workspace = true
-async-lock.workspace = true
-clock.workspace = true
-collections.workspace = true
-encoding_rs.workspace = true
-file_content.workspace = true
-fs.workspace = true
-futures.workspace = true
-futures-lite.workspace = true
-fuzzy.workspace = true
-git.workspace = true
-gpui.workspace = true
-ignore.workspace = true
-language.workspace = true
-log.workspace = true
-parking_lot.workspace = true
-paths.workspace = true
-postage.workspace = true
-pretty_assertions = { workspace = true, optional = true }
-rpc = { workspace = true, features = ["gpui"] }
-settings.workspace = true
-smallvec.workspace = true
-sum_tree.workspace = true
-text.workspace = true
-tracing.workspace = true
-util.workspace = true
-ztracing.workspace = true
+[dependencies.async-channel]
+version = "2.5"
+default-features = false
 
-[dev-dependencies]
-clock = { workspace = true, features = ["test-support"] }
-collections = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-paths = { workspace = true, features = ["test-support"] }
-rand.workspace = true
-rpc = { workspace = true, features = ["test-support"] }
-serde_json.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-util = { workspace = true, features = ["test-support"] }
-worktree = { workspace = true, features = ["test-support"] }
-zlog.workspace = true
+[dependencies.async-lock]
+version = "3.4"
+default-features = false
 
-[package.metadata.cargo-shear]
-ignored = ["tracing"]
+[dependencies.clock]
+path = "../clock"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.encoding_rs]
+version = "0.8"
+
+[dependencies.file_content]
+path = "../file_content"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.futures-lite]
+version = "2"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.git]
+path = "../git"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.ignore]
+version = "0.4.22"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.postage]
+version = "0.5"
+default-features = false
+
+[dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+optional = true
+
+[dependencies.rpc]
+path = "../rpc"
+features = ["gpui"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.tracing]
+version = "0.1.40"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.ztracing]
+path = "../ztracing"
+
+[dev-dependencies.clock]
+path = "../clock"
+features = ["test-support"]
+
+[dev-dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.paths]
+path = "../paths"
+features = ["test-support"]
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dev-dependencies.rpc]
+path = "../rpc"
+features = ["test-support"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.worktree]
+path = ""
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"

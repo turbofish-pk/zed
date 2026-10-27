@@ -1,9 +1,13 @@
 [package]
 name = "paths"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,8 +19,14 @@ test-support = []
 path = "src/paths.rs"
 doctest = false
 
-[dependencies]
-const_format.workspace = true
-dirs.workspace = true
-ignore.workspace = true
-util.workspace = true
+[dependencies.const_format]
+version = "0.2"
+
+[dependencies.dirs]
+version = "6.0"
+
+[dependencies.ignore]
+version = "0.4.22"
+
+[dependencies.util]
+path = "../util"

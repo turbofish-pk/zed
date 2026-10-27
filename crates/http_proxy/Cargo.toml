@@ -1,9 +1,13 @@
 [package]
 name = "http_proxy"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,22 +17,36 @@ path = "src/http_proxy.rs"
 doctest = false
 
 [features]
-# Compiles in the `ZED_SANDBOX_PROXY_ALLOW_LOCAL_IPS` escape hatch that lets the
-# proxy reach loopback/private/link-local addresses. This disables the proxy's
-# DNS-rebinding/SSRF protection, so it must NEVER be enabled in a real Zed
-# build (debug or release) — it exists solely for the NixOS sandbox integration
-# tests, whose echo servers live on the VM's private network. Enabled only via
-# `sandbox/nixos-test` when building `bwrap_test_helper`.
 nixos-integration-tests = []
 
-[dependencies]
-anyhow.workspace = true
-base64.workspace = true
-futures.workspace = true
-httparse.workspace = true
-idna.workspace = true
-log = { workspace = true, features = ["serde"] }
-percent-encoding.workspace = true
-proxyvars.workspace = true
-thiserror.workspace = true
-url.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.base64]
+version = "0.22"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.httparse]
+version = "1.10"
+
+[dependencies.idna]
+version = "1.0"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
+
+[dependencies.percent-encoding]
+version = "2.3.2"
+
+[dependencies.proxyvars]
+version = "0.2"
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.url]
+version = "2.2"

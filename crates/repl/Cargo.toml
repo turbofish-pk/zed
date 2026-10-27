@@ -1,9 +1,13 @@
 [package]
 name = "repl"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,66 +19,208 @@ test-support = []
 path = "src/repl.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-async-dispatcher.workspace = true
-async-task.workspace = true
-async-tungstenite = { workspace = true, features = ["tokio", "tokio-rustls-manual-roots", "tokio-runtime"] }
-base64.workspace = true
-client.workspace = true
-collections.workspace = true
-command_palette_hooks.workspace = true
-editor.workspace = true
-feature_flags.workspace = true
-file_icons.workspace = true
-futures.workspace = true
-gpui.workspace = true
-html_to_markdown.workspace = true
-http_client.workspace = true
-image.workspace = true
-jupyter-websocket-client.workspace = true
-jupyter-protocol.workspace = true
-language.workspace = true
-log.workspace = true
-markdown.workspace = true
-menu.workspace = true
-multi_buffer.workspace = true
-nbformat.workspace = true
-project.workspace = true
-remote.workspace = true
-runtimelib.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-shlex.workspace = true
-smol.workspace = true
-telemetry.workspace = true
-terminal.workspace = true
-terminal_view.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-util.workspace = true
-uuid.workspace = true
-workspace.workspace = true
-picker.workspace = true
-zed_actions.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-async-trait.workspace = true
-editor = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-http_client = { workspace = true, features = ["test-support"] }
-indoc.workspace = true
-language = { workspace = true, features = ["test-support"] }
-languages = { workspace = true, features = ["test-support"] }
-project = { workspace = true, features = ["test-support"] }
-settings = { workspace = true, features = ["test-support"] }
-task.workspace = true
-terminal_view = { workspace = true, features = ["test-support"] }
-theme = { workspace = true, features = ["test-support"] }
-tree-sitter-md.workspace = true
-tree-sitter-typescript.workspace = true
-tree-sitter-python.workspace = true
-workspace = { workspace = true, features = ["test-support"] }
-util = { workspace = true, features = ["test-support"] }
+[dependencies.async-dispatcher]
+version = "0.1"
+
+[dependencies.async-task]
+version = "4.7"
+
+[dependencies.async-tungstenite]
+version = "0.33"
+features = ["tokio", "tokio-rustls-manual-roots", "tokio-runtime"]
+
+[dependencies.base64]
+version = "0.22"
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.command_palette_hooks]
+path = "../command_palette_hooks"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.feature_flags]
+path = "../feature_flags"
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.html_to_markdown]
+path = "../html_to_markdown"
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.image]
+version = "0.25.1"
+default-features = false
+features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
+
+[dependencies.jupyter-websocket-client]
+version = "1.1.0"
+
+[dependencies.jupyter-protocol]
+version = "1.4.0"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.markdown]
+path = "../markdown"
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.multi_buffer]
+path = "../multi_buffer"
+
+[dependencies.nbformat]
+version = "1.2.0"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.remote]
+path = "../remote"
+
+[dependencies.runtimelib]
+version = "1.4.0"
+default-features = false
+features = ["async-dispatcher-runtime", "aws-lc-rs"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.shlex]
+version = "2.0"
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.terminal]
+path = "../terminal"
+
+[dependencies.terminal_view]
+path = "../terminal_view"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde"]
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.async-trait]
+version = "0.1"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.http_client]
+path = "../http_client"
+features = ["test-support"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.languages]
+path = "../languages"
+features = ["test-support"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.task]
+path = "../task"
+
+[dev-dependencies.terminal_view]
+path = "../terminal_view"
+features = ["test-support"]
+
+[dev-dependencies.theme]
+path = "../theme"
+features = ["test-support"]
+
+[dev-dependencies.tree-sitter-md]
+git = "https://github.com/zed-industries/tree-sitter-markdown"
+rev = "b596e737286780d7bfa9fcddceaeeb754574b352"
+
+[dev-dependencies.tree-sitter-typescript]
+git = "https://github.com/zed-industries/tree-sitter-typescript"
+rev = "e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899"
+
+[dev-dependencies.tree-sitter-python]
+version = "0.25"
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]

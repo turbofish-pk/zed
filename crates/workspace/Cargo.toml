@@ -1,9 +1,13 @@
 [package]
 name = "workspace"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,78 +17,210 @@ path = "src/workspace.rs"
 doctest = false
 
 [features]
-test-support = [
-    "client/test-support",
-    "http_client/test-support",
-    "db/test-support",
-    "project/test-support",
-    "remote/test-support",
-    "session/test-support",
-    "settings/test-support",
-    "gpui/test-support",
-    "fs/test-support",
-]
+test-support = ["client/test-support", "http_client/test-support", "db/test-support", "project/test-support", "remote/test-support", "session/test-support", "settings/test-support", "gpui/test-support", "fs/test-support"]
 
-[dependencies]
-any_vec.workspace = true
-agent_settings.workspace = true
-anyhow.workspace = true
-async-recursion.workspace = true
-client.workspace = true
-chrono.workspace = true
-clock.workspace = true
-collections.workspace = true
-component.workspace = true
-db.workspace = true
-dirs.workspace = true
-futures-lite.workspace = true
-fs.workspace = true
-futures.workspace = true
-git.workspace = true
-gpui.workspace = true
-http_client.workspace = true
-itertools.workspace = true
-language.workspace = true
-log.workspace = true
-menu.workspace = true
-markdown.workspace = true
-node_runtime.workspace = true
-parking_lot.workspace = true
-postage.workspace = true
-project.workspace = true
-release_channel.workspace = true
-remote.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-session.workspace = true
-settings.workspace = true
-smallvec.workspace = true
-sqlez.workspace = true
-strum.workspace = true
-task.workspace = true
-telemetry.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-ui_input.workspace = true
-url.workspace = true
-util.workspace = true
-uuid.workspace = true
-zed_actions.workspace = true
+[dependencies.any_vec]
+version = "0.14"
 
-[dev-dependencies]
-client = { workspace = true, features = ["test-support"] }
-db = { workspace = true, features = ["test-support"] }
-fs = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-project = { workspace = true, features = ["test-support"] }
-remote = { workspace = true, features = ["test-support"] }
-session = { workspace = true, features = ["test-support"] }
-settings = { workspace = true, features = ["test-support"] }
-http_client = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
-proptest.workspace = true
-proptest-derive.workspace = true
-tempfile.workspace = true
-zlog.workspace = true
+[dependencies.agent_settings]
+path = "../agent_settings"
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.async-recursion]
+version = "1.0.0"
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
+
+[dependencies.clock]
+path = "../clock"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.component]
+path = "../component"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.dirs]
+version = "6.0"
+
+[dependencies.futures-lite]
+version = "2"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.git]
+path = "../git"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.markdown]
+path = "../markdown"
+
+[dependencies.node_runtime]
+path = "../node_runtime"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.postage]
+version = "0.5"
+default-features = false
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.remote]
+path = "../remote"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.session]
+path = "../session"
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.sqlez]
+path = "../sqlez"
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.ui_input]
+path = "../ui_input"
+
+[dependencies.url]
+version = "2.2"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde"]
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.client]
+path = "../client"
+features = ["test-support"]
+
+[dev-dependencies.db]
+path = "../db"
+features = ["test-support"]
+
+[dev-dependencies.fs]
+path = "../fs"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.remote]
+path = "../remote"
+features = ["test-support"]
+
+[dev-dependencies.session]
+path = "../session"
+features = ["test-support"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.http_client]
+path = "../http_client"
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.proptest]
+version = "1.12.0"
+features = ["attr-macro"]
+
+[dev-dependencies.proptest-derive]
+version = "0.8.0"
+
+[dev-dependencies.tempfile]
+version = "3.20.0"
+
+[dev-dependencies.zlog]
+path = "../zlog"

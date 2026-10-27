@@ -1,13 +1,23 @@
 [package]
 name = "fs_benchmarks"
 version = "0.1.0"
-publish.workspace = true
-edition.workspace = true
 
-[dependencies]
-fs.workspace = true
-gpui.workspace = true
-gpui_platform.workspace = true
+[package.publish]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.gpui_platform]
+path = "../gpui_platform"
+default-features = false
 
 [lints]
 workspace = true

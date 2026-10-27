@@ -1,9 +1,13 @@
 [package]
 name = "go_to_line"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,26 +16,70 @@ workspace = true
 path = "src/go_to_line.rs"
 doctest = false
 
-[dependencies]
-editor.workspace = true
-gpui.workspace = true
-language.workspace = true
-menu.workspace = true
-multi_buffer.workspace = true
-settings.workspace = true
-text.workspace = true
-theme.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
+[dependencies.editor]
+path = "../editor"
 
-[dev-dependencies]
-editor = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-indoc.workspace = true
-language = { workspace = true, features = ["test-support"] }
-menu.workspace = true
-project = { workspace = true, features = ["test-support"] }
-rope.workspace = true
-serde_json.workspace = true
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.multi_buffer]
+path = "../multi_buffer"
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.menu]
+path = "../menu"
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.rope]
+path = "../rope"
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

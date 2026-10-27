@@ -1,9 +1,11 @@
 [package]
 name = "bench_metrics"
 version = "0.1.0"
-edition.workspace = true
 publish = false
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
 
 [lints]
 workspace = true
@@ -15,12 +17,16 @@ doctest = false
 [features]
 test-support = []
 
-[dependencies]
-anyhow.workspace = true
-criterion.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(unix)'.dependencies]
-libc.workspace = true
+[dependencies.criterion]
+version = "0.8.2"
+features = ["html_reports"]
 
-[target.'cfg(target_os = "linux")'.dependencies]
-perf-event.workspace = true
+[target."cfg(unix)".dependencies.libc]
+version = "0.2"
+
+[target.'cfg(target_os = "linux")'.dependencies.perf-event]
+package = "perf-event2"
+version = "0.7.4"

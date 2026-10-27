@@ -1,9 +1,16 @@
 [package]
 name = "settings_ui"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["component"]
 
 [lints]
 workspace = true
@@ -16,77 +23,231 @@ doctest = false
 default = []
 test-support = []
 
-[dependencies]
-agent.workspace = true
-agent_settings.workspace = true
-agent_skills.workspace = true
-anyhow.workspace = true
-audio.workspace = true
-client.workspace = true
-cloud_api_types.workspace = true
-component.workspace = true
-codestral.workspace = true
-collections.workspace = true
-context_server.workspace = true
-copilot.workspace = true
-copilot_ui.workspace = true
-cpal.workspace = true
-edit_prediction.workspace = true
-edit_prediction_ui.workspace = true
-editor.workspace = true
-extension.workspace = true
-extension_host.workspace = true
-fs.workspace = true
-feature_flags.workspace = true
-futures.workspace = true
-fuzzy.workspace = true
-gpui.workspace = true
-heck.workspace = true
-http_client.workspace = true
-http_proxy.workspace = true
-itertools.workspace = true
-language.workspace = true
-language_model.workspace = true
-log.workspace = true
-menu.workspace = true
-paths.workspace = true
-picker.workspace = true
-regex.workspace = true
-platform_title_bar.workspace = true
-project.workspace = true
-release_channel.workspace = true
-rodio.workspace = true
-schemars.workspace = true
-search.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-serde_yaml_ng.workspace = true
-settings.workspace = true
-shell_command_parser.workspace = true
-strum.workspace = true
-telemetry.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-url.workspace = true
-ui_input.workspace = true
-util.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
-zed_credentials_provider.workspace = true
+[dependencies.agent]
+path = "../agent"
 
-[dev-dependencies]
-credentials_provider = { workspace = true, features = ["test-support"] }
-fs = { workspace = true, features = ["test-support"] }
-futures.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-language_models = { workspace = true, features = ["test-support"] }
-paths.workspace = true
-pretty_assertions.workspace = true
-project = { workspace = true, features = ["test-support"] }
-serde_json.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-workspace = { workspace = true, features = ["test-support"] }
+[dependencies.agent_settings]
+path = "../agent_settings"
 
-[package.metadata.cargo-shear]
-ignored = ["component"]
+[dependencies.agent_skills]
+path = "../agent_skills"
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.audio]
+path = "../audio"
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.cloud_api_types]
+path = "../cloud_api_types"
+
+[dependencies.component]
+path = "../component"
+
+[dependencies.codestral]
+path = "../codestral"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.context_server]
+path = "../context_server"
+
+[dependencies.copilot]
+path = "../copilot"
+
+[dependencies.copilot_ui]
+path = "../copilot_ui"
+
+[dependencies.cpal]
+git = "https://github.com/RustAudio/cpal"
+rev = "e1612d5d98152f8dc2a62e1b51ef7cbf4f7f26b7"
+
+[dependencies.edit_prediction]
+path = "../edit_prediction"
+
+[dependencies.edit_prediction_ui]
+path = "../edit_prediction_ui"
+
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.extension_host]
+path = "../extension_host"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.feature_flags]
+path = "../feature_flags"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.heck]
+version = "0.5"
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.http_proxy]
+path = "../http_proxy"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.language_model]
+path = "../language_model"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.menu]
+path = "../menu"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.platform_title_bar]
+path = "../platform_title_bar"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.rodio]
+git = "https://github.com/RustAudio/rodio"
+rev = "3ee9745862279ce1d18db593155016e7ce024aeb"
+default-features = false
+features = ["wav", "playback", "wav_output", "recording"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.search]
+path = "../search"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.serde_yaml_ng]
+version = "0.10"
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.shell_command_parser]
+path = "../shell_command_parser"
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.url]
+version = "2.2"
+
+[dependencies.ui_input]
+path = "../ui_input"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dependencies.zed_credentials_provider]
+path = "../zed_credentials_provider"
+
+[dev-dependencies.credentials_provider]
+path = "../credentials_provider"
+features = ["test-support"]
+
+[dev-dependencies.fs]
+path = "../fs"
+features = ["test-support"]
+
+[dev-dependencies.futures]
+version = "0.3.34"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.language_models]
+path = "../language_models"
+features = ["test-support"]
+
+[dev-dependencies.paths]
+path = "../paths"
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.project]
+path = "../project"
+features = ["test-support"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.workspace]
+path = "../workspace"
+features = ["test-support"]

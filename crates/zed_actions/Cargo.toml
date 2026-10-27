@@ -1,9 +1,16 @@
 [package]
 name = "zed_actions"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["util"]
 
 [lints]
 workspace = true
@@ -12,11 +19,18 @@ workspace = true
 test = false
 doctest = false
 
-[dependencies]
-gpui.workspace = true
-schemars.workspace = true
-serde.workspace = true
-util.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
 
-[package.metadata.cargo-shear]
-ignored = ["util"]
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.util]
+path = "../util"

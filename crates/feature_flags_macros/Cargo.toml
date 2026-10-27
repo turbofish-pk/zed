@@ -1,9 +1,13 @@
 [package]
 name = "feature_flags_macros"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lib]
 path = "src/feature_flags_macros.rs"
@@ -13,7 +17,13 @@ doctest = false
 [lints]
 workspace = true
 
-[dependencies]
-proc-macro2.workspace = true
-quote.workspace = true
-syn = { workspace = true, features = ["derive", "parsing", "printing"] }
+[dependencies.proc-macro2]
+version = "1.0.93"
+
+[dependencies.quote]
+version = "1.0.9"
+
+[dependencies.syn]
+version = "2.0"
+default-features = false
+features = ["proc-macro", "derive", "parsing", "printing"]

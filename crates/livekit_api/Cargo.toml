@@ -1,10 +1,17 @@
 [package]
 name = "livekit_api"
 version = "0.1.0"
-edition.workspace = true
 description = "SDK for the LiveKit server API"
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["prost-types"]
 
 [lints]
 workspace = true
@@ -16,19 +23,43 @@ doctest = false
 [features]
 test-support = []
 
-[dependencies]
-anyhow.workspace = true
-async-trait.workspace = true
-jsonwebtoken = { workspace = true, features = ["aws_lc_rs"] }
-log = { workspace = true, features = ["serde"] }
-prost.workspace = true
-prost-types.workspace = true
-reqwest = { workspace = true, features = ["charset"] }
-serde.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[build-dependencies]
-prost-build.workspace = true
-protox.workspace = true
+[dependencies.async-trait]
+version = "0.1"
 
-[package.metadata.cargo-shear]
-ignored = ["prost-types"]
+[dependencies.jsonwebtoken]
+version = "10.0"
+default-features = false
+features = ["aws_lc_rs"]
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
+
+[dependencies.prost]
+version = "0.14"
+
+[dependencies.prost-types]
+version = "0.14"
+
+[dependencies.reqwest]
+git = "https://github.com/zed-industries/reqwest.git"
+rev = "33bc764aa15ff7b200bf7c93bd96e24878d53e14"
+default-features = false
+features = ["http2", "macos-system-configuration", "rustls-tls-native-roots", "socks", "stream", "charset"]
+package = "zed-reqwest"
+version = "0.12.15-zed"
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[build-dependencies.prost-build]
+version = "0.14"
+default-features = false
+
+[build-dependencies.protox]
+version = "0.9"

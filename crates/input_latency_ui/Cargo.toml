@@ -1,9 +1,13 @@
 [package]
 name = "input_latency_ui"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,11 +17,32 @@ path = "src/input_latency_ui.rs"
 test = false
 doctest = false
 
-[dependencies]
-chrono.workspace = true
-collections.workspace = true
-gpui = { workspace = true, features = ["profiler"] }
-hdrhistogram.workspace = true
-serde_json.workspace = true
-sysinfo.workspace = true
-telemetry.workspace = true
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["profiler"]
+
+[dependencies.hdrhistogram]
+version = "7"
+default-features = false
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.sysinfo]
+version = "0.39"
+default-features = false
+features = ["system"]
+
+[dependencies.telemetry]
+path = "../telemetry"

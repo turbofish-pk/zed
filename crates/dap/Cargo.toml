@@ -1,9 +1,13 @@
 [package]
 name = "dap"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,48 +17,123 @@ path = "src/dap.rs"
 doctest = false
 
 [features]
-test-support = [
-    "gpui/test-support",
-    "util/test-support",
-    "task/test-support",
-    "async-pipe",
-    "settings/test-support",
-]
+test-support = ["gpui/test-support", "util/test-support", "task/test-support", "async-pipe", "settings/test-support"]
 
-[dependencies]
-anyhow.workspace = true
-async-compression.workspace = true
-async-pipe = { workspace = true, optional = true }
-async-tar.workspace = true
-async-trait.workspace = true
-client.workspace = true
-collections.workspace = true
-dap-types.workspace = true
-fs.workspace = true
-futures.workspace = true
-gpui.workspace = true
-http_client.workspace = true
-language.workspace = true
-log.workspace = true
-node_runtime.workspace = true
-parking_lot.workspace = true
-paths.workspace = true
-proto.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-smallvec.workspace = true
-smol.workspace = true
-task.workspace = true
-telemetry.workspace = true
-util.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-async-pipe.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-settings = { workspace = true, features = ["test-support"] }
-task = { workspace = true, features = ["test-support"] }
+[dependencies.async-compression]
+version = "0.4"
+features = ["bzip2", "gzip", "futures-io"]
 
-util = { workspace = true, features = ["test-support"] }
-zlog.workspace = true
+[dependencies.async-pipe]
+git = "https://github.com/zed-industries/async-pipe-rs"
+rev = "82d00a04211cf4e1236029aa03e6b6ce2a74c553"
+optional = true
+
+[dependencies.async-tar]
+git = "https://github.com/zed-industries/async-tar"
+rev = "bd3ad6f89df9a9da7a8535958756d6bf465936a0"
+
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.dap-types]
+git = "https://github.com/zed-industries/dap-types"
+rev = "1b461b310481d01e02b2603c16d7144b926339f8"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.node_runtime]
+path = "../node_runtime"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.proto]
+path = "../proto"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.telemetry]
+path = "../telemetry"
+
+[dependencies.util]
+path = "../util"
+
+[dev-dependencies.async-pipe]
+git = "https://github.com/zed-industries/async-pipe-rs"
+rev = "82d00a04211cf4e1236029aa03e6b6ce2a74c553"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.task]
+path = "../task"
+features = ["test-support"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.zlog]
+path = "../zlog"

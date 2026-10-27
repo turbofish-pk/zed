@@ -1,9 +1,13 @@
 [package]
 name = "which_key"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,18 +16,42 @@ workspace = true
 path = "src/which_key.rs"
 doctest = false
 
-[dependencies]
-command_palette.workspace = true
-gpui.workspace = true
-settings.workspace = true
-theme_settings.workspace = true
-ui.workspace = true
-util.workspace = true
-vim_mode_setting.workspace = true
-workspace.workspace = true
-zed_actions.workspace = true
+[dependencies.command_palette]
+path = "../command_palette"
 
-[dev-dependencies]
-collections.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-theme.workspace = true
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.vim_mode_setting]
+path = "../vim_mode_setting"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dependencies.zed_actions]
+path = "../zed_actions"
+
+[dev-dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.theme]
+path = "../theme"

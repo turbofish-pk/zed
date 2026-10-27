@@ -1,16 +1,16 @@
 [package]
 name = "terminal"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
 
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
 [features]
-test-support = [
-    "collections/test-support",
-    "gpui/test-support",
-    "settings/test-support",
-]
+test-support = ["collections/test-support", "gpui/test-support", "settings/test-support"]
 
 [lints]
 workspace = true
@@ -19,39 +19,115 @@ workspace = true
 path = "src/terminal.rs"
 doctest = false
 
-[dependencies]
-async-channel.workspace = true
-alacritty_terminal.workspace = true
-anyhow.workspace = true
-collections.workspace = true
-futures.workspace = true
-futures-lite.workspace = true
-gpui.workspace = true
-itertools.workspace = true
-libc.workspace = true
-log.workspace = true
-regex.workspace = true
-release_channel.workspace = true
-schemars.workspace = true
-serde.workspace = true
-settings.workspace = true
-sysinfo.workspace = true
-task.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-thiserror.workspace = true
-url.workspace = true
-util.workspace = true
-urlencoding.workspace = true
-vte.workspace = true
-parking_lot.workspace = true
-percent-encoding.workspace = true
+[dependencies.async-channel]
+version = "2.5"
+default-features = false
 
-[target.'cfg(windows)'.dependencies]
-windows.workspace = true
+[dependencies.alacritty_terminal]
+git = "https://github.com/zed-industries/alacritty"
+rev = "4c129667ce56611becdc82de6e28218c80e2e88f"
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
-rand.workspace = true
-settings = { workspace = true, features = ["test-support"] }
-util_macros.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.futures-lite]
+version = "2"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.libc]
+version = "0.2"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.sysinfo]
+version = "0.39"
+default-features = false
+features = ["system"]
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.theme]
+path = "../theme"
+
+[dependencies.theme_settings]
+path = "../theme_settings"
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.url]
+version = "2.2"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.urlencoding]
+version = "2.1.2"
+
+[dependencies.vte]
+version = "0.15.0"
+features = ["ansi"]
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.percent-encoding]
+version = "2.3.2"
+
+[target."cfg(windows)".dependencies.windows]
+version = "0.62"
+features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_IO", "Win32_System_LibraryLoader", "Win32_System_Ole", "Win32_System_Threading", "Win32_System_Variant", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.util_macros]
+path = "../util_macros"

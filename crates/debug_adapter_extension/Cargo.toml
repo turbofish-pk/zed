@@ -2,19 +2,42 @@
 name = "debug_adapter_extension"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
-publish.workspace = true
-edition.workspace = true
 
-[dependencies]
-anyhow.workspace = true
-async-trait.workspace = true
-collections.workspace = true
-dap.workspace = true
-extension.workspace = true
-gpui.workspace = true
-serde_json.workspace = true
-util.workspace = true
-task.workspace = true
+[package.publish]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.dap]
+path = "../dap"
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.task]
+path = "../task"
 
 [lints]
 workspace = true

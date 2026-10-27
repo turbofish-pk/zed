@@ -1,9 +1,16 @@
 [package]
 name = "project"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["tracing"]
 
 [lints]
 workspace = true
@@ -18,116 +25,327 @@ required-features = ["test-support"]
 path = "tests/integration/project_tests.rs"
 
 [features]
-test-support = [
-    "buffer_diff/test-support",
-    "client/test-support",
-    "language/test-support",
-    "remote/test-support",
-    "settings/test-support",
-    "snippet_provider/test-support",
-    "text/test-support",
-    "prettier/test-support",
-    "worktree/test-support",
-    "gpui/test-support",
-    "dap/test-support",
-]
+test-support = ["buffer_diff/test-support", "client/test-support", "language/test-support", "remote/test-support", "settings/test-support", "snippet_provider/test-support", "text/test-support", "prettier/test-support", "worktree/test-support", "gpui/test-support", "dap/test-support"]
 
-[dependencies]
-aho-corasick.workspace = true
-anyhow.workspace = true
-askpass.workspace = true
-async-channel.workspace = true
-async-lock.workspace = true
-async-trait.workspace = true
-base64.workspace = true
-buffer_diff.workspace = true
-client.workspace = true
-clock.workspace = true
-collections.workspace = true
-context_server.workspace = true
-credentials_provider.workspace = true
-dap.workspace = true
-encoding_rs.workspace = true
-extension.workspace = true
-fancy-regex.workspace = true
-file_content.workspace = true
-fs.workspace = true
-futures.workspace = true
-fuzzy.workspace = true
-fuzzy_nucleo.workspace = true
-git.workspace = true
-git_hosting_providers.workspace = true
-globset.workspace = true
-gpui.workspace = true
-http_client = { workspace = true, features = ["github-download"] }
-image.workspace = true
-indexmap.workspace = true
-itertools.workspace = true
-language.workspace = true
-log.workspace = true
-lsp.workspace = true
-markdown.workspace = true
-node_runtime.workspace = true
-parking_lot.workspace = true
-path.workspace = true
-paths.workspace = true
-percent-encoding.workspace = true
-postage.workspace = true
-prettier.workspace = true
-rand.workspace = true
-regex.workspace = true
-release_channel.workspace = true
-remote.workspace = true
-rpc.workspace = true
-schemars.workspace = true
-semver.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-settings.workspace = true
-sha2.workspace = true
-shellexpand.workspace = true
-smallvec.workspace = true
-smol.workspace = true
-snippet.workspace = true
-snippet_provider.workspace = true
-sum_tree.workspace = true
-task.workspace = true
-tempfile.workspace = true
-terminal.workspace = true
-text.workspace = true
-toml.workspace = true
-tracing.workspace = true
-url.workspace = true
-util.workspace = true
-watch.workspace = true
-wax.workspace = true
-which.workspace = true
-worktree.workspace = true
-zed_credentials_provider.workspace = true
-zeroize.workspace = true
-zlog.workspace = true
-ztracing.workspace = true
+[dependencies.aho-corasick]
+version = "1.1"
 
-[dev-dependencies]
-client = { workspace = true, features = ["test-support"] }
-collections = { workspace = true, features = ["test-support"] }
-context_server = { workspace = true, features = ["test-support"] }
-buffer_diff = { workspace = true, features = ["test-support"] }
-dap = { workspace = true, features = ["test-support"] }
-fs = { workspace = true, features = ["test-support"] }
-gpui = { workspace = true, features = ["test-support"] }
-language = { workspace = true, features = ["test-support"] }
-lsp = { workspace = true, features = ["test-support"] }
-prettier = { workspace = true, features = ["test-support"] }
-pretty_assertions.workspace = true
-project = {workspace = true, features = ["test-support"]}
-rpc = { workspace = true, features = ["test-support"] }
-settings = { workspace = true, features = ["test-support"] }
-snippet_provider = { workspace = true, features = ["test-support"] }
-unindent.workspace = true
-util = { workspace = true, features = ["test-support"] }
-worktree = { workspace = true, features = ["test-support"] }
-remote = { workspace = true, features = ["test-support"] }
+[dependencies.anyhow]
+version = "1.0.86"
 
-[package.metadata.cargo-shear]
-ignored = ["tracing"]
+[dependencies.askpass]
+path = "../askpass"
+
+[dependencies.async-channel]
+version = "2.5"
+default-features = false
+
+[dependencies.async-lock]
+version = "3.4"
+default-features = false
+
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.base64]
+version = "0.22"
+
+[dependencies.buffer_diff]
+path = "../buffer_diff"
+
+[dependencies.client]
+path = "../client"
+
+[dependencies.clock]
+path = "../clock"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.context_server]
+path = "../context_server"
+
+[dependencies.credentials_provider]
+path = "../credentials_provider"
+
+[dependencies.dap]
+path = "../dap"
+
+[dependencies.encoding_rs]
+version = "0.8"
+
+[dependencies.extension]
+path = "../extension"
+
+[dependencies.fancy-regex]
+version = "0.19"
+
+[dependencies.file_content]
+path = "../file_content"
+
+[dependencies.fs]
+path = "../fs"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.fuzzy_nucleo]
+path = "../fuzzy_nucleo"
+
+[dependencies.git]
+path = "../git"
+
+[dependencies.git_hosting_providers]
+path = "../git_hosting_providers"
+
+[dependencies.globset]
+version = "0.4"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.http_client]
+path = "../http_client"
+features = ["github-download"]
+
+[dependencies.image]
+version = "0.25.1"
+default-features = false
+features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
+
+[dependencies.indexmap]
+version = "2.7.0"
+features = ["serde"]
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.lsp]
+path = "../lsp"
+
+[dependencies.markdown]
+path = "../markdown"
+
+[dependencies.node_runtime]
+path = "../node_runtime"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.path]
+path = "../path"
+
+[dependencies.paths]
+path = "../paths"
+
+[dependencies.percent-encoding]
+version = "2.3.2"
+
+[dependencies.postage]
+version = "0.5"
+default-features = false
+
+[dependencies.prettier]
+path = "../prettier"
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.release_channel]
+path = "../release_channel"
+
+[dependencies.remote]
+path = "../remote"
+
+[dependencies.rpc]
+path = "../rpc"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.sha2]
+version = "0.10"
+
+[dependencies.shellexpand]
+version = "3.1"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.snippet]
+path = "../snippet"
+
+[dependencies.snippet_provider]
+path = "../snippet_provider"
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.task]
+path = "../task"
+
+[dependencies.tempfile]
+version = "3.20.0"
+
+[dependencies.terminal]
+path = "../terminal"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.toml]
+version = "0.9"
+default-features = false
+features = ["std", "serde", "parse"]
+
+[dependencies.tracing]
+version = "0.1.40"
+
+[dependencies.url]
+version = "2.2"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.watch]
+path = "../watch"
+
+[dependencies.wax]
+version = "0.7"
+default-features = false
+
+[dependencies.which]
+version = "8"
+
+[dependencies.worktree]
+path = "../worktree"
+
+[dependencies.zed_credentials_provider]
+path = "../zed_credentials_provider"
+
+[dependencies.zeroize]
+version = "1.8"
+
+[dependencies.zlog]
+path = "../zlog"
+
+[dependencies.ztracing]
+path = "../ztracing"
+
+[dev-dependencies.client]
+path = "../client"
+features = ["test-support"]
+
+[dev-dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+features = ["test-support"]
+
+[dev-dependencies.context_server]
+path = "../context_server"
+features = ["test-support"]
+
+[dev-dependencies.buffer_diff]
+path = "../buffer_diff"
+features = ["test-support"]
+
+[dev-dependencies.dap]
+path = "../dap"
+features = ["test-support"]
+
+[dev-dependencies.fs]
+path = "../fs"
+features = ["test-support"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.language]
+path = "../language"
+features = ["test-support"]
+
+[dev-dependencies.lsp]
+path = "../lsp"
+features = ["test-support"]
+
+[dev-dependencies.prettier]
+path = "../prettier"
+features = ["test-support"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.project]
+path = ""
+features = ["test-support"]
+
+[dev-dependencies.rpc]
+path = "../rpc"
+features = ["test-support"]
+
+[dev-dependencies.settings]
+path = "../settings"
+features = ["test-support"]
+
+[dev-dependencies.snippet_provider]
+path = "../snippet_provider"
+features = ["test-support"]
+
+[dev-dependencies.unindent]
+version = "0.2.0"
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.worktree]
+path = "../worktree"
+features = ["test-support"]
+
+[dev-dependencies.remote]
+path = "../remote"
+features = ["test-support"]

@@ -1,9 +1,13 @@
 [package]
 name = "language_selector"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -12,21 +16,50 @@ workspace = true
 path = "src/language_selector.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-editor.workspace = true
-file_icons.workspace = true
-fuzzy.workspace = true
-gpui.workspace = true
-language.workspace = true
-open_path_prompt.workspace = true
-picker.workspace = true
-project.workspace = true
-settings.workspace = true
-ui.workspace = true
-util.workspace = true
-workspace.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-editor = { workspace = true, features = ["test-support"] }
-serde_json.workspace = true
+[dependencies.editor]
+path = "../editor"
+
+[dependencies.file_icons]
+path = "../file_icons"
+
+[dependencies.fuzzy]
+path = "../fuzzy"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.open_path_prompt]
+path = "../open_path_prompt"
+
+[dependencies.picker]
+path = "../picker"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.settings]
+path = "../settings"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dev-dependencies.editor]
+path = "../editor"
+features = ["test-support"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]

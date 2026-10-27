@@ -1,9 +1,13 @@
 [package]
 name = "ollama"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,11 +20,28 @@ doctest = false
 default = []
 schemars = ["dep:schemars"]
 
-[dependencies]
-anyhow.workspace = true
-futures.workspace = true
-http_client.workspace = true
-schemars = { workspace = true, optional = true }
-serde.workspace = true
-serde_json.workspace = true
-settings_content.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+optional = true
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.settings_content]
+path = "../settings_content"

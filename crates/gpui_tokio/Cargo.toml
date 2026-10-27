@@ -1,9 +1,13 @@
 [package]
 name = "gpui_tokio"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -13,8 +17,16 @@ path = "src/gpui_tokio.rs"
 doctest = false
 test = false
 
-[dependencies]
-anyhow.workspace = true
-gpui.workspace = true
-gpui_util.workspace = true
-tokio = { workspace = true, features = ["rt-multi-thread"] }
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.gpui_util]
+path = "../gpui_util"
+
+[dependencies.tokio]
+version = "1"
+features = ["rt-multi-thread"]

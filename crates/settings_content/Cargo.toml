@@ -1,9 +1,13 @@
 [package]
 name = "settings_content"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -14,19 +18,59 @@ path = "src/settings_content.rs"
 [features]
 default = []
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-derive_more = { workspace = true, features = ["from"] }
-gpui.workspace = true
-language_model_core.workspace = true
-log.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-serde_json_lenient.workspace = true
-serde_path_to_error.workspace = true
-settings_json.workspace = true
-settings_macros.workspace = true
-strum.workspace = true
-util.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.derive_more]
+version = "2.1"
+features = ["deref", "deref_mut", "from_str", "from"]
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language_model_core]
+path = "../language_model_core"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.serde_json_lenient]
+version = "0.2"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.serde_path_to_error]
+version = "0.1.17"
+
+[dependencies.settings_json]
+path = "../settings_json"
+default-features = false
+
+[dependencies.settings_macros]
+path = "../settings_macros"
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.util]
+path = "../util"

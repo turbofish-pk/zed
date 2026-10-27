@@ -1,7 +1,6 @@
 [package]
 name = "gpui"
 version = "0.2.2"
-edition.workspace = true
 authors = ["Nathan Sobo <nathan@zed.dev>"]
 description = "Zed's GPU-accelerated UI framework"
 repository = "https://github.com/zed-industries/zed"
@@ -13,198 +12,382 @@ keywords = ["desktop", "gui", "immediate"]
 categories = ["gui"]
 autobenches = false
 
+[package.edition]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["getrandom", "objc2", "objc2-metal"]
+ignored-paths = ["src/_ownership_and_data_flow.rs", "benches/focus_cleanup.rs"]
 
 [lints]
 workspace = true
 
 [features]
 default = ["font-kit", "wayland", "x11", "windows-manifest"]
-test-support = [
-    "collections/test-support",
-    "http_client/test-support",
-    "wayland",
-    "x11",
-    "proptest",
-    "dep:futures-concurrency",
-    "dep:postage",
-    "dep:web-time",
-]
+test-support = ["collections/test-support", "http_client/test-support", "wayland", "x11", "proptest", "dep:futures-concurrency", "dep:postage", "dep:web-time"]
 bench-support = ["profiler", "dep:criterion", "dep:bench_metrics"]
-# Preserve the published feature name while consumers migrate to `bench-support`.
 bench = ["bench-support"]
 inspector = ["gpui_macros/inspector"]
-# Tracks every entity handle so tests can assert nothing leaked. Also enabled
-# by setting `GPUI_LEAK_DETECTION` when building; see `build.rs`.
 leak-detection = []
 font-kit = []
 wayland = []
-x11 = [
-    "scap?/x11",
-]
-screen-capture = [
-    "scap",
-]
+x11 = ["scap?/x11"]
+screen-capture = ["scap"]
 windows-manifest = ["dep:embed-resource"]
 profiler = ["dep:hdrhistogram"]
 stacker = ["dep:stacksafe"]
-hot-reload = [
-    "dep:async-tungstenite",
-    "dep:dioxus-cli-config",
-    "dep:dioxus-devtools-types",
-    "dep:smol",
-    "dep:subsecond",
-]
+hot-reload = ["dep:async-tungstenite", "dep:dioxus-cli-config", "dep:dioxus-devtools-types", "dep:smol", "dep:subsecond"]
 
 [lib]
 path = "src/gpui.rs"
 
 [dependencies]
-accesskit.workspace = true
-anyhow.workspace = true
-async-task.workspace = true
-backtrace.workspace = true
-bitflags.workspace = true
-
-collections.workspace = true
-bench_metrics = { workspace = true, optional = true }
-criterion = { workspace = true, optional = true }
-ctor.workspace = true
-derive_more = { workspace = true, features = ["add", "add_assign", "mul", "mul_assign", "not"] }
-etagere.workspace = true
-futures.workspace = true
-futures-concurrency = { workspace = true, optional = true }
-gpui_macros.workspace = true
-gpui_shared_string.workspace = true
-http_client.workspace = true
-image.workspace = true
-inventory.workspace = true
-itertools.workspace = true
-log.workspace = true
 num_cpus = "1.13"
 parking = "2.0.0"
-parking_lot.workspace = true
-postage = { workspace = true, features = ["blocking"], optional = true }
-proptest = { workspace = true, optional = true }
-chrono = { workspace = true, default-features = true }
-profiling.workspace = true
-rand = { workspace = true, features = ["small_rng", "thread_rng"] }
-raw-window-handle.workspace = true
-regex = { workspace = true, default-features = true }
-refineable.workspace = true
-scheduler.workspace = true
-resvg.workspace = true
-usvg.workspace = true
 ttf-parser = "0.25"
-schemars = { workspace = true, features = ["derive"] }
 seahash = "4.1"
-serde = { workspace = true, features = ["derive"] }
-serde_json.workspace = true
-slotmap.workspace = true
-smallvec.workspace = true
-stacksafe = { workspace = true, optional = true }
-strum.workspace = true
-sum_tree.workspace = true
-taffy = { workspace = true, features = [
-    "std",
-    "taffy_tree",
-    "flexbox",
-    "grid",
-    "block_layout",
-    "float_layout",
-    "content_size",
-] }
-thiserror.workspace = true
-gpui_util.workspace = true
-hdrhistogram = { workspace = true, optional = true }
 waker-fn = "1.2.0"
 lyon = "1.0"
 pin-project = "1.1.10"
-spin.workspace = true
-url.workspace = true
-uuid = { workspace = true, features = ["v4"] }
-web-time = { workspace = true, optional = true }
-heapless.workspace = true
 
-[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
-async-channel.workspace = true
+[dependencies.accesskit]
+version = "0.24.0"
+features = ["enumn"]
 
-[target.'cfg(not(all(target_arch = "wasm32", target_os = "unknown")))'.dependencies]
-async-channel = { workspace = true, features = ["std"] }
+[dependencies.anyhow]
+version = "1.0.86"
 
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-pollster.workspace = true
+[dependencies.async-task]
+version = "4.7"
 
-[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows", target_os = "ios"))'.dependencies]
-async-tungstenite = { workspace = true, optional = true }
-dioxus-cli-config = { version = "=0.7.10", optional = true }
-dioxus-devtools-types = { version = "=0.7.10", optional = true }
-smol = { workspace = true, optional = true }
-subsecond = { version = "=0.7.10", optional = true }
+[dependencies.backtrace]
+version = "0.3"
 
-[target.'cfg(target_family = "wasm")'.dependencies]
-getrandom = { version = "0.3.4", features = ["wasm_js"] }
-uuid = { workspace = true, features = ["js"] }
+[dependencies.bitflags]
+version = "2.6.0"
 
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
 
-[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-objc2-core-foundation.workspace = true
-objc2-core-video = { workspace = true, features = ["CVPixelBuffer"] }
+[dependencies.bench_metrics]
+path = "../bench_metrics"
+optional = true
 
-[target.'cfg(target_os = "macos")'.dependencies]
-log.workspace = true
-objc2 = { workspace = true, optional = true }
-objc2-metal = { version = "0.3", optional = true }
+[dependencies.criterion]
+version = "0.8.2"
+features = ["html_reports"]
+optional = true
 
-[target.'cfg(any(target_os = "linux", target_os = "freebsd", target_os = "windows"))'.dependencies]
-scap = { workspace = true, optional = true }
+[dependencies.ctor]
+version = "1.0.12"
 
-[target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
-libc.workspace = true
+[dependencies.derive_more]
+version = "2.1"
+features = ["deref", "deref_mut", "from_str", "add", "add_assign", "mul", "mul_assign", "not"]
 
+[dependencies.etagere]
+version = "0.2"
 
-[target.'cfg(target_os = "windows")'.dependencies]
-windows = { workspace = true, features = [
-    "Win32_System_Power",
-    "Win32_System_RemoteDesktop",
-    "Win32_System_WindowsProgramming",
-] }
+[dependencies.futures]
+version = "0.3.34"
 
+[dependencies.futures-concurrency]
+version = "7.7.1"
+optional = true
 
-[dev-dependencies]
-backtrace.workspace = true
-bench_metrics = { workspace = true, features = ["test-support"] }
-collections = { workspace = true, features = ["test-support"] }
-env_logger.workspace = true
-futures-concurrency.workspace = true
-postage = { workspace = true, features = ["blocking"] }
-web-time.workspace = true
-gpui_platform = { workspace = true, features = ["font-kit", "wayland", "x11"] }
-gpui_util.workspace = true
-lyon = { version = "1.0", features = ["extra"] }
-rand = { workspace = true, default-features = true }
-scheduler = { workspace = true, features = ["test-support"] }
-unicode-segmentation.workspace = true
-util_macros.workspace = true
+[dependencies.gpui_macros]
+path = "../gpui_macros"
 
-[target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
-http_client = { workspace = true, features = ["test-support"] }
-proptest.workspace = true
-reqwest_client = { workspace = true, features = ["test-support"] }
+[dependencies.gpui_shared_string]
+path = "../gpui_shared_string"
 
-[target.'cfg(target_family = "wasm")'.dev-dependencies]
-wasm-bindgen.workspace = true
-web-sys.workspace = true
+[dependencies.http_client]
+path = "../http_client"
 
-[build-dependencies]
-embed-resource = { version = "3.0", optional = true }
+[dependencies.image]
+version = "0.25.1"
+default-features = false
+features = ["bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "rayon", "tga", "tiff", "webp"]
 
-[package.metadata.cargo-shear]
-ignored = [
-    "getrandom",
-    "objc2",
-    "objc2-metal",
-]
-ignored-paths = ["src/_ownership_and_data_flow.rs", "benches/focus_cleanup.rs"]
+[dependencies.inventory]
+version = "0.3.19"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.postage]
+version = "0.5"
+default-features = false
+features = ["blocking"]
+optional = true
+
+[dependencies.proptest]
+version = "1.12.0"
+features = ["attr-macro"]
+optional = true
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
+
+[dependencies.profiling]
+version = "1"
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng", "small_rng", "thread_rng"]
+
+[dependencies.raw-window-handle]
+version = "0.6"
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.refineable]
+path = "../refineable"
+
+[dependencies.scheduler]
+path = "../scheduler"
+
+[dependencies.resvg]
+version = "0.46.0"
+default-features = false
+features = ["text", "system-fonts", "memmap-fonts", "raster-images"]
+
+[dependencies.usvg]
+version = "0.46.0"
+default-features = false
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2", "derive"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc", "derive"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.slotmap]
+version = "1.0.6"
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.stacksafe]
+version = "1.0"
+optional = true
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.taffy]
+version = "=0.15.0"
+default-features = false
+features = ["std", "taffy_tree", "flexbox", "grid", "block_layout", "float_layout", "content_size"]
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.gpui_util]
+path = "../gpui_util"
+
+[dependencies.hdrhistogram]
+version = "7"
+default-features = false
+optional = true
+
+[dependencies.spin]
+version = "0.10"
+default-features = false
+features = ["mutex", "spin_mutex", "lock_api"]
+
+[dependencies.url]
+version = "2.2"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde", "v4"]
+
+[dependencies.web-time]
+version = "1.1.0"
+optional = true
+
+[dependencies.heapless]
+version = "0.9.2"
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies.async-channel]
+version = "2.5"
+default-features = false
+
+[target.'cfg(not(all(target_arch = "wasm32", target_os = "unknown")))'.dependencies.async-channel]
+version = "2.5"
+default-features = false
+features = ["std"]
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.pollster]
+version = "0.4.0"
+
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies.http_client]
+path = "../http_client"
+features = ["test-support"]
+
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies.proptest]
+version = "1.12.0"
+features = ["attr-macro"]
+
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies.reqwest_client]
+path = "../reqwest_client"
+features = ["test-support"]
+
+[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows", target_os = "ios"))'.dependencies.async-tungstenite]
+version = "0.33"
+optional = true
+
+[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows", target_os = "ios"))'.dependencies.dioxus-cli-config]
+version = "=0.7.10"
+optional = true
+
+[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows", target_os = "ios"))'.dependencies.dioxus-devtools-types]
+version = "=0.7.10"
+optional = true
+
+[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows", target_os = "ios"))'.dependencies.smol]
+version = "2.0"
+optional = true
+
+[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows", target_os = "ios"))'.dependencies.subsecond]
+version = "=0.7.10"
+optional = true
+
+[target.'cfg(target_family = "wasm")'.dependencies.getrandom]
+version = "0.3.4"
+features = ["wasm_js"]
+
+[target.'cfg(target_family = "wasm")'.dependencies.uuid]
+version = "1.1"
+features = ["serde", "js"]
+
+[target.'cfg(target_family = "wasm")'.dev-dependencies.wasm-bindgen]
+version = "0.2.120"
+
+[target.'cfg(target_family = "wasm")'.dev-dependencies.web-sys]
+version = "0.3"
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.objc2-core-foundation]
+version = "=0.3.2"
+default-features = false
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.objc2-core-video]
+version = "=0.3.2"
+default-features = false
+features = ["CVBuffer", "CVImageBuffer", "CVPixelBuffer"]
+
+[target.'cfg(target_os = "macos")'.dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2]
+version = "0.6"
+optional = true
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-metal]
+version = "0.3"
+optional = true
+
+[target.'cfg(any(target_os = "linux", target_os = "freebsd", target_os = "windows"))'.dependencies.scap]
+git = "https://github.com/zed-industries/scap"
+rev = "b5c86ec58dd4b6b7732bf6ac8be03d6b1f190a82"
+default-features = false
+package = "zed-scap"
+version = "0.0.8-zed"
+optional = true
+
+[target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies.libc]
+version = "0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies.windows]
+version = "0.62"
+features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_IO", "Win32_System_LibraryLoader", "Win32_System_Ole", "Win32_System_Threading", "Win32_System_Variant", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Win32_System_Power", "Win32_System_RemoteDesktop", "Win32_System_WindowsProgramming"]
+
+[dev-dependencies.backtrace]
+version = "0.3"
+
+[dev-dependencies.bench_metrics]
+path = "../bench_metrics"
+features = ["test-support"]
+
+[dev-dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+features = ["test-support"]
+
+[dev-dependencies.env_logger]
+version = "0.11"
+
+[dev-dependencies.futures-concurrency]
+version = "7.7.1"
+
+[dev-dependencies.postage]
+version = "0.5"
+default-features = false
+features = ["blocking"]
+
+[dev-dependencies.web-time]
+version = "1.1.0"
+
+[dev-dependencies.gpui_platform]
+path = "../gpui_platform"
+default-features = false
+features = ["font-kit", "wayland", "x11"]
+
+[dev-dependencies.gpui_util]
+path = "../gpui_util"
+
+[dev-dependencies.lyon]
+version = "1.0"
+features = ["extra"]
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dev-dependencies.scheduler]
+path = "../scheduler"
+features = ["test-support"]
+
+[dev-dependencies.unicode-segmentation]
+version = "1.10"
+
+[dev-dependencies.util_macros]
+path = "../util_macros"
+
+[build-dependencies.embed-resource]
+version = "3.0"
+optional = true
 
 [[example]]
 name = "hello_world"
@@ -245,7 +428,6 @@ path = "examples/set_menus.rs"
 [[example]]
 name = "system_notifications"
 path = "examples/system_notifications.rs"
-
 
 [[example]]
 name = "shadow"

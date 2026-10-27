@@ -1,9 +1,13 @@
 [package]
 name = "component_preview"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -17,35 +21,90 @@ doctest = false
 default = []
 test-support = ["db/test-support"]
 
-[dependencies]
-anyhow.workspace = true
-client.workspace = true
-collections.workspace = true
-component.workspace = true
-db.workspace = true
-gpui.workspace = true
-language.workspace = true
-log.workspace = true
-notifications.workspace = true
-project.workspace = true
-ui.workspace = true
-ui_input.workspace = true
-workspace.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-assets.workspace = true
-editor.workspace = true
-env_logger.workspace = true
-fs.workspace = true
-gpui_platform = { workspace = true, features = ["screen-capture", "font-kit", "wayland", "x11"] }
-node_runtime.workspace = true
-release_channel.workspace = true
-reqwest_client.workspace = true
-session.workspace = true
-settings.workspace = true
-theme.workspace = true
-theme_settings.workspace = true
-uuid.workspace = true
+[dependencies.client]
+path = "../client"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.component]
+path = "../component"
+
+[dependencies.db]
+path = "../db"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.language]
+path = "../language"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.notifications]
+path = "../notifications"
+
+[dependencies.project]
+path = "../project"
+
+[dependencies.ui]
+path = "../ui"
+
+[dependencies.ui_input]
+path = "../ui_input"
+
+[dependencies.workspace]
+path = "../workspace"
+
+[dev-dependencies.assets]
+path = "../assets"
+
+[dev-dependencies.editor]
+path = "../editor"
+
+[dev-dependencies.env_logger]
+version = "0.11"
+
+[dev-dependencies.fs]
+path = "../fs"
+
+[dev-dependencies.gpui_platform]
+path = "../gpui_platform"
+default-features = false
+features = ["screen-capture", "font-kit", "wayland", "x11"]
+
+[dev-dependencies.node_runtime]
+path = "../node_runtime"
+
+[dev-dependencies.release_channel]
+path = "../release_channel"
+
+[dev-dependencies.reqwest_client]
+path = "../reqwest_client"
+
+[dev-dependencies.session]
+path = "../session"
+
+[dev-dependencies.settings]
+path = "../settings"
+
+[dev-dependencies.theme]
+path = "../theme"
+
+[dev-dependencies.theme_settings]
+path = "../theme_settings"
+
+[dev-dependencies.uuid]
+version = "1.1"
+features = ["serde"]
 
 [[example]]
 name = "component_preview"

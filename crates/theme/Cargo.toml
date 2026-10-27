@@ -1,9 +1,13 @@
 [package]
 name = "theme"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,21 +20,60 @@ test-support = ["gpui/test-support", "syntax_theme/test-support"]
 path = "src/theme.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-collections.workspace = true
-gpui.workspace = true
-syntax_theme.workspace = true
-palette.workspace = true
-parking_lot.workspace = true
-refineable.workspace = true
-schemars.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-serde_json_lenient.workspace = true
-strum.workspace = true
-thiserror.workspace = true
-uuid.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-gpui = { workspace = true, features = ["test-support"] }
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.syntax_theme]
+path = "../syntax_theme"
+
+[dependencies.palette]
+version = "0.7.5"
+default-features = false
+features = ["std"]
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.refineable]
+path = "../refineable"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.serde_json_lenient]
+version = "0.2"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde"]
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]

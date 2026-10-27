@@ -1,9 +1,16 @@
 [package]
 name = "rope"
 version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
 license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["tracing"]
 
 [lints]
 workspace = true
@@ -12,27 +19,56 @@ workspace = true
 path = "src/rope.rs"
 doctest = false
 
-[dependencies]
-gpui_util.workspace = true
-heapless.workspace = true
-log.workspace = true
-rayon.workspace = true
-sum_tree.workspace = true
-unicode-segmentation.workspace = true
-ztracing.workspace = true
-tracing.workspace = true
+[dependencies.gpui_util]
+path = "../gpui_util"
 
-[dev-dependencies]
-ctor.workspace = true
-gpui = { workspace = true, features = ["test-support"] }
-rand.workspace = true
-util = { workspace = true, features = ["test-support"] }
-criterion.workspace = true
-zlog.workspace = true
+[dependencies.heapless]
+version = "0.9.2"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.rayon]
+version = "1.8"
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.unicode-segmentation]
+version = "1.10"
+
+[dependencies.ztracing]
+path = "../ztracing"
+
+[dependencies.tracing]
+version = "0.1.40"
+
+[dev-dependencies.ctor]
+version = "1.0.12"
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+features = ["test-support"]
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+
+[dev-dependencies.util]
+path = "../util"
+features = ["test-support"]
+
+[dev-dependencies.criterion]
+version = "0.8.2"
+features = ["html_reports"]
+
+[dev-dependencies.zlog]
+path = "../zlog"
 
 [[bench]]
 name = "rope_benchmark"
 harness = false
-
-[package.metadata.cargo-shear]
-ignored = ["tracing"]

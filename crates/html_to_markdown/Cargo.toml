@@ -5,9 +5,11 @@ description = "Convert HTML to Markdown"
 repository = "https://github.com/zed-industries/zed"
 documentation = "https://docs.rs/html_to_markdown"
 keywords = ["html", "markdown", "html-to-markdown"]
-edition.workspace = true
 publish = true
 license = "Apache-2.0"
+
+[package.edition]
+workspace = true
 
 [lints]
 workspace = true
@@ -16,12 +18,23 @@ workspace = true
 path = "src/html_to_markdown.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-html5ever.workspace = true
-markup5ever_rcdom.workspace = true
-regex = { workspace = true, features = ["unicode-perl"] }
+[dependencies.anyhow]
+version = "1.0.86"
 
-[dev-dependencies]
-indoc.workspace = true
-pretty_assertions.workspace = true
+[dependencies.html5ever]
+version = "0.39"
+
+[dependencies.markup5ever_rcdom]
+version = "0.39"
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf", "unicode-perl"]
+
+[dev-dependencies.indoc]
+version = "2"
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]

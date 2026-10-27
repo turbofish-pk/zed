@@ -1,31 +1,79 @@
 [package]
 name = "language_core"
 version = "0.1.0"
-edition.workspace = true
 publish = false
+
+[package.edition]
+workspace = true
 
 [lib]
 path = "src/language_core.rs"
 doctest = false
 
-[dependencies]
-anyhow.workspace = true
-bitflags.workspace = true
-collections.workspace = true
-gpui_shared_string.workspace = true
-gpui_util.workspace = true
-log.workspace = true
-lru.workspace = true
-parking_lot.workspace = true
-path.workspace = true
-regex = { workspace = true, default-features = true }
-schemars = { workspace = true, features = ["derive"] }
-serde = { workspace = true, features = ["derive"] }
-serde_json.workspace = true
-smallvec.workspace = true
-strum.workspace = true
-toml.workspace = true
-tree-sitter.workspace = true
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.bitflags]
+version = "2.6.0"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.gpui_shared_string]
+path = "../gpui_shared_string"
+
+[dependencies.gpui_util]
+path = "../gpui_util"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.lru]
+version = "0.16"
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.path]
+path = "../path"
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2", "derive"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc", "derive"]
+
+[dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
+
+[dependencies.toml]
+version = "0.9"
+default-features = false
+features = ["std", "serde", "parse"]
+
+[dependencies.tree-sitter]
+git = "https://github.com/tree-sitter/tree-sitter"
+rev = "803c6ebaac27d69e1808b45058482e868d073ceb"
 
 [features]
 test-support = []
