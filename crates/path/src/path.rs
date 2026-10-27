@@ -75,7 +75,7 @@ impl PathStyle {
         PathStyle::Windows
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     pub const fn local() -> Self {
         PathStyle::Unix
     }
@@ -725,7 +725,7 @@ mod tests {
         }
     }
 
-    #[cfg(unix)]
+    
     #[test]
     fn test_local_path_style_non_utf8() {
         use std::ffi::OsStr;

@@ -202,12 +202,12 @@ pub fn init(cx: &mut App) {
                         if room.is_sharing_screen() {
                             room.unshare_screen(true, cx).ok();
                         } else {
-                            #[cfg(target_os = "linux")]
+                            
                             let is_wayland = gpui::guess_compositor() == "Wayland";
                             #[cfg(not(target_os = "linux"))]
                             let is_wayland = false;
 
-                            #[cfg(target_os = "linux")]
+                            
                             {
                                 if is_wayland {
                                     room.share_screen_wayland(cx).detach_and_log_err(cx);

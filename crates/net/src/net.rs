@@ -12,7 +12,7 @@ mod util;
 pub use listener::*;
 #[cfg(target_os = "windows")]
 pub use socket::*;
-#[cfg(not(target_os = "windows"))]
+
 pub use std::os::unix::net::{UnixListener, UnixStream};
 #[cfg(target_os = "windows")]
 pub use stream::*;

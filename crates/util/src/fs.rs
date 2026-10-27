@@ -91,7 +91,7 @@ pub async fn move_folder_files_to_folder<P: AsRef<Path>>(
     Ok(())
 }
 
-#[cfg(unix)]
+
 /// Set the permissions for the given path so that the file becomes executable.
 /// This is a noop for non-unix platforms.
 pub async fn make_file_executable(path: &Path) -> std::io::Result<()> {

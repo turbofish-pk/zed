@@ -393,7 +393,7 @@ mod tests {
             gpui::Modifiers::control_shift(),
             "4".to_owned(),
         );
-        #[cfg(not(target_os = "windows"))]
+        
         let keystroke = KeybindingKeystroke::from_keystroke(
             Keystroke::parse("ctrl-x").expect("valid keystroke"),
         );

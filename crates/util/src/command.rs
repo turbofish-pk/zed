@@ -38,7 +38,7 @@ impl Command {
             cmd.creation_flags(CREATE_NO_WINDOW);
             Self(cmd)
         }
-        #[cfg(not(target_os = "windows"))]
+        
         Self(smol::process::Command::new(program))
     }
 

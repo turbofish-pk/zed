@@ -16,16 +16,7 @@ pub const AGENTS_DIR_NAME: &str = ".agents";
 /// Second segment of the skills directory path: `skills`.
 pub const SKILLS_DIR_NAME: &str = "skills";
 
-/// User-facing display form of the global skills directory path — i.e.
-/// what a human should see in messages and prompts, with the platform's
-/// native path separator and home-directory shorthand.
-///
-/// Windows doesn't recognize `~` as the home directory, so the env-var
-/// form is used there instead.
-#[cfg(target_os = "windows")]
-pub const GLOBAL_SKILLS_DIR_DISPLAY: &str =
-    concatcp!("%USERPROFILE%\\", AGENTS_DIR_NAME, "\\", SKILLS_DIR_NAME);
-#[cfg(not(target_os = "windows"))]
+
 pub const GLOBAL_SKILLS_DIR_DISPLAY: &str = concatcp!("~/", AGENTS_DIR_NAME, "/", SKILLS_DIR_NAME);
 
 /// Opaque identifier for the project scope a skill was loaded from.

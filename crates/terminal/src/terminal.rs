@@ -34,7 +34,7 @@ use theme::{ActiveTheme, Theme};
 use urlencoding;
 use util::{ResultExt as _, paths::PathStyle, truncate_and_trailoff};
 
-#[cfg(unix)]
+
 use std::os::unix::process::ExitStatusExt;
 use std::{
     borrow::Cow,
@@ -1779,7 +1779,7 @@ impl Terminal {
                 if self.vi_mode_enabled {
                     update_vi_cursor_for_scroll(term, *scroll);
                     if let Some(selection_head) = update_selection_to_vi_cursor(term) {
-                        #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+                        
                         if let Some(selection_text) = selection_text(term) {
                             cx.write_to_primary(ClipboardItem::new_string(selection_text));
                         }
@@ -1793,7 +1793,7 @@ impl Terminal {
                 trace!("Setting selection: selection={selection:?}");
                 set_term_selection(term, selection.as_ref());
 
-                #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+                
                 if let Some(selection_text) = selection_text(term) {
                     cx.write_to_primary(ClipboardItem::new_string(selection_text));
                 }
@@ -1812,7 +1812,7 @@ impl Terminal {
                 );
 
                 if update_term_selection(term, point, side) {
-                    #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+                    
                     if let Some(selection_text) = selection_text(term) {
                         cx.write_to_primary(ClipboardItem::new_string(selection_text));
                     }
@@ -2803,7 +2803,7 @@ impl Terminal {
                             .push_back(InternalEvent::SetSelection(Some(selection)));
                     }
                 }
-                #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+                
                 MouseButton::Middle => {
                     if mode == MouseInputMode::ReportToTerminal
                         && let Some(item) = cx.read_from_primary()
@@ -3311,7 +3311,7 @@ fn task_summary(task: &TaskState, exit_status: Option<ExitStatus>) -> (bool, Str
     let (success, task_line) = match exit_status {
         Some(status) => {
             let code = status.code();
-            #[cfg(unix)]
+            
             let signal = status.signal();
             #[cfg(not(unix))]
             let signal: Option<i32> = None;
@@ -3785,7 +3785,7 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     fn init_test(cx: &mut TestAppContext) {
         cx.update(|cx| {
             let settings_store = settings::SettingsStore::test(cx);
@@ -3848,7 +3848,7 @@ mod tests {
     /// headless hosts (e.g. the eval CLI) where PTY allocation fails with
     /// `ENOTTY`. The command runs as a plain subprocess whose piped output is
     /// pumped into the emulator.
-    #[cfg(not(target_os = "windows"))]
+    
     async fn build_test_subprocess_terminal(
         cx: &mut TestAppContext,
         program: String,
@@ -3913,7 +3913,7 @@ mod tests {
     /// Regression test for the agent terminal failing with `Not a tty (os error
     /// 25)` in headless/eval sandboxes: a `no_pty` task terminal must run
     /// without a PTY, capture stdout, and report its exit status.
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test]
     async fn test_no_pty_task_terminal_captures_output(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -4101,7 +4101,7 @@ mod tests {
         });
     }
 
-    #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+    
     #[gpui::test]
     async fn test_local_selection_does_not_paste_primary_selection(cx: &mut TestAppContext) {
         let terminal = init_terminal_test(cx, b"hello world\r\n");
@@ -4320,7 +4320,7 @@ mod tests {
         );
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn test_foreground_process_command_tracks_path_command(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -4408,7 +4408,7 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test(iterations = 10)]
     async fn test_terminal_closes_after_nonzero_exit(cx: &mut TestAppContext) {
         init_test(cx);
@@ -4524,7 +4524,7 @@ mod tests {
                 );
                 #[cfg(target_os = "windows")]
                 assert_eq!(exit_status.code(), Some(1));
-                #[cfg(not(target_os = "windows"))]
+                
                 assert_eq!(exit_status.code(), Some(127)); // code 127 means "command not found" on Unix
             }
         });
@@ -4798,7 +4798,7 @@ mod tests {
 
         terminal.update(cx, |terminal, cx| {
             terminal.write_output(b"shell failed to start\nprompt", cx);
-            #[cfg(unix)]
+            
             let exit_status =
                 <ExitStatus as std::os::unix::process::ExitStatusExt>::from_raw(1 << 8);
             #[cfg(windows)]
@@ -6061,7 +6061,7 @@ mod tests {
         panic!("Expected terminal content to contain {expected:?}, got: {content}");
     }
 
-    #[cfg(unix)]
+    
     async fn assert_foreground_process_command_eventually(
         terminal: &Entity<Terminal>,
         expected: &str,
@@ -6099,7 +6099,7 @@ mod tests {
 
     /// Test that kill_active_task properly terminates both the foreground process
     /// and the shell, allowing wait_for_completed_task to complete and output to be captured.
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn test_kill_active_task_completes_and_captures_output(cx: &mut TestAppContext) {
         cx.executor().allow_parking();

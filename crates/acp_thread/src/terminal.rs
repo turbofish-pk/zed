@@ -902,7 +902,7 @@ impl Terminal {
 
     // This method is adapted from `portable_pty::ExitStatus::from`, version 0.9.0
     fn transform_exit_status(exit_status: ExitStatus) -> (u32, Option<String>) {
-        #[cfg(unix)]
+        
         {
             use std::os::unix::process::ExitStatusExt;
 

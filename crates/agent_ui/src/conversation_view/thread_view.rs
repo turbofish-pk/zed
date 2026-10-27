@@ -7045,7 +7045,7 @@ enum WritableEntryDisplay {
     Path(String),
     // Only ever constructed on Linux (the bwrap `--tmpfs /tmp` overlay), so the
     // variant is gated to match and avoid dead-code warnings elsewhere.
-    #[cfg(target_os = "linux")]
+
     IsolatedTmp,
 }
 
@@ -7112,7 +7112,7 @@ fn augment_settings_sandbox_policy(
             // The ephemeral, host-isolated tmpfs at /tmp is Linux-specific (the
             // bwrap `--tmpfs /tmp` overlay). It's a display-only label, not a
             // real host path, so it can't be a captured location.
-            #[cfg(target_os = "linux")]
+
             entries.push(WritableEntryDisplay::IsolatedTmp);
             SandboxFsDisplay::Restricted(entries)
         }
@@ -7174,7 +7174,7 @@ fn sandbox_fs_rows(fs: &SandboxFsDisplay) -> Vec<SandboxRow> {
             .map(|entry| match entry {
                 // The display string was captured up front.
                 WritableEntryDisplay::Path(path) => SandboxRow::path(PathBuf::from(path)),
-                #[cfg(target_os = "linux")]
+
                 WritableEntryDisplay::IsolatedTmp => {
                     SandboxRow::path(PathBuf::from("/tmp (isolated)"))
                 }
@@ -14612,7 +14612,7 @@ mod tests {
         .await;
         fs.insert_tree(path!("/other"), json!({"main.rs": "one\ntwo\n"}))
             .await;
-        #[cfg(not(target_os = "windows"))]
+
         fs.insert_tree(
             path!("/project"),
             json!({"literal.rs": "wrong file", "literal.rs:2": "literal file"}),
@@ -14717,13 +14717,13 @@ mod tests {
                 path!("/project/src/main.rs"),
                 Point::new(3, 0),
             ),
-            #[cfg(not(target_os = "windows"))]
+
             (
                 "file:/project/literal.rs:2",
                 path!("/project/literal.rs:2"),
                 Point::new(0, 0),
             ),
-            #[cfg(not(target_os = "windows"))]
+
             (
                 "literal.rs:2",
                 path!("/project/literal.rs:2"),
@@ -14779,7 +14779,7 @@ mod tests {
             json!({"src": {"main.rs": ""}, "tel": "not a phone", "custom": "not a URI handler"}),
         )
         .await;
-        #[cfg(not(target_os = "windows"))]
+
         fs.insert_tree(
             path!("/project"),
             json!({"mailto:contact@example.com": "not the email handler"}),
@@ -15103,7 +15103,7 @@ mod tests {
             PathBuf::from(path!("/outside/notes.md")),
         )
         .await;
-        #[cfg(not(target_os = "windows"))]
+
         fs.insert_tree(
             path!("/outside"),
             json!({"literal.rs": "base file", "literal.rs:2": "literal file"}),
@@ -15222,13 +15222,13 @@ mod tests {
                 path!("/outside/a b.rs"),
                 Point::new(1, 0),
             ),
-            #[cfg(not(target_os = "windows"))]
+
             (
                 path!("/outside/literal.rs").to_string(),
                 path!("/outside/literal.rs"),
                 Point::new(0, 0),
             ),
-            #[cfg(not(target_os = "windows"))]
+
             (
                 "../outside/literal.rs:2".to_string(),
                 path!("/outside/literal.rs:2"),

@@ -2,7 +2,7 @@
 use std::process::Command;
 
 fn main() {
-    #[cfg(target_os = "linux")]
+    
     {
         // Add rpaths for libraries that webrtc-sys dlopens at runtime.
         // This is mostly required for hosts with non-standard SO installation
@@ -212,11 +212,11 @@ fn main() {
         }
     }
 
-    #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+    
     prepare_app_icon_x11();
 }
 
-#[cfg(any(target_os = "linux", target_os = "freebsd"))]
+
 fn icon_path() -> std::path::PathBuf {
     use std::str::FromStr;
 
@@ -237,7 +237,7 @@ fn icon_path() -> std::path::PathBuf {
     std::path::PathBuf::from_str(&icon).unwrap()
 }
 
-#[cfg(any(target_os = "linux", target_os = "freebsd"))]
+
 fn prepare_app_icon_x11() {
     use image::{ImageReader, imageops};
     use std::env;

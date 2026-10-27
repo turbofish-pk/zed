@@ -7,7 +7,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[cfg(target_os = "linux")]
 use std::os::fd::{AsFd as _, AsRawFd as _, BorrowedFd, OwnedFd};
 
 /// A canonical, symlink-free filesystem path.
@@ -40,7 +39,6 @@ pub(crate) struct CanonicalPathBuf {
     /// An `O_PATH` descriptor pinning the inode of the canonical target. Wrapped
     /// in an `Arc` only so the surrounding policy types can stay `Clone`;
     /// cloning shares the same underlying descriptor.
-    #[cfg(target_os = "linux")]
     fd: std::sync::Arc<OwnedFd>,
 }
 
@@ -72,7 +70,7 @@ impl CanonicalPathBuf {
                 path: super::canonicalize_allowing_missing_leaf(path),
             })
         }
-        #[cfg(target_os = "linux")]
+
         {
             use std::os::unix::fs::OpenOptionsExt as _;
             // `O_PATH` opens a handle that refers to the inode without granting
@@ -128,7 +126,7 @@ impl CanonicalPathBuf {
         {
             Ok(Self { path })
         }
-        #[cfg(target_os = "linux")]
+
         {
             use std::os::unix::fs::OpenOptionsExt as _;
             // `O_NOFOLLOW` makes a symlink *leaf* open the symlink itself
@@ -195,7 +193,7 @@ impl CanonicalPathBuf {
 
     /// Linux: a borrowed handle to the pinned inode, for `fstat`-based identity
     /// checks.
-    #[cfg(target_os = "linux")]
+
     pub(crate) fn fd(&self) -> BorrowedFd<'_> {
         self.fd.as_fd()
     }
@@ -203,7 +201,7 @@ impl CanonicalPathBuf {
     /// Linux: an independent `O_PATH` descriptor to the same pinned inode,
     /// duplicated (with `O_CLOEXEC`) so a validation server can own and send it
     /// over `SCM_RIGHTS` without affecting this value's descriptor.
-    #[cfg(target_os = "linux")]
+
     pub(crate) fn dup_fd(&self) -> io::Result<OwnedFd> {
         self.fd.as_fd().try_clone_to_owned()
     }
@@ -263,7 +261,6 @@ impl PartialEq for CanonicalPathBuf {
     /// different ways" and refuse to treat "two different objects that happen to
     /// share a path string" as one.
     fn eq(&self, other: &Self) -> bool {
-        #[cfg(target_os = "linux")]
         {
             match (
                 linux_fd_identity(self.fd.as_fd()),
@@ -295,7 +292,7 @@ impl Eq for CanonicalPathBuf {}
 /// The `(device, inode)` pair behind an `O_PATH` descriptor, used to decide
 /// whether two [`CanonicalPathBuf`]s (or their parents) refer to the same
 /// filesystem object.
-#[cfg(target_os = "linux")]
+
 pub(crate) fn linux_fd_identity(fd: BorrowedFd<'_>) -> Option<(u64, u64)> {
     let stat = nix::sys::stat::fstat(fd).ok()?;
     Some((stat.st_dev as u64, stat.st_ino as u64))

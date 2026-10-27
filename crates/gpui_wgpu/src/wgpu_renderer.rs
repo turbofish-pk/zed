@@ -2612,10 +2612,10 @@ mod tests {
         PolychromeSprite, Quad, Shadow, Size, SubpixelSprite, Underline, linear_color_stop,
         linear_gradient,
     };
-    #[cfg(target_os = "linux")]
+    
     use gpui::{DevicePixels, PlatformHeadlessRenderer, Scene};
 
-    #[cfg(target_os = "linux")]
+    
     fn device_size(width: i32, height: i32) -> Size<DevicePixels> {
         Size {
             width: DevicePixels(width),
@@ -2623,7 +2623,7 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    
     fn solid_quad(x: f32, y: f32, width: f32, height: f32, color: Hsla) -> Quad {
         let bounds = Bounds {
             origin: Point {
@@ -2649,7 +2649,7 @@ mod tests {
 
     /// Channels are compared with a small tolerance so the assertions hold across
     /// drivers without pinning exact rasterizer output.
-    #[cfg(target_os = "linux")]
+    
     fn assert_pixel(image: &image::RgbaImage, x: u32, y: u32, expected: [u8; 4]) {
         let actual = image.get_pixel(x, y).0;
         assert!(
@@ -2661,14 +2661,14 @@ mod tests {
         );
     }
 
-    #[cfg(target_os = "linux")]
+    
     const RED: [u8; 4] = [255, 0, 0, 255];
-    #[cfg(target_os = "linux")]
+    
     const BLUE: [u8; 4] = [0, 0, 255, 255];
-    #[cfg(target_os = "linux")]
+    
     const BLACK: [u8; 4] = [0, 0, 0, 255];
 
-    #[cfg(target_os = "linux")]
+    
     #[test]
     fn headless_renderer_draws_quads_with_distinct_colors() -> anyhow::Result<()> {
         let mut renderer = WgpuHeadlessRenderer::new()?;
@@ -2686,7 +2686,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(target_os = "linux")]
+    
     #[test]
     fn headless_renderer_captures_each_requested_size() -> anyhow::Result<()> {
         let mut renderer = WgpuHeadlessRenderer::new()?;
@@ -2712,7 +2712,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(target_os = "linux")]
+    
     #[test]
     fn headless_renderer_reuses_target_for_same_size() -> anyhow::Result<()> {
         let mut renderer = WgpuHeadlessRenderer::new()?;
@@ -2735,7 +2735,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(target_os = "linux")]
+    
     #[test]
     fn headless_renderer_rejects_invalid_sizes() -> anyhow::Result<()> {
         let mut renderer = WgpuHeadlessRenderer::new()?;

@@ -119,7 +119,7 @@ fn open_window(todos: &Entity<Todos>, cx: &mut App) -> anyhow::Result<()> {
 
 /// Builds the environment for `open`: the given `NAME=value` pairs, or this process's
 /// environment when none are given.
-#[cfg(target_os = "linux")]
+
 fn display_environment(arguments: &str) -> anyhow::Result<GraphicalEnvironment> {
     if arguments.trim().is_empty() {
         return Ok(GraphicalEnvironment::detect());
@@ -204,7 +204,7 @@ fn handle_command(
     Ok(None)
 }
 
-#[cfg(target_os = "linux")]
+
 const USAGE: &str = "commands: ls | create [message] | open [DISPLAY=… WAYLAND_DISPLAY=… XDG_RUNTIME_DIR=… XDG_ACTIVATION_TOKEN=…] | close | quit";
 
 #[cfg(target_os = "windows")]
@@ -247,7 +247,7 @@ async fn run_command(
 
 #[cfg(not(target_family = "wasm"))]
 fn main() {
-    #[cfg(target_os = "linux")]
+    
     let application = gpui_platform::linux(gpui::WindowingModes::all());
     #[cfg(not(target_os = "linux"))]
     let application = gpui_platform::application();

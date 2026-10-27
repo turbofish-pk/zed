@@ -35,7 +35,7 @@ pub async fn gather() -> Value {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    
     {
         match collect_linux_proc_info() {
             Ok(info) => {
@@ -255,7 +255,7 @@ fn descendants_of(system: &sysinfo::System, root: sysinfo::Pid) -> Vec<sysinfo::
     out
 }
 
-#[cfg(target_os = "linux")]
+
 fn collect_linux_proc_info() -> anyhow::Result<Value> {
     use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System};
 

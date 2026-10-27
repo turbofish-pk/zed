@@ -15,16 +15,16 @@ use gpui::BackgroundExecutor;
 use gpui::Global;
 use gpui::ReadGlobal as _;
 use gpui::SharedString;
-#[cfg(unix)]
+
 use std::ffi::CString;
 use util::command::{Stdio, new_command};
 
-#[cfg(unix)]
+
 use std::os::fd::{AsFd, AsRawFd};
-#[cfg(unix)]
+
 use std::os::unix::ffi::OsStrExt;
 
-#[cfg(unix)]
+
 use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 
 #[cfg(any(target_os = "macos", target_os = "freebsd"))]
@@ -490,7 +490,7 @@ impl FileHandle for std::fs::File {
         Ok(path)
     }
 
-    #[cfg(target_os = "linux")]
+
     fn current_path(&self, _: &Arc<dyn Fs>) -> Result<PathBuf> {
         let fd = self.as_fd();
         let fd_path = format!("/proc/self/fd/{}", fd.as_raw_fd());
@@ -634,7 +634,7 @@ fn rename_without_replace(source: &Path, target: &Path) -> io::Result<()> {
     #[cfg(target_os = "macos")]
     let result = unsafe { libc::renamex_np(source.as_ptr(), target.as_ptr(), libc::RENAME_EXCL) };
 
-    #[cfg(target_os = "linux")]
+
     let result = unsafe {
         libc::syscall(
             libc::SYS_renameat2,
@@ -694,7 +694,7 @@ fn path_to_c_string(path: &Path) -> io::Result<CString> {
 //
 // To avoid crashing the app in this situation, we use the rustix analogue of
 // ReadDir, which doesn't have this panic in drop.
-#[cfg(unix)]
+
 fn read_dir_entries(path: PathBuf) -> Result<impl Send + Iterator<Item = Result<PathBuf>>> {
     use rustix::fs::{Dir, Mode, OFlags};
     use std::ffi::OsStr;
@@ -743,7 +743,7 @@ impl Fs for RealFs {
     }
 
     async fn create_symlink(&self, path: &Path, target: PathBuf) -> Result<()> {
-        #[cfg(unix)]
+
         smol::fs::unix::symlink(target, path).await?;
 
         #[cfg(windows)]
@@ -978,7 +978,7 @@ impl Fs for RealFs {
         Ok(bytes)
     }
 
-    #[cfg(not(target_os = "windows"))]
+
     async fn atomic_write(&self, path: PathBuf, data: String) -> Result<()> {
         smol::unblock(move || {
             // Use the directory of the destination as temp dir to avoid
@@ -1065,7 +1065,7 @@ impl Fs for RealFs {
                 #[cfg(target_os = "windows")]
                 let result = Self::canonicalize(&path);
 
-                #[cfg(not(target_os = "windows"))]
+
                 let result = std::fs::canonicalize(&path);
 
                 result.with_context(|| format!("canonicalizing {path:?}"))
@@ -1130,7 +1130,7 @@ impl Fs for RealFs {
             symlink_metadata
         };
 
-        #[cfg(unix)]
+
         let inode = metadata.ino();
 
         #[cfg(windows)]
@@ -1139,10 +1139,10 @@ impl Fs for RealFs {
         #[cfg(windows)]
         let is_fifo = false;
 
-        #[cfg(unix)]
+
         let is_fifo = metadata.file_type().is_fifo();
 
-        #[cfg(unix)]
+
         let is_executable = metadata.is_file() && metadata.permissions().mode() & 0o111 != 0;
 
         #[cfg(windows)]

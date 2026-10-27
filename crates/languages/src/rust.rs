@@ -52,7 +52,7 @@ impl RustLspAdapter {
     const ARCH_SERVER_NAME: &str = "apple-darwin";
 }
 
-#[cfg(target_os = "linux")]
+
 impl RustLspAdapter {
     const GITHUB_ASSET_KIND: AssetKind = AssetKind::Gz;
     const ARCH_SERVER_NAME: &str = "unknown-linux";
@@ -72,7 +72,7 @@ impl RustLspAdapter {
 
 const SERVER_NAME: LanguageServerName = LanguageServerName::new_static("rust-analyzer");
 
-#[cfg(target_os = "linux")]
+
 enum LibcType {
     Gnu,
     Musl,
@@ -141,7 +141,7 @@ impl RustLspAdapter {
         })
     }
 
-    #[cfg(target_os = "linux")]
+    
     async fn determine_libc_type() -> LibcType {
         use futures::pin_mut;
 
@@ -191,7 +191,7 @@ impl RustLspAdapter {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    
     async fn build_arch_server_name_linux() -> String {
         let libc = match Self::determine_libc_type().await {
             LibcType::Musl => "musl",
@@ -261,7 +261,7 @@ impl RustLspAdapter {
             AssetKind::Zip => "zip",
         };
 
-        #[cfg(target_os = "linux")]
+        
         let arch_server_name = Self::build_arch_server_name_linux().await;
         #[cfg(not(target_os = "linux"))]
         let arch_server_name = Self::ARCH_SERVER_NAME.to_string();

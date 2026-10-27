@@ -18249,7 +18249,7 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     fn document_selector_pattern_matches_windows_remote_worktree(cx: &mut TestAppContext) {
         assert_eq!(PathStyle::local(), PathStyle::Unix);

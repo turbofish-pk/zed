@@ -219,7 +219,7 @@ where
 /// This function checks if the current process is running with root privileges
 /// and terminates the program with an error message unless explicitly allowed via the
 /// `ZED_ALLOW_ROOT` environment variable.
-#[cfg(unix)]
+
 pub fn prevent_root_execution() {
     let is_root = nix::unistd::geteuid().is_root();
     let allow_root = std::env::var("ZED_ALLOW_ROOT").is_ok_and(|val| val == "true");
@@ -239,7 +239,7 @@ Error: Running Zed as root or via sudo is unsupported.
 /// Raises the soft limit on open file descriptors without changing the hard limit.
 ///
 /// Call during startup, before spawning children that will inherit the limit.
-#[cfg(unix)]
+
 pub fn increase_open_file_limit() -> Result<()> {
     use anyhow::Context as _;
     use nix::sys::resource::{Resource::RLIMIT_NOFILE, getrlimit, setrlimit};
@@ -269,7 +269,7 @@ pub fn increase_open_file_limit() -> Result<()> {
     Ok(())
 }
 
-#[cfg(unix)]
+
 fn load_shell_from_passwd() -> Result<()> {
     let buflen = match unsafe { libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX) } {
         n if n < 0 => 1024,
@@ -389,7 +389,7 @@ pub fn get_zed_cli_path() -> Result<PathBuf> {
         })
 }
 
-#[cfg(unix)]
+
 pub async fn load_login_shell_environment() -> Result<()> {
     use anyhow::Context as _;
 
@@ -432,7 +432,7 @@ pub fn set_pre_exec_to_start_new_session(
 ) -> &mut std::process::Command {
     // safety: code in pre_exec should be signal safe.
     // https://man7.org/linux/man-pages/man7/signal-safety.7.html
-    #[cfg(unix)]
+    
     unsafe {
         use std::os::unix::process::CommandExt;
         command.pre_exec(|| {

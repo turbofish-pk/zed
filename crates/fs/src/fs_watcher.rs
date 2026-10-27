@@ -299,7 +299,7 @@ pub fn requires_poll_watcher(path: &Path) -> bool {
         _ => {}
     }
 
-    #[cfg(target_os = "linux")]
+    
     {
         return detect_requires_poll_watcher_linux(path);
     }
@@ -354,7 +354,7 @@ fn register_existing_path(
     }))
 }
 
-#[cfg(target_os = "linux")]
+
 fn detect_requires_poll_watcher_linux(path: &Path) -> bool {
     use std::ffi::CString;
     use std::os::unix::ffi::OsStrExt;
@@ -407,7 +407,7 @@ fn detect_requires_poll_watcher_linux(path: &Path) -> bool {
     false
 }
 
-#[cfg(target_os = "linux")]
+
 fn is_virtiofs(path: &Path) -> bool {
     let Ok(mountinfo) = std::fs::read_to_string("/proc/self/mountinfo") else {
         return false;
@@ -438,7 +438,7 @@ fn is_virtiofs(path: &Path) -> bool {
     best_mount.is_some_and(|(_, fs_type)| fs_type == "virtiofs" || fs_type == "fuse.virtiofs")
 }
 
-#[cfg(target_os = "linux")]
+
 fn is_wsl_drvfs_path(path: &Path) -> bool {
     if std::env::var_os("WSL_DISTRO_NAME").is_none() {
         if let Ok(version) = std::fs::read_to_string("/proc/version") {
@@ -477,7 +477,7 @@ pub(crate) fn case_insensitive_path(path: &Path) -> bool {
     unsafe { libc::pathconf(c_path.as_ptr(), libc::_PC_CASE_SENSITIVE) == 0 }
 }
 
-#[cfg(target_os = "linux")]
+
 pub(crate) fn case_insensitive_path(_path: &Path) -> bool {
     // use std::os::unix::ffi::OsStrExt as _;
 

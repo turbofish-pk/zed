@@ -1317,7 +1317,7 @@ async fn test_scan_symlinks_always_respects_gitignore(cx: &mut TestAppContext) {
 // canonicalization or readdir behavior is not covered by the FakeFs tests.
 // These tests use a real temp directory and a real symlink to exercise the
 // production path on the host platform.
-#[cfg(unix)]
+
 #[gpui::test]
 async fn test_real_fs_scan_symlinks_always(cx: &mut TestAppContext) {
     cx.executor().allow_parking();
@@ -1388,7 +1388,7 @@ async fn test_real_fs_scan_symlinks_always(cx: &mut TestAppContext) {
     });
 }
 
-#[cfg(unix)]
+
 #[gpui::test]
 async fn test_real_fs_scan_symlinks_expanded(cx: &mut TestAppContext) {
     cx.executor().allow_parking();
@@ -6676,7 +6676,7 @@ fn test_remote_worktree_language_matching(cx: &mut TestAppContext) {
                         "Plain Text".into(),
                         vec![
                             "repo/templates/*.html".into(),
-                            #[cfg(unix)]
+                            
                             r"repo\\raw\\*.html".into(),
                         ]
                         .into(),
@@ -6745,9 +6745,9 @@ fn test_remote_worktree_language_matching(cx: &mut TestAppContext) {
             "templates/index.html",
             PathStyle::Windows,
         ),
-        #[cfg(unix)]
+        
         ("config", r"/home/user\.ssh/config", "", PathStyle::Unix),
-        #[cfg(unix)]
+        
         ("repo", r"C:\repo", "raw/index.html", PathStyle::Windows),
     ] {
         cx.update(|cx| {
@@ -6793,9 +6793,9 @@ fn test_remote_worktree_language_matching(cx: &mut TestAppContext) {
             Some("SSH Config".into()),
             Some("SSH Config".into()),
             Some("Plain Text".into()),
-            #[cfg(unix)]
+            
             Some("INI".into()),
-            #[cfg(unix)]
+            
             Some("Plain Text".into()),
         ]
     );

@@ -8,7 +8,7 @@ use super::CanonicalPathBuf;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 use super::lexically_normalized_absolute;
 
-#[cfg(target_os = "linux")]
+
 use std::os::fd::{BorrowedFd, OwnedFd};
 
 /// An opaque handle to a location on the **host** filesystem the sandbox may
@@ -186,14 +186,14 @@ impl HostFilesystemLocation {
     }
 
     /// Linux: the verified canonical path, used as the bind source/destination.
-    #[cfg(target_os = "linux")]
+    
     pub(crate) fn linux_canonical_path(&self) -> &Path {
         self.canonical.path()
     }
 
     /// Linux: a borrowed handle to the pinned inode, for `fstat`-based identity
     /// checks.
-    #[cfg(target_os = "linux")]
+    
     pub(crate) fn linux_fd(&self) -> BorrowedFd<'_> {
         self.canonical.fd()
     }
@@ -201,7 +201,7 @@ impl HostFilesystemLocation {
     /// Linux: an independent `O_PATH` descriptor to the same pinned inode,
     /// duplicated (with `O_CLOEXEC`) so the validation server can own and send it
     /// over `SCM_RIGHTS` without affecting this location's descriptor.
-    #[cfg(target_os = "linux")]
+    
     pub(crate) fn linux_dup_fd(&self) -> std::io::Result<OwnedFd> {
         self.canonical.dup_fd()
     }

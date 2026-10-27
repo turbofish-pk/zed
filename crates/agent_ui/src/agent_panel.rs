@@ -7927,7 +7927,7 @@ mod tests {
     /// Exercises the real `spawn_terminal` path with a genuine shell PTY (not the
     /// display-only test terminal, where `write_to_pty` is a no-op) to verify the
     /// init command is actually delivered to the shell and executed.
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn test_spawn_terminal_runs_init_command_in_real_shell(cx: &mut TestAppContext) {
         let (panel, mut cx) = setup_panel(cx).await;

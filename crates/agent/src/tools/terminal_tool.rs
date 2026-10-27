@@ -409,7 +409,7 @@ fn wsl_zed_release(cx: &App) -> Option<(String, String)> {
 }
 
 /// Non-Windows platforms don't route through WSL, so there's no helper to fetch.
-#[cfg(not(target_os = "windows"))]
+
 fn wsl_zed_release(_cx: &App) -> Option<(String, String)> {
     None
 }
@@ -561,7 +561,7 @@ async fn run_terminal_tool(
     // its nearest existing ancestor directory. Reject anything that
     // isn't an already-existing directory so the user is only ever asked to
     // approve — and only ever grants — exactly the paths shown to them.
-    #[cfg(target_os = "linux")]
+    
     for path in &write_paths {
         if !path.is_dir() {
             return Err(format!(
@@ -581,7 +581,7 @@ async fn run_terminal_tool(
     // what lets enforcement rebuild the grant via a verifying reopen rather than
     // re-resolving the requested path by string (closing a symlink TOCTOU). A
     // path that can't be resolved is dropped — fail-closed.
-    #[cfg(not(target_os = "windows"))]
+
     let write_paths: Vec<settings::GrantedWritePath> = write_paths
         .into_iter()
         .filter_map(|requested| match sandbox::resolve_canonical(&requested) {
@@ -760,7 +760,7 @@ async fn run_terminal_tool(
             // Each retry re-probes from scratch, so the failure reason shown to
             // the user reflects the *current* environment (e.g. it can change
             // from "no bwrap" to "bwrap is setuid" after they install one).
-            #[cfg(target_os = "linux")]
+            
             {
                 let mut retries = 0usize;
                 loop {
@@ -926,7 +926,7 @@ async fn run_terminal_tool(
             }
         }
     };
-    #[cfg(not(target_os = "windows"))]
+
     let terminal = environment
         .create_terminal(
             input.command.clone(),
@@ -1256,13 +1256,6 @@ fn process_content(
     let content = select_terminal_output_lines(content, selection);
     let is_empty = content.is_empty();
 
-    // On Windows, recognize the kernel-style diagnostics WSL prints when a
-    // command tries to launch a Windows executable inside the sandbox (where
-    // interop is deliberately disabled). They're noise the model can't act on,
-    // so we explain what actually happened.
-    #[cfg(target_os = "windows")]
-    let interop_blocked = wsl_interop_blocked(&content);
-    #[cfg(not(target_os = "windows"))]
     let interop_blocked = false;
 
     let content = format!("```\n{content}\n```");

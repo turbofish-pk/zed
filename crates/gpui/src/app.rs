@@ -1854,14 +1854,14 @@ impl App {
 
     /// Reads data from the primary selection buffer.
     /// Only available on Linux.
-    #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+    
     pub fn read_from_primary(&self) -> Option<ClipboardItem> {
         self.platform.read_from_primary()
     }
 
     /// Writes data to the primary selection buffer.
     /// Only available on Linux.
-    #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+    
     pub fn write_to_primary(&self, item: ClipboardItem) {
         self.platform.write_to_primary(item)
     }
@@ -3710,7 +3710,7 @@ mod test {
         rc::Rc,
     };
 
-    #[cfg(unix)]
+    
     use std::os::unix::ffi::OsStringExt;
 
     use crate::{
@@ -3885,7 +3885,7 @@ mod test {
 
     #[gpui::test]
     async fn test_restart_preserves_path_and_arguments(cx: &mut TestAppContext) {
-        #[cfg(unix)]
+        
         let user_data_dir = OsString::from_vec(b"/tmp/zed data/\xff".to_vec());
         #[cfg(not(unix))]
         let user_data_dir = OsString::from("C:\\zed data");

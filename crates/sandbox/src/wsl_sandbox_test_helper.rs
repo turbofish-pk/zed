@@ -26,7 +26,7 @@
     reason = "a single-threaded test helper that intentionally blocks on child processes"
 )]
 
-#[cfg(not(target_os = "windows"))]
+
 fn main() {
     eprintln!("wsl_sandbox_test_helper is only supported on Windows");
     std::process::exit(1);

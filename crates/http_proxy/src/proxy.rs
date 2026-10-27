@@ -17,11 +17,11 @@ use crate::allowlist::Allowlist;
 use anyhow::{Context, Result};
 use futures::channel::mpsc;
 use std::net::{Ipv4Addr, TcpListener, TcpStream};
-#[cfg(unix)]
+
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-#[cfg(unix)]
+
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread;
@@ -203,7 +203,7 @@ impl ProxyHandle {
 
     /// Spawns the proxy on a fresh pathname Unix socket under the system temp
     /// directory and reserves a loopback port number for the in-sandbox bridge.
-    #[cfg(unix)]
+
     pub fn spawn_unix_temp(config: ProxyConfig) -> Result<ProxyHandle> {
         let directory = unique_temp_socket_directory();
         let path = directory.join("proxy.sock");
@@ -212,12 +212,11 @@ impl ProxyHandle {
 
     /// Spawns the proxy on a pathname Unix socket and reserves a loopback port
     /// number for the in-sandbox bridge to listen on.
-    #[cfg(unix)]
+
     pub fn spawn_unix(path: impl AsRef<Path>, config: ProxyConfig) -> Result<ProxyHandle> {
         Self::spawn_unix_with_cleanup(path.as_ref().to_path_buf(), None, config)
     }
 
-    #[cfg(unix)]
     fn spawn_unix_with_cleanup(
         path: PathBuf,
         cleanup_directory: Option<PathBuf>,
@@ -290,7 +289,6 @@ impl Drop for ProxyHandle {
         // flag, breaks the loop. The accepted connection's worker thread
         // will read the empty stream and exit too.
         if let Some(path) = &self.socket_path {
-            #[cfg(unix)]
             let _ = UnixStream::connect(path);
             #[cfg(not(unix))]
             let _ = path;
@@ -327,7 +325,6 @@ impl Drop for ProxyHandle {
     }
 }
 
-#[cfg(unix)]
 fn unique_temp_socket_directory() -> PathBuf {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let counter = COUNTER.fetch_add(1, Ordering::Relaxed);
@@ -359,7 +356,6 @@ impl Drop for ConnectionSlot {
     }
 }
 
-#[cfg(unix)]
 fn reserve_loopback_port() -> Result<u16> {
     let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0))
         .context("failed to reserve proxy bridge port")?;
@@ -387,7 +383,6 @@ fn run_listener(listener: TcpListener, state: Arc<RuntimeState>, shutdown: Arc<A
     }
 }
 
-#[cfg(unix)]
 fn run_unix_listener(listener: UnixListener, state: Arc<RuntimeState>, shutdown: Arc<AtomicBool>) {
     for stream in listener.incoming() {
         if shutdown.load(Ordering::SeqCst) {

@@ -1,5 +1,5 @@
 fn main() {
-    #[cfg(not(target_os = "windows"))]
+    
     println!("cargo:rerun-if-changed=build.rs");
     #[cfg(target_os = "windows")]
     {

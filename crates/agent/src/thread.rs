@@ -8988,7 +8988,7 @@ mod tests {
         );
     }
 
-    #[cfg(target_os = "linux")]
+    
     #[gpui::test]
     async fn test_authorize_sandbox_fallback_options_and_details(cx: &mut TestAppContext) {
         crate::tests::init_test(cx);
@@ -9049,7 +9049,7 @@ mod tests {
         assert_eq!(authorize.await.unwrap(), SandboxFallbackDecision::Retry);
     }
 
-    #[cfg(target_os = "linux")]
+    
     #[gpui::test]
     async fn test_authorize_sandbox_fallback_retry_label_counts_attempts(cx: &mut TestAppContext) {
         crate::tests::init_test(cx);
@@ -9093,7 +9093,7 @@ mod tests {
         assert_eq!(retry_label(cx, 2).await, "Retry (attempt 2)");
     }
 
-    #[cfg(target_os = "linux")]
+    
     #[gpui::test]
     async fn test_authorize_sandbox_fallback_allow_thread_records_grant(cx: &mut TestAppContext) {
         crate::tests::init_test(cx);
@@ -9128,7 +9128,7 @@ mod tests {
         assert!(event_stream.sandbox_fallback_granted_for_thread());
     }
 
-    #[cfg(target_os = "linux")]
+    
     #[gpui::test]
     async fn test_authorize_sandbox_fallback_deny(cx: &mut TestAppContext) {
         crate::tests::init_test(cx);

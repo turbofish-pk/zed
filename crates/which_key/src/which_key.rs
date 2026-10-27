@@ -210,7 +210,7 @@ mod tests {
                     "2".to_owned(),
                 )
             }
-            #[cfg(not(target_os = "windows"))]
+            
             {
                 KeybindingKeystroke::from_keystroke(keystroke)
             }

@@ -28,7 +28,6 @@ impl ProcessIdGetter {
     }
 }
 
-#[cfg(unix)]
 impl ProcessIdGetter {
     fn pid(&self) -> Option<Pid> {
         // Negative pid means error.
@@ -146,7 +145,6 @@ impl PtyProcessInfo {
         RwLockReadGuard::try_map(self.system.read(), |system| system.process(pid)).ok()
     }
 
-    #[cfg(unix)]
     pub(crate) fn kill_current_process(&self) -> bool {
         let Some(pid) = self.pid_getter.pid() else {
             return false;
@@ -163,7 +161,6 @@ impl PtyProcessInfo {
         self.get_child().is_some_and(|process| process.kill())
     }
 
-    #[cfg(unix)]
     pub(crate) fn terminate_child_process(&self) -> bool {
         let pid = self.pid_getter.fallback_pid();
         unsafe { libc::killpg(pid.as_u32() as i32, libc::SIGTERM) == 0 }

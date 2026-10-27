@@ -841,7 +841,7 @@ mod tests {
         assert_eq!(escaped, "/path/with\\\"quotes");
     }
 
-    #[cfg(unix)]
+    
     #[test]
     fn test_escape_sandbox_path_rejects_invalid_utf8() {
         use std::{ffi::OsString, os::unix::ffi::OsStringExt};

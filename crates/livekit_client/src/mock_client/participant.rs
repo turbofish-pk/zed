@@ -100,7 +100,7 @@ impl LocalParticipant {
         ))
     }
 
-    #[cfg(target_os = "linux")]
+
     pub async fn publish_screenshare_track_wayland(
         &self,
         _cx: &mut AsyncApp,
@@ -192,15 +192,15 @@ impl ScreenCaptureStream for TestScreenCaptureStream {
     }
 }
 
-#[cfg(target_os = "linux")]
+
 static NEXT_TEST_WAYLAND_SHARE_ID: AtomicU64 = AtomicU64::new(1);
 
-#[cfg(target_os = "linux")]
+
 struct TestWaylandScreenCaptureStream {
     id: u64,
 }
 
-#[cfg(target_os = "linux")]
+
 impl TestWaylandScreenCaptureStream {
     fn new() -> Self {
         Self {
@@ -209,7 +209,7 @@ impl TestWaylandScreenCaptureStream {
     }
 }
 
-#[cfg(target_os = "linux")]
+
 impl ScreenCaptureStream for TestWaylandScreenCaptureStream {
     fn metadata(&self) -> Result<SourceMetadata> {
         Ok(SourceMetadata {

@@ -482,11 +482,11 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    #[cfg(unix)]
+    
     util::prevent_root_execution();
 
     // Exit flatpak sandbox if needed
-    #[cfg(target_os = "linux")]
+    
     {
         flatpak::try_restart_to_host();
         flatpak::ld_extra_libs();
@@ -524,7 +524,7 @@ fn run() -> Result<()> {
         paths::set_custom_data_dir(dir);
     }
 
-    #[cfg(target_os = "linux")]
+    
     let args = flatpak::set_bin_if_no_escape(args);
 
     let app = Detect::detect(args.zed.as_deref()).context("Bundle detection")?;
@@ -600,7 +600,7 @@ fn run() -> Result<()> {
     };
 
     let env = {
-        #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+        
         {
             use collections::HashMap;
 
@@ -668,7 +668,7 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "windows")]
     let wsl = args.wsl.as_ref();
-    #[cfg(not(target_os = "windows"))]
+    
     let wsl = None;
 
     for path in args.paths_with_position.iter() {
@@ -714,7 +714,7 @@ fn run() -> Result<()> {
 
                 #[cfg(target_os = "windows")]
                 let wsl = args.wsl;
-                #[cfg(not(target_os = "windows"))]
+                
                 let wsl = None;
 
                 let open_request = CliRequest::Open {
@@ -799,7 +799,7 @@ fn run() -> Result<()> {
 }
 
 fn anonymous_fd(path: &str) -> Option<fs::File> {
-    #[cfg(target_os = "linux")]
+    
     {
         use std::os::fd::{self, FromRawFd};
 
@@ -877,7 +877,7 @@ fn prompt_open_behavior() -> Option<cli::CliBehaviorSetting> {
     })
 }
 
-#[cfg(any(target_os = "linux", target_os = "freebsd"))]
+
 mod linux {
     use std::{
         env,
@@ -1026,7 +1026,7 @@ mod linux {
     }
 }
 
-#[cfg(target_os = "linux")]
+
 mod flatpak {
     use std::ffi::OsString;
     use std::path::{Path, PathBuf};

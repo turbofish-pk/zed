@@ -68,7 +68,7 @@ use project::{
 use rand::{Rng as _, rngs::StdRng};
 use serde_json::json;
 use settings::{GlobalLspSettingsContent, SettingsStore, SplicingVec};
-#[cfg(target_os = "linux")]
+
 use settings::{LocalSettingsKind, LocalSettingsPath};
 #[cfg(not(windows))]
 use std::os;
@@ -85,7 +85,7 @@ use std::{
     task::Poll,
     time::Duration,
 };
-#[cfg(target_os = "linux")]
+
 use std::{ffi::OsStr, os::unix::ffi::OsStrExt as _};
 use sum_tree::SumTree;
 use task::{ResolvedTask, ShellKind, TaskContext};
@@ -106,7 +106,7 @@ async fn test_block_via_channel(cx: &mut gpui::TestAppContext) {
 
     let (tx, mut rx) = futures::channel::mpsc::unbounded();
     let _thread = std::thread::spawn(move || {
-        #[cfg(not(target_os = "windows"))]
+        
         std::fs::metadata("/tmp").unwrap();
         #[cfg(target_os = "windows")]
         std::fs::metadata("C:/Windows").unwrap();
@@ -364,7 +364,7 @@ async fn test_resolve_abs_file_link_project_aliases(cx: &mut gpui::TestAppContex
     });
 }
 
-#[cfg(target_os = "linux")]
+
 #[gpui::test]
 async fn test_resolve_abs_file_link_rejects_non_utf8_target(cx: &mut gpui::TestAppContext) {
     init_test(cx);
@@ -9377,7 +9377,7 @@ async fn test_rescan_and_remote_updates(cx: &mut gpui::TestAppContext) {
     });
 }
 
-#[cfg(target_os = "linux")]
+
 #[gpui::test(retries = 5)]
 async fn test_recreated_directory_receives_child_events(cx: &mut gpui::TestAppContext) {
     init_test(cx);
@@ -17884,7 +17884,7 @@ async fn test_git_repository_status_removes_directory_descendants(cx: &mut gpui:
     });
 }
 
-#[cfg(target_os = "linux")]
+
 #[gpui::test(retries = 5)]
 async fn test_git_events_after_project_excludes_dot_git(cx: &mut gpui::TestAppContext) {
     init_test(cx);
@@ -20733,7 +20733,7 @@ fn git_reset(offset: usize, work_dir: &Path) {
     );
 }
 
-#[cfg(target_os = "linux")]
+
 #[allow(clippy::disallowed_methods)]
 #[track_caller]
 fn git_branch(name: &str, work_dir: &Path) {
@@ -20748,7 +20748,7 @@ fn git_branch(name: &str, work_dir: &Path) {
     );
 }
 
-#[cfg(target_os = "linux")]
+
 #[allow(clippy::disallowed_methods)]
 #[track_caller]
 fn git_checkout(name: &str, work_dir: &Path) {

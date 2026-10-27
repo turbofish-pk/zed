@@ -571,7 +571,7 @@ impl Log for ProgressLogger {
     }
 }
 
-#[cfg(unix)]
+
 fn get_terminal_width() -> usize {
     unsafe {
         let mut winsize: libc::winsize = std::mem::zeroed();

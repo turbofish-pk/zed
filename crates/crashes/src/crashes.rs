@@ -150,7 +150,7 @@ where
         );
     }
 
-    #[cfg(target_os = "linux")]
+    
     handler.set_ptracer(Some(_crash_handler.id()));
 
     info!("crash handler registered");
@@ -160,7 +160,7 @@ where
             let _handler = { handler };
             loop {
                 if let Err(e) = client.ping() {
-                    #[cfg(not(target_os = "windows"))]
+                    
                     log::error!(
                         "ping failed: {:?}, process exit status: {:?}",
                         e,
@@ -341,7 +341,7 @@ fn abort_message_address() -> Option<u64> {
 /// with mmap so that it stays intact even when the heap is corrupt. `size` is
 /// the total byte size of that mapping (header included, rounded up to whole
 /// pages), not the message length; the message itself is NUL-terminated.
-#[cfg(target_os = "linux")]
+
 fn read_abort_message(location: AbortMessageLocation) -> Option<String> {
     let pointer_bytes = read_process_memory(location.pid, location.address, size_of::<usize>())?;
     let message_address = usize::from_ne_bytes(pointer_bytes.try_into().ok()?) as u64;
@@ -391,7 +391,7 @@ fn parse_abort_message(bytes: &[u8]) -> Option<String> {
     (!message.is_empty()).then_some(message)
 }
 
-#[cfg(target_os = "linux")]
+
 fn read_process_memory(pid: u32, address: u64, len: usize) -> Option<Vec<u8>> {
     let mut buffer = vec![0u8; len];
     let local = libc::iovec {
@@ -457,7 +457,7 @@ impl minidumper::ServerHandler for CrashServer {
         #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
         let gpus = vec![];
 
-        #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+        
         let gpus = match system_specs::read_gpu_info_from_sys_class_drm() {
             Ok(gpus) => gpus,
             Err(err) => {
@@ -469,7 +469,7 @@ impl minidumper::ServerHandler for CrashServer {
         // The crashed process is still alive at this point: it stays parked in
         // its signal handler until the server acknowledges the dump request,
         // which happens after this callback returns.
-        #[cfg(target_os = "linux")]
+        
         let abort_message = (*self.abort_message_location.lock()).and_then(read_abort_message);
         #[cfg(not(target_os = "linux"))]
         let abort_message = None;
@@ -641,7 +641,7 @@ mod macos {
         }
     }
 }
-#[cfg(not(target_os = "windows"))]
+
 fn spawn_crash_handler(exe: &Path, socket_name: &Path) -> async_process::Child {
     async_process::Command::new(exe)
         .arg("--crash-handler")
@@ -859,7 +859,7 @@ mod tests {
     /// one's own memory). The message page is followed by a `PROT_NONE` guard
     /// page so the test fails if the read ever extends past the mapping glibc
     /// would have allocated.
-    #[cfg(target_os = "linux")]
+    
     #[test]
     fn read_abort_message_reads_glibc_layout_from_a_live_process() {
         let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as usize;

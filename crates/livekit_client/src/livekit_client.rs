@@ -9,7 +9,7 @@ use playback::capture_local_video_track;
 use settings::Settings;
 use std::sync::{Arc, atomic::AtomicU64};
 
-#[cfg(target_os = "linux")]
+
 mod linux;
 mod playback;
 
@@ -217,7 +217,7 @@ impl LocalParticipant {
             .context("unpublishing a track")
     }
 
-    #[cfg(target_os = "linux")]
+    
     pub async fn publish_screenshare_track_wayland(
         &self,
         cx: &mut AsyncApp,

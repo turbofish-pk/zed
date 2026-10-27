@@ -989,7 +989,7 @@ impl VsCodeSettings {
     fn project_terminal_settings_content(&self) -> ProjectTerminalSettingsContent {
         #[cfg(target_os = "windows")]
         let platform = "windows";
-        #[cfg(target_os = "linux")]
+        
         let platform = "linux";
         #[cfg(target_os = "macos")]
         let platform = "osx";

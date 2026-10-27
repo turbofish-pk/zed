@@ -2672,7 +2672,7 @@ mod tests {
         );
     }
 
-    #[cfg(target_os = "linux")]
+
     #[gpui::test]
     async fn ctrl_q_is_forwarded_to_terminal_not_quit(cx: &mut TestAppContext) {
         let (project, _workspace, window_handle) = init_test_with_window(cx).await;

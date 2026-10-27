@@ -145,7 +145,7 @@ impl Display for SystemSpecs {
 }
 
 fn try_determine_available_gpus() -> Option<String> {
-    #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+    
     {
         #[allow(
             clippy::disallowed_methods,
@@ -184,7 +184,7 @@ pub struct GpuInfo {
     pub driver_name: Option<String>,
 }
 
-#[cfg(any(target_os = "linux", target_os = "freebsd"))]
+
 pub fn read_gpu_info_from_sys_class_drm() -> anyhow::Result<Vec<GpuInfo>> {
     use anyhow::Context as _;
     use pciid_parser;
@@ -266,7 +266,7 @@ pub fn read_gpu_info_from_sys_class_drm() -> anyhow::Result<Vec<GpuInfo>> {
     Ok(gpus)
 }
 
-#[cfg(any(target_os = "linux", target_os = "freebsd"))]
+
 fn read_pci_id_from_path(path: impl AsRef<std::path::Path>) -> anyhow::Result<u16> {
     use anyhow::Context as _;
     let id = std::fs::read_to_string(path)?;

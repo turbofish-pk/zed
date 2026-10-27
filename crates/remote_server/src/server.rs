@@ -27,7 +27,7 @@ use paths::logs_dir;
 use project::{project_settings::ProjectSettings, trusted_worktrees};
 use proto::CrashReport;
 use release_channel::{AppCommitSha, AppVersion, RELEASE_CHANNEL, ReleaseChannel};
-#[cfg(unix)]
+
 use remote::command::RemoteCommand;
 use remote::{
     RemoteClient,
@@ -55,7 +55,7 @@ use std::{
     sync::{Arc, LazyLock},
     time::Instant,
 };
-#[cfg(unix)]
+
 use std::{
     ffi::OsString,
     os::{
@@ -87,7 +87,7 @@ pub enum Commands {
         identifier: String,
     },
     Version,
-    #[cfg(unix)]
+
     Exec,
 }
 
@@ -113,7 +113,7 @@ pub fn run(command: Commands) -> anyhow::Result<()> {
             identifier,
             reconnect,
         } => execute_proxy(identifier, reconnect).context("running proxy on the remote server"),
-        #[cfg(unix)]
+
         Commands::Exec => execute_command(),
         Commands::Version => {
             let release_channel = *RELEASE_CHANNEL;
@@ -150,7 +150,6 @@ pub static VERSION: LazyLock<String> = LazyLock::new(|| match *RELEASE_CHANNEL {
     }
 });
 
-#[cfg(unix)]
 fn execute_command() -> Result<()> {
     let mut stdin = File::from(std::io::stdin().as_fd().try_clone_to_owned()?);
     let descriptor = RemoteCommand::read(&mut stdin)?;
@@ -170,7 +169,6 @@ fn execute_command() -> Result<()> {
     Err(error).with_context(|| format!("Failed to execute {}", descriptor.program))
 }
 
-#[cfg(unix)]
 fn exec_with_script_fallback(
     descriptor: &RemoteCommand,
     working_dir: Option<&str>,
@@ -211,7 +209,6 @@ fn exec_with_script_fallback(
     error
 }
 
-#[cfg(unix)]
 fn script_candidates(program: &str, path: Option<&OsStr>) -> Vec<PathBuf> {
     let explicit = |candidate: PathBuf| {
         if candidate.is_absolute() {
@@ -230,10 +227,8 @@ fn script_candidates(program: &str, path: Option<&OsStr>) -> Vec<PathBuf> {
         .collect()
 }
 
-#[cfg(unix)]
 const DEFAULT_PATH: &str = "/usr/local/bin:/bin:/usr/bin";
 
-#[cfg(unix)]
 fn exec_command(
     descriptor: &RemoteCommand,
     working_dir: Option<&str>,
@@ -726,7 +721,6 @@ pub fn execute_run(
         .build_global()
         .unwrap();
 
-    #[cfg(unix)]
     let shell_env_loaded_rx = {
         let (shell_env_loaded_tx, shell_env_loaded_rx) = oneshot::channel();
         app.background_executor()
@@ -1484,7 +1478,6 @@ fn is_file_in_use(file_name: &OsStr) -> bool {
 mod tests {
     use super::*;
 
-    #[cfg(unix)]
     mod unix {
         use super::*;
         use gpui::TestAppContext;
@@ -1672,7 +1665,6 @@ mod tests {
         );
     }
 
-    #[cfg(unix)]
     #[test]
     fn script_candidates_never_start_with_a_dash() {
         assert_eq!(
@@ -1710,7 +1702,6 @@ mod tests {
         );
     }
 
-    #[cfg(unix)]
     #[test]
     fn script_fallback_runs_option_like_wrapper_instead_of_its_arguments() {
         use std::cell::RefCell;

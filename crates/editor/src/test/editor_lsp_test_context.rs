@@ -516,7 +516,7 @@ impl EditorLspTestContext {
         Path::new("C:\\root")
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     pub fn root_path() -> &'static Path {
         Path::new("/root")
     }

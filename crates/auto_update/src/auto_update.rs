@@ -48,7 +48,7 @@ const POLL_INTERVAL: Duration = Duration::from_secs(60 * 60);
 const NIGHTLY_POLL_INTERVAL: Duration = Duration::from_secs(15 * 60);
 const REMOTE_SERVER_CACHE_LIMIT: usize = 5;
 
-#[cfg(target_os = "linux")]
+
 fn linux_rsync_install_hint() -> &'static str {
     let os_release = match std::fs::read_to_string("/etc/os-release") {
         Ok(os_release) => os_release,
@@ -369,13 +369,10 @@ pub fn view_release_notes(_: &ViewReleaseNotes, cx: &mut App) -> Option<()> {
     None
 }
 
-#[cfg(not(target_os = "windows"))]
 const INSTALLER_DIR_PREFIX: &str = "zed-auto-update";
 
-#[cfg(not(target_os = "windows"))]
 struct InstallerDir(tempfile::TempDir);
 
-#[cfg(not(target_os = "windows"))]
 impl InstallerDir {
     async fn new() -> Result<Self> {
         Ok(Self(
@@ -441,7 +438,7 @@ impl AutoUpdater {
         // and then spawn the new binary.
         #[cfg(target_os = "windows")]
         let quit_subscription = Some(cx.on_app_quit(|_, _| finalize_auto_update_on_quit()));
-        #[cfg(not(target_os = "windows"))]
+
         let quit_subscription = None;
 
         cx.on_app_restart(|this, _| {
@@ -902,7 +899,7 @@ impl AutoUpdater {
     }
 
     fn check_dependencies() -> Result<()> {
-        #[cfg(target_os = "linux")]
+
         if which::which("rsync").is_err() {
             let install_hint = linux_rsync_install_hint();
             return Err(MissingDependencyError(format!(

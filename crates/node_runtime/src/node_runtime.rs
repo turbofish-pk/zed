@@ -1396,7 +1396,7 @@ mod tests {
             for path in [&node_binary, &npm_file] {
                 fs::create_dir_all(path.parent().ok_or_else(|| anyhow::anyhow!("no parent"))?)?;
                 fs::write(path, "#!/bin/sh\npwd -P\n")?;
-                #[cfg(unix)]
+
                 {
                     use std::os::unix::fs::PermissionsExt;
 
@@ -1441,7 +1441,7 @@ mod tests {
                             subcommand.to_string(),
                         ];
                         assert!(command.args.windows(3).any(|args| args == expected_prefix));
-                        #[cfg(unix)]
+
                         {
                             let output = runtime
                                 .run_npm_subcommand(prefix_directory, None, subcommand, &[])
@@ -1477,7 +1477,7 @@ mod tests {
         let filename = format!("npm{}", env::consts::EXE_SUFFIX);
         let npm = binary_directory.join(&filename);
         fs::write(&npm, "#!/bin/sh\npwd -P\n")?;
-        #[cfg(unix)]
+
         {
             use std::os::unix::fs::PermissionsExt;
             fs::set_permissions(&npm, fs::Permissions::from_mode(0o755))?;
@@ -1490,7 +1490,7 @@ mod tests {
         ] {
             let resolved_npm = find_npm_path(&configured_path, search_path, directory.path())?;
             assert_eq!(resolved_npm, npm);
-            #[cfg(unix)]
+
             {
                 let runtime = SystemNodeRuntime {
                     node: binary_directory.join("node"),
@@ -1523,7 +1523,7 @@ mod tests {
         let filename = format!("node{}", env::consts::EXE_SUFFIX);
         let node = binary_directory.join(&filename);
         fs::write(&node, b"not executed by lookup tests")?;
-        #[cfg(unix)]
+
         {
             use std::os::unix::fs::PermissionsExt;
             fs::set_permissions(&node, fs::Permissions::from_mode(0o755))?;
@@ -2030,7 +2030,6 @@ mod tests {
     }
 
     fn node_output(stdout: &str) -> Output {
-        #[cfg(unix)]
         use std::os::unix::process::ExitStatusExt;
         #[cfg(windows)]
         use std::os::windows::process::ExitStatusExt;

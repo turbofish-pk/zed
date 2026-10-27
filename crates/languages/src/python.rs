@@ -327,7 +327,7 @@ impl TyLspAdapter {
     const ARCH_SERVER_NAME: &str = "apple-darwin";
 }
 
-#[cfg(target_os = "linux")]
+
 impl TyLspAdapter {
     const GITHUB_ASSET_KIND: AssetKind = AssetKind::TarGz;
     const ARCH_SERVER_NAME: &str = "unknown-linux-gnu";
@@ -2449,7 +2449,7 @@ impl RuffLspAdapter {
     const ARCH_SERVER_NAME: &str = "apple-darwin";
 }
 
-#[cfg(target_os = "linux")]
+
 impl RuffLspAdapter {
     const GITHUB_ASSET_KIND: AssetKind = AssetKind::TarGz;
     const ARCH_SERVER_NAME: &str = "unknown-linux-gnu";
@@ -2734,7 +2734,7 @@ impl PyreflyLspAdapter {
     const ARCH_SERVER_NAME: &str = "macos";
 }
 
-#[cfg(target_os = "linux")]
+
 impl PyreflyLspAdapter {
     const GITHUB_ASSET_KIND: AssetKind = AssetKind::TarGz;
     const ARCH_SERVER_NAME: &str = "linux";

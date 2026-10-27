@@ -1545,7 +1545,7 @@ impl Room {
         })
     }
 
-    #[cfg(target_os = "linux")]
+    
     pub fn share_screen_wayland(&mut self, cx: &mut Context<Self>) -> Task<Result<()>> {
         log::info!("will screenshare on wayland");
         if self.status.is_offline() {

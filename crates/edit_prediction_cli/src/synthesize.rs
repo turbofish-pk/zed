@@ -112,7 +112,7 @@ pub async fn run_synthesize(config: SynthesizeConfig) -> Result<()> {
     if LATEST_FAILED_EXAMPLES_DIR.is_symlink() {
         std::fs::remove_file(&*LATEST_FAILED_EXAMPLES_DIR)?;
     }
-    #[cfg(unix)]
+    
     std::os::unix::fs::symlink(&*FAILED_EXAMPLES_DIR, &*LATEST_FAILED_EXAMPLES_DIR)?;
     #[cfg(windows)]
     std::os::windows::fs::symlink_dir(&*FAILED_EXAMPLES_DIR, &*LATEST_FAILED_EXAMPLES_DIR)?;

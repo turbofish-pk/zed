@@ -7118,7 +7118,7 @@ mod tests {
         };
     }
 
-    #[cfg(unix)]
+
     #[gpui::test]
     async fn stdio_offers_subagents_only_behind_acp_beta(cx: &mut gpui::TestAppContext) {
         cx.update(|cx| {
@@ -7262,13 +7262,13 @@ exec cat >/dev/null
         }
     }
 
-    #[cfg(unix)]
+
     #[gpui::test]
     async fn agent_exit_preserves_final_updates_and_diagnostics(cx: &mut gpui::TestAppContext) {
         assert_agent_exit_preserves_final_output(false, cx).await;
     }
 
-    #[cfg(unix)]
+
     #[gpui::test]
     async fn agent_exit_with_inherited_handles_preserves_final_output(
         cx: &mut gpui::TestAppContext,
@@ -7276,7 +7276,7 @@ exec cat >/dev/null
         assert_agent_exit_preserves_final_output(true, cx).await;
     }
 
-    #[cfg(unix)]
+
     async fn assert_agent_exit_preserves_final_output(
         inherit_handles: bool,
         cx: &mut gpui::TestAppContext,

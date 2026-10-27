@@ -3819,7 +3819,7 @@ mod tests {
 
         // Base document with {ABS} placeholder for absolute path prefix.
         // Each test case replaces a specific line to add cursor (ˇ) or highlight («»ˇ) markers.
-        #[cfg(not(target_os = "windows"))]
+        
         const ABS: &str = "/root/dir";
         #[cfg(target_os = "windows")]
         const ABS: &str = "C:/root/dir";

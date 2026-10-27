@@ -19,7 +19,6 @@ pub fn sql(tokens: TokenStream) -> TokenStream {
     #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
     let error = SQLITE.sql_has_syntax_error(sql.trim());
 
-    #[cfg(any(target_os = "linux", target_os = "freebsd"))]
     let error: Option<(String, usize)> = None;
 
     let formatted_sql = sqlformat::format(&sql, &sqlformat::QueryParams::None, Default::default());

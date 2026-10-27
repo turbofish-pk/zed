@@ -3389,7 +3389,7 @@ mod tests {
         assert!(harness.prompts.is_empty());
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn v2_receipt_stdio_preserves_acceptance_before_immediate_eof(cx: &mut TestAppContext) {
         use acp_thread::{SubmissionResponse, SubmissionState};
@@ -5520,7 +5520,7 @@ done
         );
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn v2_new_stdio_preserves_pre_response_updates_before_eof(cx: &mut TestAppContext) {
         use acp_thread::ForegroundActivity;
@@ -5584,7 +5584,7 @@ done
         assert_eq!(client.pending_session_updates.borrow().counts(), (0, 0, 0));
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn v2_session_stdio_applies_initial_state_and_authoritative_config(
         cx: &mut TestAppContext,
@@ -5689,7 +5689,7 @@ done
         }
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn v2_close_stdio_preserves_success_before_immediate_eof(cx: &mut TestAppContext) {
         cx.update(|cx| {
@@ -7536,7 +7536,7 @@ done
         assert_eq!(task.env.get("EXTRA").map(String::as_str), Some("2"));
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn v2_stdio_shutdown_terminates_a_retained_connection(cx: &mut TestAppContext) {
         cx.update(|cx| {
@@ -7615,7 +7615,7 @@ exec sleep 60
         }
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn v2_shutdown_terminates_a_process_during_initialization(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -7664,7 +7664,7 @@ exec sleep 60
         );
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn v2_stdio_startup_preserves_rejections_before_cleanup(cx: &mut TestAppContext) {
         cx.update(|cx| {
@@ -7752,7 +7752,7 @@ exec sleep 60
         }
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn v2_auth_stdio_uses_one_launcher_and_preserves_errors_and_exit_stderr(
         cx: &mut TestAppContext,

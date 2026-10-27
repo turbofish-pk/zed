@@ -284,7 +284,6 @@ impl Measurement for HardwareCounter {
 use darwin as backend;
 /// The platform backend behind [`HardwareCounter`]. Each provides a `Counter`
 /// with `open`, `snapshot`, `advanced`, and `delta`, and a `Snapshot` type.
-#[cfg(target_os = "linux")]
 use perf as backend;
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
 use unsupported as backend;
@@ -305,7 +304,7 @@ use unsupported as backend;
 /// scheduled; each PMU's encoding is read from sysfs. If the kernel
 /// multiplexes a conventional counter with other profiling, its count is
 /// scaled by `time_enabled / time_running` and a warning is printed once.
-#[cfg(target_os = "linux")]
+
 pub mod perf {
     use super::*;
 
@@ -883,7 +882,6 @@ impl ResourceMetric {
         }
     }
 
-    #[cfg(unix)]
     fn read(self, usage: &libc::rusage) -> u64 {
         let value = match self {
             Self::VoluntaryContextSwitches => usage.ru_nvcsw,
@@ -927,11 +925,10 @@ impl ResourceCounter {
         self.scope
     }
 
-    #[cfg(unix)]
     fn read(&self) -> Result<u64> {
         let who = match self.scope {
             MetricScope::Process => libc::RUSAGE_SELF,
-            #[cfg(target_os = "linux")]
+
             MetricScope::CallingThread => libc::RUSAGE_THREAD,
             #[cfg(not(target_os = "linux"))]
             MetricScope::CallingThread => {
@@ -2116,7 +2113,6 @@ mod tests {
         assert_eq!(formatter.scale_for_machines(&mut values), "cycles");
     }
 
-    #[cfg(unix)]
     #[test]
     fn resource_counter_counts_page_faults_and_context_switches() {
         let faults = ResourceCounter::new(ResourceMetric::MinorPageFaults, MetricScope::Process)
@@ -2127,7 +2123,6 @@ mod tests {
         std::hint::black_box(&buffer);
         assert!(faults.end(start) > 100.0);
 
-        #[cfg(target_os = "linux")]
         {
             let switches = ResourceCounter::new(
                 ResourceMetric::VoluntaryContextSwitches,

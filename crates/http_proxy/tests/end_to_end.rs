@@ -13,7 +13,7 @@ use http_proxy::{
 };
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
-#[cfg(unix)]
+
 use std::os::unix::net::UnixStream;
 use std::thread;
 use std::time::Duration;
@@ -101,7 +101,6 @@ fn spawn_proxy_with_upstream(
     (proxy, events_rx)
 }
 
-#[cfg(unix)]
 fn spawn_unix_proxy(allowlist: Allowlist) -> (ProxyHandle, mpsc::UnboundedReceiver<ProxyEvent>) {
     let (events_tx, mut events_rx) = mpsc::unbounded();
     let proxy = ProxyHandle::spawn_unix_temp(ProxyConfig {
@@ -189,7 +188,6 @@ fn connect_allowed_host_completes_tunnel_and_emits_events() {
     }
 }
 
-#[cfg(unix)]
 #[test]
 fn unix_listener_denied_host_returns_511() {
     let allowlist = Allowlist::from_patterns([HostPattern::parse("github.com").unwrap()]);

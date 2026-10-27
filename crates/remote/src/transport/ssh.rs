@@ -2506,7 +2506,6 @@ mod tests {
             }
         }
 
-        #[cfg(unix)]
         {
             let socket = smol::block_on(SshSocket::new(
                 SshConnectionOptions::default(),
@@ -2544,7 +2543,6 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(unix)]
     #[test]
     fn command_output_drains_output_while_writing_input() -> Result<()> {
         let input = vec![b'x'; 1024 * 1024];
@@ -2561,7 +2559,6 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(unix)]
     #[test]
     fn command_output_preserves_stderr_when_input_fails() -> Result<()> {
         let input = vec![b'x'; 1024 * 1024];
@@ -2578,7 +2575,6 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(unix)]
     #[test]
     fn version_query_failure_does_not_abort_probe() -> Result<()> {
         let command = if cfg!(target_os = "macos") {

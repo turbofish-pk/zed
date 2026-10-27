@@ -275,7 +275,7 @@ mod tests {
         );
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn shared_runtime_startup_exit_drains_stderr_in_both_arrival_orders(
         cx: &mut TestAppContext,
@@ -331,7 +331,7 @@ mod tests {
         assert_eq!(error.to_string(), "initialize rejected");
     }
 
-    #[cfg(unix)]
+    
     #[gpui::test]
     async fn shared_runtime_child_guard_kills_an_abandoned_process(cx: &mut TestAppContext) {
         cx.executor().allow_parking();

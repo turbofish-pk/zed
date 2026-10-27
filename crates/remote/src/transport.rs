@@ -245,7 +245,6 @@ fn handle_rpc_messages_over_child_process_stdio(
         };
         let exit_status = remote_proxy_process.status().await?;
         let status = exit_status.code().unwrap_or_else(|| {
-            #[cfg(unix)]
             let status = std::os::unix::process::ExitStatusExt::signal(&exit_status).unwrap_or(1);
             #[cfg(not(unix))]
             let status = 1;
@@ -490,7 +489,7 @@ async fn build_remote_server_from_source(
     let path = if !build_remote_server.contains("nocompress") {
         delegate.set_status(Some("Compressing binary"), cx);
 
-        #[cfg(not(target_os = "windows"))]
+        
         let archive_path = {
             run_cmd(new_command("gzip").arg("-f").arg(&bin_path)).await?;
             bin_path.with_extension("gz")
@@ -716,7 +715,6 @@ mod tests {
         );
     }
 
-    #[cfg(unix)]
     #[test]
     fn test_home_dir_probe_without_path_lookup() {
         let temp_dir = tempfile::tempdir().unwrap();

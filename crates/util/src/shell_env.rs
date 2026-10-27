@@ -34,7 +34,7 @@ pub async fn capture(
 ) -> Result<collections::HashMap<String, String>> {
     #[cfg(windows)]
     return capture_windows(shell_path.as_ref(), args, directory.as_ref()).await;
-    #[cfg(unix)]
+    
     return capture_unix(shell_path.as_ref(), args, directory.as_ref()).await;
 }
 
@@ -71,7 +71,7 @@ fn parse_env_output(
     }
 }
 
-#[cfg(unix)]
+
 async fn capture_unix(
     shell_path: &Path,
     args: &[String],
@@ -162,7 +162,7 @@ async fn capture_unix(
     )
 }
 
-#[cfg(unix)]
+
 fn capture_output_redirection(shell_kind: ShellKind) -> (std::os::fd::RawFd, String) {
     // In some shells, file descriptors greater than 2 cannot be used in interactive mode,
     // so file descriptor 0 (stdin) is used instead. This impacts zsh, old bash; perhaps others.
@@ -182,7 +182,7 @@ fn capture_output_redirection(shell_kind: ShellKind) -> (std::os::fd::RawFd, Str
     }
 }
 
-#[cfg(unix)]
+
 async fn spawn_and_read_fd(
     mut command: std::process::Command,
     child_fd: std::os::fd::RawFd,
@@ -315,7 +315,7 @@ mod tests {
     use super::*;
     use crate::path;
 
-    #[cfg(unix)]
+    
     fn exit_status(code: i32) -> ExitStatus {
         use std::os::unix::process::ExitStatusExt;
 
@@ -329,7 +329,7 @@ mod tests {
         ExitStatus::from_raw(code)
     }
 
-    #[cfg(unix)]
+    
     #[test]
     fn capture_powershell_environment_without_startup_output() -> Result<()> {
         for shell in ["pwsh", "powershell"] {

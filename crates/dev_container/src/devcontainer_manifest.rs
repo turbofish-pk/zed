@@ -705,7 +705,7 @@ impl DevContainerManifest {
         dockerfile_content: String,
         use_buildkit: bool,
     ) -> String {
-        #[cfg(not(target_os = "windows"))]
+        
         let update_remote_user_uid = self.dev_container().update_remote_user_uid.unwrap_or(true);
         #[cfg(target_os = "windows")]
         let update_remote_user_uid = false;
@@ -1658,7 +1658,7 @@ RUN sed -i -E 's/((^|\s)PATH=)([^\$]*)$/\1\${{PATH:-\3}}/g' /etc/profile || true
         Ok(image)
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     fn should_update_remote_user_uid(
         &self,
         image: &DockerInspect,
@@ -1673,7 +1673,7 @@ RUN sed -i -E 's/((^|\s)PATH=)([^\$]*)$/\1\${{PATH:-\3}}/g' /etc/profile || true
         Ok(remote_user != "root" && !remote_user.chars().all(|c| c.is_ascii_digit()))
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     async fn update_remote_user_uid(
         &self,
         image: DockerInspect,
@@ -1786,7 +1786,7 @@ RUN sed -i -E 's/((^|\s)PATH=)([^\$]*)$/\1\${{PATH:-\3}}/g' /etc/profile || true
         self.docker_client.inspect(&updated_image_tag).await
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     fn generate_update_uid_dockerfile(&self) -> String {
         let mut dockerfile = r#"ARG BASE_IMAGE
 FROM $BASE_IMAGE
@@ -3447,7 +3447,7 @@ fn build_devcontainer_metadata_entry(
 }
 
 fn normalize_label_path(path: &str) -> String {
-    #[cfg(not(target_os = "windows"))]
+    
     {
         path.to_string()
     }
@@ -3474,7 +3474,7 @@ mod test {
         sync::{Arc, Mutex},
     };
 
-    #[cfg(not(target_os = "windows"))]
+    
     use std::{
         fs as std_fs,
         time::{SystemTime, UNIX_EPOCH},
@@ -3510,7 +3510,7 @@ mod test {
         },
         oci::TokenResponse,
     };
-    #[cfg(not(target_os = "windows"))]
+    
     const TEST_PROJECT_PATH: &str = "/path/to/local/project";
     #[cfg(target_os = "windows")]
     const TEST_PROJECT_PATH: &str = r#"C:\\path\to\local\project"#;
@@ -4024,7 +4024,7 @@ mod test {
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[test]
     fn post_start_marker_script_runs_command_when_marker_directory_cannot_be_created() {
         let mut command = Command::new("echo");
@@ -4044,7 +4044,7 @@ mod test {
         assert_eq!(String::from_utf8_lossy(&output.stdout), "post-start\n");
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[test]
     fn post_start_marker_script_accepts_background_command() {
         let home_directory = temporary_home_directory("post-start-background");
@@ -4074,7 +4074,7 @@ mod test {
         std_fs::remove_dir_all(home_directory).expect("temporary home should be removed");
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[test]
     fn post_start_marker_script_marks_only_after_success() {
         let home_directory = temporary_home_directory("post-start-success");
@@ -4112,7 +4112,7 @@ mod test {
         std_fs::remove_dir_all(home_directory).expect("temporary home should be removed");
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[test]
     fn post_start_marker_script_surfaces_marker_write_failure() {
         let home_directory = temporary_home_directory("post-start-marker-write-failure");
@@ -4136,7 +4136,7 @@ mod test {
         std_fs::remove_dir_all(home_directory).expect("temporary home should be removed");
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[test]
     fn post_start_marker_script_does_not_mark_after_failure() {
         let home_directory = temporary_home_directory("post-start-failure");
@@ -4156,14 +4156,14 @@ mod test {
         std_fs::remove_dir_all(home_directory).expect("temporary home should be removed");
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     fn run_shell_script(script: &str, home_directory: &Path) -> Output {
         let mut command = Command::new("sh");
         command.arg("-c").arg(script).env("HOME", home_directory);
         gpui::block_on(command.output()).expect("shell should run postStartCommand marker script")
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     fn temporary_home_directory(prefix: &str) -> PathBuf {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -4488,7 +4488,7 @@ mod test {
 
     // updateRemoteUserUID is treated as false in Windows, so this test will fail
     // It is covered by test_spawns_devcontainer_with_dockerfile_and_no_update_uid
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test]
     async fn test_spawns_devcontainer_with_dockerfile_and_features(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -4873,7 +4873,7 @@ chmod +x ./install.sh
 
     // updateRemoteUserUID is treated as false in Windows, so this test will fail
     // It is covered by test_spawns_devcontainer_with_docker_compose_and_no_update_uid
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test]
     async fn test_spawns_devcontainer_with_docker_compose(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -5988,7 +5988,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test]
     async fn test_spawns_devcontainer_with_docker_compose_and_podman(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -6498,7 +6498,7 @@ chmod +x ./install.sh
         }))
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test]
     async fn test_spawns_devcontainer_with_local_feature(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -6608,7 +6608,7 @@ chmod +x ./install.sh
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test]
     async fn test_spawns_devcontainer_with_plain_image(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -6710,7 +6710,7 @@ RUN sed -i -E 's/((^|\s)PATH=)([^\$]*)$/\1\${PATH:-\3}/g' /etc/profile || true
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test]
     async fn test_spawns_devcontainer_with_docker_compose_and_plain_image(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -7176,7 +7176,7 @@ RUN echo $RUBY_VERSION2
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     #[gpui::test]
     async fn check_for_existing_container_errors_when_multiple_match(cx: &mut TestAppContext) {
         cx.executor().allow_parking();
@@ -7322,11 +7322,11 @@ RUN echo $RUBY_VERSION2
                 .expect("should be available")
                 .clone()
         }
-        #[cfg(not(target_os = "windows"))]
+        
         fn set_podman(&mut self, podman: bool) {
             self.podman = podman;
         }
-        #[cfg(not(target_os = "windows"))]
+        
         fn set_duplicate_container_ids(&self, ids: Vec<String>) {
             *self
                 .duplicate_container_ids

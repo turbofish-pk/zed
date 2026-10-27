@@ -2050,7 +2050,6 @@ impl GitRepository for RealGitRepository {
                     let current_mode = if metadata.file_type().is_symlink() {
                         "120000"
                     } else {
-                        #[cfg(unix)]
                         {
                             use std::os::unix::fs::PermissionsExt as _;
                             if metadata.permissions().mode() & 0o111 == 0 {
@@ -4439,7 +4438,6 @@ mod tests {
         );
     }
 
-    #[cfg(unix)]
     #[gpui::test]
     async fn test_merge_base_worktree_diff_handles_recreated_symlink(cx: &mut TestAppContext) {
         use std::os::unix::fs::symlink;
@@ -5544,7 +5542,6 @@ mod tests {
         );
     }
 
-    #[cfg(unix)]
     #[gpui::test]
     async fn test_commit_runs_git_hooks(cx: &mut TestAppContext) {
         use std::os::unix::fs::PermissionsExt as _;

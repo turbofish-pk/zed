@@ -4,7 +4,7 @@ pub use encrypted_password::{EncryptedPassword, IKnowWhatIAmDoingAndIHaveReadThe
 
 use net::async_net::UnixListener;
 use smol::lock::Mutex;
-#[cfg(not(target_os = "windows"))]
+
 use util::fs::make_file_executable;
 
 use std::ffi::OsStr;
@@ -20,11 +20,11 @@ use futures::{
     select_biased,
 };
 use gpui::{AsyncApp, BackgroundExecutor, Task};
-#[cfg(not(target_os = "windows"))]
+
 use smol::fs;
 use util::{ResultExt as _, debug_panic, maybe};
 
-#[cfg(not(target_os = "windows"))]
+
 use util::{paths::PathExt, shell::ShellKind};
 
 /// Path to the program used for askpass
@@ -115,10 +115,10 @@ pub struct AskPassSession {
     executor: BackgroundExecutor,
 }
 
-#[cfg(not(target_os = "windows"))]
+
 const ASKPASS_SCRIPT_NAME: &str = "askpass.sh";
 
-#[cfg(not(target_os = "windows"))]
+
 const GPG_WRAPPER_SCRIPT_NAME: &str = "gpg-wrapper.sh";
 
 impl AskPassSession {
@@ -232,7 +232,7 @@ impl AskPassSession {
     /// Path to a script suitable for git's `gpg.program`, routing GnuPG
     /// passphrase prompts through Zed's askpass UI. `None` if unavailable.
     pub fn gpg_wrapper_path(&self) -> Option<&std::path::Path> {
-        #[cfg(not(target_os = "windows"))]
+        
         return self.askpass_task.gpg_wrapper_path();
         #[cfg(target_os = "windows")]
         return None;
@@ -255,7 +255,7 @@ pub struct PasswordProxy {
     /// On Unix: path to the generated .sh askpass script (set as SSH_ASKPASS).
     /// On Windows: path to cli.exe (set as SSH_ASKPASS directly — no script needed).
     askpass_script_path: std::path::PathBuf,
-    #[cfg(not(target_os = "windows"))]
+    
     gpg_wrapper_script_path: Option<std::path::PathBuf>,
     /// On Windows only: path to the Unix socket, passed as ZED_ASKPASS_SOCKET
     /// so cli.exe can find it without --askpass argument parsing.
@@ -282,7 +282,7 @@ impl PasswordProxy {
 
         // Unix: SSH_ASKPASS = path to generated .sh script in temp dir.
         // Windows: SSH_ASKPASS = path to cli.exe directly. No script is written.
-        #[cfg(not(target_os = "windows"))]
+        
         let askpass_script_path = temp_dir.path().join(ASKPASS_SCRIPT_NAME);
         #[cfg(target_os = "windows")]
         let askpass_script_path = askpass_program.to_path_buf();
@@ -294,7 +294,7 @@ impl PasswordProxy {
         // Unix where we control the pinentry via loopback mode. We compute the path
         // before the socket task takes ownership of `temp_dir`, and write the file
         // afterwards.
-        #[cfg(not(target_os = "windows"))]
+        
         let (gpg_wrapper_script_path, gpg_wrapper_script) =
             match generate_gpg_wrapper_script(askpass_program, &askpass_socket_path) {
                 Ok(Some(script)) => (
@@ -348,7 +348,7 @@ impl PasswordProxy {
 
         // Unix only: write the shell script and mark it executable.
         // On Windows cli.exe is invoked directly, so no script is needed.
-        #[cfg(not(target_os = "windows"))]
+        
         {
             let askpass_script = generate_askpass_script(askpass_program, &askpass_socket_path)?;
             fs::write(&askpass_script_path, askpass_script)
@@ -362,7 +362,7 @@ impl PasswordProxy {
         }
 
         // Write the gpg wrapper script (computed above) and mark it executable.
-        #[cfg(not(target_os = "windows"))]
+        
         let gpg_wrapper_script_path =
             if let Some((path, script)) = gpg_wrapper_script_path.zip(gpg_wrapper_script) {
                 match async {
@@ -389,7 +389,7 @@ impl PasswordProxy {
         Ok(Self {
             _task,
             askpass_script_path,
-            #[cfg(not(target_os = "windows"))]
+            
             gpg_wrapper_script_path,
             #[cfg(target_os = "windows")]
             askpass_socket_path,
@@ -405,7 +405,7 @@ impl PasswordProxy {
         &self.askpass_socket_path
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     pub fn gpg_wrapper_path(&self) -> Option<&std::path::Path> {
         self.gpg_wrapper_script_path.as_deref()
     }
@@ -477,7 +477,7 @@ pub fn set_askpass_program(path: std::path::PathBuf) {
 
 /// Generates the Unix shell askpass script.
 /// Not used on Windows — cli.exe is invoked directly as SSH_ASKPASS.
-#[cfg(not(target_os = "windows"))]
+
 fn generate_askpass_script(
     askpass_program: &std::path::Path,
     askpass_socket: &std::path::Path,
@@ -502,7 +502,7 @@ fn generate_askpass_script(
 }
 
 #[inline]
-#[cfg(not(target_os = "windows"))]
+
 fn generate_gpg_wrapper_script(
     askpass_program: &std::path::Path,
     askpass_socket: &std::path::Path,
@@ -611,7 +611,7 @@ printf '%s\n' "$passphrase" |
 
 /// Finds the real `gpg` (or `gpg2`) executable on `PATH`.
 #[inline]
-#[cfg(not(target_os = "windows"))]
+
 fn find_gpg_program() -> Option<std::path::PathBuf> {
     ["gpg", "gpg2"]
         .into_iter()

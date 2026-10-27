@@ -21,12 +21,10 @@ fn main() {
     std::process::exit(1);
 }
 
-#[cfg(target_os = "linux")]
 fn main() {
     imp::main();
 }
 
-#[cfg(target_os = "linux")]
 mod imp {
     use std::io::{Read as _, Write as _};
     use std::net::TcpStream;

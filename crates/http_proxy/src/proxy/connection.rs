@@ -19,7 +19,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use base64::Engine as _;
 use std::io::{Read, Write};
 use std::net::{IpAddr, Shutdown, SocketAddr, TcpStream, ToSocketAddrs as _};
-#[cfg(unix)]
+
 use std::os::unix::net::UnixStream;
 use std::sync::Arc;
 use std::thread;
@@ -57,7 +57,7 @@ const UPSTREAM_HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(30);
 /// the connection (those are logged at the listener level).
 pub(crate) enum ClientStream {
     Tcp(TcpStream),
-    #[cfg(unix)]
+    
     Unix(UnixStream),
 }
 
@@ -65,7 +65,7 @@ impl ClientStream {
     fn try_clone(&self) -> std::io::Result<Self> {
         match self {
             Self::Tcp(stream) => stream.try_clone().map(Self::Tcp),
-            #[cfg(unix)]
+            
             Self::Unix(stream) => stream.try_clone().map(Self::Unix),
         }
     }
@@ -73,7 +73,7 @@ impl ClientStream {
     fn set_read_timeout(&self, duration: Option<Duration>) -> std::io::Result<()> {
         match self {
             Self::Tcp(stream) => stream.set_read_timeout(duration),
-            #[cfg(unix)]
+            
             Self::Unix(stream) => stream.set_read_timeout(duration),
         }
     }
@@ -83,7 +83,7 @@ impl Read for ClientStream {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         match self {
             Self::Tcp(stream) => stream.read(buf),
-            #[cfg(unix)]
+            
             Self::Unix(stream) => stream.read(buf),
         }
     }
@@ -93,7 +93,7 @@ impl Write for ClientStream {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match self {
             Self::Tcp(stream) => stream.write(buf),
-            #[cfg(unix)]
+            
             Self::Unix(stream) => stream.write(buf),
         }
     }
@@ -101,7 +101,7 @@ impl Write for ClientStream {
     fn flush(&mut self) -> std::io::Result<()> {
         match self {
             Self::Tcp(stream) => stream.flush(),
-            #[cfg(unix)]
+            
             Self::Unix(stream) => stream.flush(),
         }
     }
@@ -115,7 +115,7 @@ impl StreamIo for ClientStream {
     fn shutdown(&self, how: Shutdown) -> std::io::Result<()> {
         match self {
             Self::Tcp(stream) => stream.shutdown(how),
-            #[cfg(unix)]
+            
             Self::Unix(stream) => stream.shutdown(how),
         }
     }

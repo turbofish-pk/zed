@@ -28,7 +28,7 @@ fn init_logger() {
 
 pub fn test_font() -> Font {
     static TEST_FONT: LazyLock<Font> = LazyLock::new(|| {
-        #[cfg(not(target_os = "windows"))]
+        
         {
             font("Helvetica")
         }

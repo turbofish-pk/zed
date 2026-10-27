@@ -775,7 +775,7 @@ impl ShellKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(unix)]
+
     use crate::shell_builder::ShellBuilder;
 
     // Examples
@@ -1067,7 +1067,6 @@ mod tests {
         assert_eq!(shell_kind.try_quote("nul\0byte"), None);
     }
 
-    #[cfg(unix)]
     #[test]
     fn test_quoted_arguments_survive_real_shells() {
         let arguments = [
@@ -1168,7 +1167,6 @@ mod tests {
         }
     }
 
-    #[cfg(unix)]
     #[test]
     fn test_quoted_csh_commands_survive_real_shells() {
         use std::os::unix::fs::PermissionsExt as _;

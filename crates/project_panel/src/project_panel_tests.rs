@@ -5047,7 +5047,7 @@ async fn test_rename_with_hide_root(cx: &mut gpui::TestAppContext) {
             "Rename should be blocked on Windows even with multiple worktrees"
         );
 
-        #[cfg(not(target_os = "windows"))]
+        
         {
             assert!(
                 panel.read_with(cx, |panel, _| panel.state.edit_state.is_some()),

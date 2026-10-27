@@ -613,7 +613,7 @@ impl TitleBar {
                 },
             )
             .when(can_use_microphone && screen_sharing_supported, |parent| {
-                #[cfg(target_os = "linux")]
+                
                 let is_wayland = gpui::guess_compositor() == "Wayland";
                 #[cfg(not(target_os = "linux"))]
                 let is_wayland = false;
@@ -634,7 +634,7 @@ impl TitleBar {
                             .room()
                             .is_some_and(|room| !room.read(cx).is_sharing_screen());
 
-                        #[cfg(target_os = "linux")]
+                        
                         {
                             if is_wayland
                                 && let Some(room) = ActiveCall::global(cx).read(cx).room().cloned()

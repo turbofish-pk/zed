@@ -17,7 +17,7 @@ use syn::{ItemFn, LitStr, parse_macro_input, parse_quote};
 /// let path = path!("/Users/user/file.txt");
 /// #[cfg(target_os = "windows")]
 /// assert_eq!(path, "C:\\Users\\user\\file.txt");
-/// #[cfg(not(target_os = "windows"))]
+/// 
 /// assert_eq!(path, "/Users/user/file.txt");
 /// ```
 #[proc_macro]
@@ -48,7 +48,7 @@ pub fn path(input: TokenStream) -> TokenStream {
 /// let uri = uri!("file:///path/to/file");
 /// #[cfg(target_os = "windows")]
 /// assert_eq!(uri, "file:///C:/path/to/file");
-/// #[cfg(not(target_os = "windows"))]
+/// 
 /// assert_eq!(uri, "file:///path/to/file");
 /// ```
 #[proc_macro]
@@ -74,7 +74,7 @@ pub fn uri(input: TokenStream) -> TokenStream {
 /// let text = line_endings!("Hello\nWorld");
 /// #[cfg(target_os = "windows")]
 /// assert_eq!(text, "Hello\r\nWorld");
-/// #[cfg(not(target_os = "windows"))]
+/// 
 /// assert_eq!(text, "Hello\nWorld");
 /// ```
 #[proc_macro]

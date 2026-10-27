@@ -267,7 +267,7 @@ pub async fn run_prediction(
         if LATEST_EXAMPLE_RUN_DIR.is_symlink() {
             fs::remove_file(&*LATEST_EXAMPLE_RUN_DIR)?;
         }
-        #[cfg(unix)]
+        
         std::os::unix::fs::symlink(&run_dir, &*LATEST_EXAMPLE_RUN_DIR)?;
         #[cfg(windows)]
         std::os::windows::fs::symlink_dir(&run_dir, &*LATEST_EXAMPLE_RUN_DIR)?;

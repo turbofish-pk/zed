@@ -80,7 +80,7 @@ impl Keystroke {
     /// This method assumes that `self` was typed and `target' is in the keymap, and checks
     /// both possibilities for self against the target.
     pub fn should_match(&self, target: &KeybindingKeystroke) -> bool {
-        #[cfg(not(target_os = "windows"))]
+        
         if let Some(key_char) = self
             .key_char
             .as_ref()
@@ -331,7 +331,7 @@ impl KeybindingKeystroke {
                 display_key: key,
             }
         }
-        #[cfg(not(target_os = "windows"))]
+        
         {
             KeybindingKeystroke { inner: keystroke }
         }
@@ -353,7 +353,7 @@ impl KeybindingKeystroke {
         {
             &self.display_modifiers
         }
-        #[cfg(not(target_os = "windows"))]
+        
         {
             &self.inner.modifiers
         }
@@ -369,7 +369,7 @@ impl KeybindingKeystroke {
         {
             &self.display_key
         }
-        #[cfg(not(target_os = "windows"))]
+        
         {
             &self.inner.key
         }
@@ -399,7 +399,7 @@ impl KeybindingKeystroke {
         {
             unparse(&self.display_modifiers, &self.display_key, os)
         }
-        #[cfg(not(target_os = "windows"))]
+        
         {
             unparse(&self.inner.modifiers, &self.inner.key, os)
         }

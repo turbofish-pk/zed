@@ -7817,7 +7817,7 @@ impl AcpThread {
                         (task_command, task_args, env, None, cwd.clone())
                     };
 
-                #[cfg(not(target_os = "windows"))]
+                
                 let (task_command, task_args, task_env, sandbox, spawn_cwd) = {
                     let mut builder = ShellBuilder::new(&Shell::Program(shell), is_windows);
                     if headless || (cfg!(target_os = "linux") && sandbox_wrap.is_some()) {
@@ -11014,19 +11014,17 @@ mod tests {
     /// This test verifies that the fix to kill_active_task (which now also kills
     /// the shell process in addition to the foreground process) properly allows
     /// wait_for_exit to complete instead of hanging indefinitely.
-    #[cfg(unix)]
+
     #[gpui::test]
     async fn test_terminal_kill_allows_wait_for_exit_to_complete(cx: &mut gpui::TestAppContext) {
         assert_process_terminal_can_stop(false, cx).await;
     }
 
-    #[cfg(unix)]
     #[gpui::test]
     async fn test_headless_terminal_retains_process_control(cx: &mut gpui::TestAppContext) {
         assert_process_terminal_can_stop(true, cx).await;
     }
 
-    #[cfg(unix)]
     async fn assert_process_terminal_can_stop(headless: bool, cx: &mut gpui::TestAppContext) {
         use std::collections::HashMap;
         use task::Shell;
@@ -15870,7 +15868,6 @@ mod tests {
         });
     }
 
-    #[cfg(unix)]
     #[gpui::test]
     async fn test_terminal_environment_pairs_reach_process(cx: &mut TestAppContext) {
         init_test(cx);
@@ -17178,7 +17175,6 @@ mod tests {
         assert_eq!(location.line, Some(7));
         assert_eq!(location.meta.as_ref(), Some(&meta));
 
-        #[cfg(unix)]
         {
             use std::os::unix::ffi::OsStringExt;
 

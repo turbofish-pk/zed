@@ -884,7 +884,7 @@ impl Loader {
         Ok(())
     }
 
-    #[cfg(unix)]
+    
     fn check_external_scanner(&self, name: &str, library_path: &Path) -> Result<()> {
         let prefix = if cfg!(any(target_os = "macos", target_os = "ios")) {
             "_"
@@ -1046,7 +1046,7 @@ impl Loader {
 
                 // Get the current user id so that files created in the docker container will have
                 // the same owner.
-                #[cfg(unix)]
+                
                 {
                     #[link(name = "c")]
                     extern "C" {

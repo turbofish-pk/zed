@@ -814,7 +814,7 @@ async fn test_fake_fs_rename_onto_itself_keeps_the_file(executor: BackgroundExec
 }
 
 #[gpui::test]
-#[cfg(unix)]
+
 async fn test_realfs_executable_metadata(executor: BackgroundExecutor) {
     use std::os::unix::fs::PermissionsExt as _;
 
@@ -857,7 +857,7 @@ async fn test_realfs_executable_metadata(executor: BackgroundExecutor) {
 }
 
 #[gpui::test]
-#[cfg(unix)]
+
 async fn test_realfs_broken_symlink_metadata(executor: BackgroundExecutor) {
     let tempdir = TempDir::new().unwrap();
     let path = tempdir.path();
@@ -877,7 +877,7 @@ async fn test_realfs_broken_symlink_metadata(executor: BackgroundExecutor) {
 }
 
 #[gpui::test]
-#[cfg(unix)]
+
 async fn test_realfs_symlink_loop_metadata(executor: BackgroundExecutor) {
     let tempdir = TempDir::new().unwrap();
     let path = tempdir.path();
@@ -1061,7 +1061,7 @@ async fn test_fake_fs_restore(executor: BackgroundExecutor) {
 /// the create-symlink privilege), so callers can skip a scenario gracefully
 /// rather than failing the whole test.
 fn make_dir_symlink(target: &Path, link: &Path) -> std::io::Result<()> {
-    #[cfg(unix)]
+    
     {
         std::os::unix::fs::symlink(target, link)
     }

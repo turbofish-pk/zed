@@ -111,7 +111,7 @@ pub fn os_name() -> String {
     {
         "macOS".to_string()
     }
-    #[cfg(target_os = "linux")]
+    
     {
         format!("Linux {}", gpui::guess_compositor())
     }

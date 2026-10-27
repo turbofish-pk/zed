@@ -1396,7 +1396,7 @@ mod tests {
             ($file_iri:literal) => { { test_hyperlink!(concat!("‹«👉", $file_iri, "»›"); FileIri) } };
         }
 
-        #[cfg(not(target_os = "windows"))]
+        
         #[test]
         fn absolute_file_iri() {
             test_file_iri!("file:///test/cool/index.rs");
@@ -1404,7 +1404,7 @@ mod tests {
         }
 
         mod issues {
-            #[cfg(not(target_os = "windows"))]
+            
             #[test]
             fn issue_file_iri_with_percent_encoded_characters() {
                 // Non-space characters

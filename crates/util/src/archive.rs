@@ -65,7 +65,7 @@ pub async fn extract_zip<R: AsyncRead + Unpin>(destination: &Path, reader: R) ->
     Ok(())
 }
 
-#[cfg(unix)]
+
 pub async fn extract_zip<R: AsyncRead + Unpin>(destination: &Path, reader: R) -> Result<()> {
     // Unix needs file permissions copied when extracting.
     // This is only possible to do when a reader impls `AsyncSeek` and `seek::ZipFileReader` is used.
@@ -82,7 +82,7 @@ pub async fn extract_zip<R: AsyncRead + Unpin>(destination: &Path, reader: R) ->
     extract_seekable_zip(destination, file).await
 }
 
-#[cfg(unix)]
+
 pub async fn extract_seekable_zip<R: AsyncRead + AsyncSeek + Unpin>(
     destination: &Path,
     reader: R,
@@ -171,7 +171,7 @@ mod tests {
 
             let filename = relative_path.display().to_string();
 
-            #[cfg(unix)]
+            
             {
                 let mut builder =
                     ZipEntryBuilder::new(filename.into(), async_zip::Compression::Deflate);
@@ -244,7 +244,7 @@ mod tests {
         });
     }
 
-    #[cfg(unix)]
+    
     #[test]
     fn test_extract_zip_preserves_executable_permissions() {
         use std::os::unix::fs::PermissionsExt;
@@ -278,7 +278,7 @@ mod tests {
         });
     }
 
-    #[cfg(unix)]
+    
     #[test]
     fn test_extract_zip_sets_default_permissions() {
         use std::os::unix::fs::PermissionsExt;

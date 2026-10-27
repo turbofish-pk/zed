@@ -430,7 +430,7 @@ mod tests {
                 std::fs::read(&binary_path).unwrap(),
                 b"#!/bin/sh\necho hello\n"
             );
-            #[cfg(unix)]
+            
             {
                 use std::os::unix::fs::PermissionsExt;
                 let mode = std::fs::metadata(&binary_path)

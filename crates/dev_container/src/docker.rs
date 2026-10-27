@@ -768,7 +768,7 @@ mod test {
             parse_find_process_output,
         },
     };
-    #[cfg(not(target_os = "windows"))]
+
     use util::command::Command;
 
     #[test]
@@ -890,7 +890,7 @@ mod test {
         )
     }
 
-    #[cfg(not(target_os = "windows"))]
+
     #[test]
     fn docker_exec_returns_error_on_nonzero_exit() {
         let docker = Docker {

@@ -12,7 +12,7 @@ impl WindowsWindowControls {
         Self { button_height }
     }
 
-    #[cfg(not(target_os = "windows"))]
+    
     fn get_font() -> &'static str {
         "Segoe Fluent Icons"
     }

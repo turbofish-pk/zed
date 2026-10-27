@@ -90,7 +90,7 @@ mod tests {
 
     use super::*;
 
-    #[cfg(unix)]
+    
     #[test]
     fn requires_an_apache_license_field_and_symlink() -> Result<()> {
         use std::os::unix::fs::symlink;

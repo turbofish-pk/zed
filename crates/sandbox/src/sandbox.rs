@@ -14,10 +14,10 @@ use std::{
 };
 
 use http_proxy::ProxyHandle;
-#[cfg(not(target_os = "windows"))]
+
 use http_proxy::{Allowlist, HostPattern, ProxyConfig, ProxyEvent, UpstreamProxy};
 
-#[cfg(target_os = "linux")]
+
 mod linux_bubblewrap;
 
 #[cfg(target_os = "macos")]
@@ -30,7 +30,7 @@ mod util;
 
 #[cfg(target_os = "macos")]
 use util::canonicalize_allowing_missing_leaf;
-#[cfg(target_os = "linux")]
+
 use util::{CanonicalPathBuf, linux_fd_identity};
 pub use util::{
     HostFilesystemLocation, HostFilesystemLocationDisplay, normalize_host_filesystem_locations,
@@ -134,7 +134,7 @@ pub fn path_is_on_windows_drive(path: &Path) -> bool {
     {
         windows_wsl::path_is_on_windows_drive(path)
     }
-    #[cfg(not(target_os = "windows"))]
+    
     {
         let _ = path;
         false
@@ -152,7 +152,7 @@ pub fn wsl_distro_registered() -> bool {
     {
         windows_wsl::wsl_distro_registered()
     }
-    #[cfg(not(target_os = "windows"))]
+    
     {
         false
     }
@@ -213,7 +213,7 @@ fn validate_writable_paths_do_not_overlap_protected_paths(
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
+
 fn writable_path_overlaps_protected_path(
     writable_path: &HostFilesystemLocation,
     protected_path: &HostFilesystemLocation,
@@ -241,7 +241,7 @@ fn writable_path_overlaps_protected_path(
         .starts_with(protected_path.untrusted_raw_path())
 }
 
-#[cfg(target_os = "linux")]
+
 fn linux_location_is_equal_or_descendant(
     location: &HostFilesystemLocation,
     ancestor: &HostFilesystemLocation,
@@ -470,7 +470,7 @@ enum NetSetup {
     Blocked,
     // Restricted networking is rejected up front on Windows, so this variant is
     // never constructed there.
-    #[cfg(not(target_os = "windows"))]
+    
     Restricted {
         allowlist: Allowlist,
     },
@@ -496,7 +496,7 @@ pub struct Sandbox {
     /// the command finishes. Holds the fds, keeping their inodes pinned until
     /// then. Created lazily on the wrap that first needs it (a restricted-fs run
     /// with writable binds); a `Sandbox` normally wraps a single command.
-    #[cfg(target_os = "linux")]
+    
     validation_fd_sender: Option<linux_bubblewrap::ValidationFdSender>,
     /// Windows only: `(release channel, version)` of the Linux `zed` to
     /// provision inside WSL as the `--wsl-sandbox-helper` (version `latest` for
@@ -551,7 +551,7 @@ impl Sandbox {
             fs,
             network,
             proxy: None,
-            #[cfg(target_os = "linux")]
+            
             validation_fd_sender: None,
             #[cfg(target_os = "windows")]
             wsl_zed_release: None,
@@ -583,7 +583,7 @@ impl Sandbox {
     /// former Landlock probe, bwrap needs no ABI-matching against the real
     /// ruleset, so there's no reason to mirror the real command's mounts.)
     pub fn can_create(policy: &SandboxPolicy) -> Result<(), SandboxError> {
-        #[cfg(target_os = "linux")]
+        
         {
             let permissions = linux_bubblewrap::SandboxPermissions {
                 network: linux_probe_network(&policy.network),
@@ -609,7 +609,7 @@ impl Sandbox {
     /// The returned [`WrappedCommand`] is plain data; keep `self` alive while it
     /// runs (it owns the proxy and any per-command policy file).
     pub async fn wrap(&mut self, command: &CommandAndArgs) -> Result<WrappedCommand, SandboxError> {
-        #[cfg(target_os = "linux")]
+        
         {
             self.wrap_linux(command)
         }
@@ -666,7 +666,7 @@ impl Sandbox {
     /// Spawn the restricted-network proxy if it isn't running yet, point the
     /// command env at it, and return its `(port, host socket path)`. Returns
     /// `None` for non-restricted network policies.
-    #[cfg(not(target_os = "windows"))]
+    
     fn ensure_restricted_proxy(
         &mut self,
         env: &mut HashMap<String, String>,
@@ -683,7 +683,7 @@ impl Sandbox {
                 upstream,
                 events: events_tx,
             };
-            #[cfg(target_os = "linux")]
+            
             let handle = ProxyHandle::spawn_unix_temp(config);
             #[cfg(not(target_os = "linux"))]
             let handle = ProxyHandle::spawn(config);
@@ -710,7 +710,7 @@ impl Sandbox {
         self.fs.protected_paths.clone()
     }
 
-    #[cfg(target_os = "linux")]
+    
     fn wrap_linux(&mut self, command: &CommandAndArgs) -> Result<WrappedCommand, SandboxError> {
         let mut env = command.env.clone();
         let proxy = self.ensure_restricted_proxy(&mut env)?;
@@ -952,7 +952,7 @@ pub(crate) const WSL_SANDBOX_RESOLVE_FLAG: &str = "--wsl-sandbox-resolve-path";
 /// Call this at the top of `main`, before normal argument parsing.
 #[doc(hidden)]
 pub fn run_sandbox_launcher_if_invoked() {
-    #[cfg(target_os = "linux")]
+    
     {
         linux_bubblewrap::run_launcher_if_invoked();
         linux_bubblewrap::run_wsl_helper_if_invoked();
@@ -964,7 +964,7 @@ pub fn run_sandbox_launcher_if_invoked() {
 // with no writable binds rather than re-deriving paths from the opaque
 // locations.
 
-#[cfg(not(target_os = "windows"))]
+
 fn resolve_restricted_network(allowed_domains: &[String]) -> Result<NetSetup, SandboxError> {
     let mut patterns = Vec::with_capacity(allowed_domains.len());
     for domain in allowed_domains {
@@ -990,7 +990,7 @@ fn unsupported_restricted_network_on_windows() -> SandboxError {
     )
 }
 
-#[cfg(target_os = "linux")]
+
 fn linux_probe_network(network: &SandboxNetPolicy) -> linux_bubblewrap::NetworkAccess {
     match network {
         SandboxNetPolicy::Unrestricted => linux_bubblewrap::NetworkAccess::All,
@@ -1000,7 +1000,7 @@ fn linux_probe_network(network: &SandboxNetPolicy) -> linux_bubblewrap::NetworkA
     }
 }
 
-#[cfg(not(target_os = "windows"))]
+
 fn upstream_proxy_from_env(env: &HashMap<String, String>) -> Option<UpstreamProxy> {
     let url = first_nonempty_env_value(
         env,
@@ -1023,7 +1023,7 @@ fn upstream_proxy_from_env(env: &HashMap<String, String>) -> Option<UpstreamProx
     }
 }
 
-#[cfg(not(target_os = "windows"))]
+
 fn first_nonempty_env_value<'a>(
     env: &'a HashMap<String, String>,
     names: &[&str],
@@ -1047,7 +1047,7 @@ fn first_nonempty_env_value<'a>(
 /// matching an allowlisted host would make the client attempt a direct
 /// connection, which the sandbox blocks — surfacing as a confusing "connection
 /// refused" instead of a clean policy decision.
-#[cfg(not(target_os = "windows"))]
+
 fn apply_proxy_env(env: &mut HashMap<String, String>, port: u16) {
     let url = format!("http://127.0.0.1:{port}");
     for key in [
@@ -1068,7 +1068,7 @@ fn apply_proxy_env(env: &mut HashMap<String, String>, port: u16) {
 /// Drain the proxy's event channel on a background thread, logging each event.
 /// v1 surfacing only; future integrations (UI, telemetry) can replace this.
 /// The thread exits when the proxy is dropped and the channel closes.
-#[cfg(not(target_os = "windows"))]
+
 fn spawn_proxy_event_logger(events: futures::channel::mpsc::UnboundedReceiver<ProxyEvent>) {
     std::thread::spawn(move || {
         futures::executor::block_on(async move {
@@ -1081,7 +1081,7 @@ fn spawn_proxy_event_logger(events: futures::channel::mpsc::UnboundedReceiver<Pr
     });
 }
 
-#[cfg(not(target_os = "windows"))]
+
 fn log_proxy_event(event: &ProxyEvent) {
     match event {
         ProxyEvent::Ready { .. } => {}
@@ -1112,7 +1112,7 @@ fn log_proxy_event(event: &ProxyEvent) {
     }
 }
 
-#[cfg(target_os = "linux")]
+
 fn map_linux_status(status: linux_bubblewrap::LauncherStatus) -> SandboxError {
     match status {
         linux_bubblewrap::LauncherStatus::BwrapNotFound => SandboxError::BwrapNotFound,
@@ -1161,7 +1161,7 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    
     #[test]
     fn restricted_fs_protected_overlap_check_uses_captured_fds_not_path_text() {
         use std::os::unix::fs as unix_fs;
@@ -1346,7 +1346,7 @@ impl GrantableWriteDir {
     /// Prepare `path` for use as a sandbox write grant. `path` must be absolute.
     pub fn prepare(path: &Path) -> std::io::Result<Self> {
         let untrusted_raw_path = path.to_path_buf();
-        #[cfg(target_os = "linux")]
+        
         {
             let mut eagerly_created = Vec::new();
             if let Err(error) = create_missing_dirs(path, &mut eagerly_created) {
@@ -1417,7 +1417,7 @@ impl GrantableWriteDir {
 /// `create_dir_all`), recording exactly the directories created so they can be
 /// removed again if the grant is denied. Components that already exist are left
 /// alone.
-#[cfg(target_os = "linux")]
+
 fn create_missing_dirs(path: &Path, created: &mut Vec<PathBuf>) -> std::io::Result<()> {
     let mut cur = PathBuf::new();
     for component in path.components() {
@@ -1434,7 +1434,7 @@ fn create_missing_dirs(path: &Path, created: &mut Vec<PathBuf>) -> std::io::Resu
 /// Open an `O_PATH` handle to `path` and read back the canonical path of the
 /// inode it pins, so the value shown to the user reflects the real target even
 /// when a component is a symlink.
-#[cfg(target_os = "linux")]
+
 fn pinned_canonical_path(path: &Path) -> std::io::Result<PathBuf> {
     Ok(CanonicalPathBuf::resolve(path)?.into_path())
 }
