@@ -12,9 +12,6 @@ workspace = true
 [lints]
 workspace = true
 
-[[bench]]
-name = "sorting"
-harness = false
 
 [lib]
 path = "src/project_panel.rs"
@@ -111,8 +108,7 @@ path = "../markdown_preview"
 [dependencies.zed_actions]
 path = "../zed_actions"
 
-[dependencies.telemetry]
-path = "../telemetry"
+
 
 [dependencies.notifications]
 path = "../notifications"
@@ -130,7 +126,7 @@ path = "../svg_preview"
 
 [dev-dependencies.client]
 path = "../client"
-features = ["test-support"]
+
 
 [dev-dependencies.criterion]
 version = "0.8.2"
@@ -138,20 +134,20 @@ features = ["html_reports"]
 
 [dev-dependencies.editor]
 path = "../editor"
-features = ["test-support"]
+
 
 [dev-dependencies.git_ui]
 path = "../git_ui"
-features = ["test-support"]
+
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.language]
 path = "../language"
-features = ["test-support"]
+
 
 [dev-dependencies.pretty_assertions]
 version = "1.3.0"
@@ -166,4 +162,3 @@ version = "3.20.0"
 
 [dev-dependencies.workspace]
 path = "../workspace"
-features = ["test-support"]

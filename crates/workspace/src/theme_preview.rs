@@ -5,8 +5,8 @@ use gpui::{
 use strum::IntoEnumIterator;
 use theme::all_theme_colors;
 use ui::{
-    AudioStatus, Avatar, AvatarAudioStatusIndicator, AvatarAvailabilityIndicator, ButtonLike,
-    Checkbox, CollaboratorAvailability, DecoratedIcon, ElevationIndex, Facepile, IconDecoration,
+    ButtonLike,
+    Checkbox,  DecoratedIcon, ElevationIndex,  IconDecoration,
     Indicator, KeybindingHint, Switch, TintColor, Tooltip, prelude::*,
     utils::calculate_contrast_ratio,
 };
@@ -91,10 +91,6 @@ impl Item for ThemePreview {
     fn tab_content_text(&self, _detail: usize, cx: &App) -> SharedString {
         let name = cx.theme().name.clone();
         format!("{} Preview", name).into()
-    }
-
-    fn telemetry_event_text(&self) -> Option<&'static str> {
-        None
     }
 
     fn can_split(&self) -> bool {

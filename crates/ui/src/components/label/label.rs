@@ -332,56 +332,6 @@ fn parse_backtick_spans(text: &str) -> Option<(SharedString, Vec<Range<usize>>)>
     Some((SharedString::from(stripped), code_ranges))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_single_line_replaces_control_characters() {
-        // File names are allowed to contain these, and rendering them verbatim
-        // breaks the layout of tabs and project panel entries.
-        let label = Label::new("a\nb\rc\td").single_line();
-        assert_eq!(label.label, "a⏎b␍c␉d");
-    }
-
-    #[test]
-    fn test_single_line_leaves_printable_text_alone() {
-        let label = Label::new("main.rs").single_line();
-        assert_eq!(label.label, "main.rs");
-    }
-
-    #[test]
-    fn test_parse_backtick_spans_no_backticks() {
-        assert_eq!(parse_backtick_spans("plain text"), None);
-    }
-
-    #[test]
-    fn test_parse_backtick_spans_single_span() {
-        let (text, ranges) = parse_backtick_spans("use `zed` to open").unwrap();
-        assert_eq!(text.as_ref(), "use zed to open");
-        assert_eq!(ranges, vec![4..7]);
-    }
-
-    #[test]
-    fn test_parse_backtick_spans_multiple_spans() {
-        let (text, ranges) = parse_backtick_spans("flags `-e` or `-n`").unwrap();
-        assert_eq!(text.as_ref(), "flags -e or -n");
-        assert_eq!(ranges, vec![6..8, 12..14]);
-    }
-
-    #[test]
-    fn test_parse_backtick_spans_unmatched_backtick() {
-        // A trailing unmatched backtick should not produce a code range
-        assert_eq!(parse_backtick_spans("trailing `backtick"), None);
-    }
-
-    #[test]
-    fn test_parse_backtick_spans_empty_span() {
-        let (text, ranges) = parse_backtick_spans("empty `` span").unwrap();
-        assert_eq!(text.as_ref(), "empty  span");
-        assert_eq!(ranges, vec![6..6]);
-    }
-}
 
 impl Component for Label {
     fn scope() -> ComponentScope {

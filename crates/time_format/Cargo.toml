@@ -22,13 +22,3 @@ features = ["macros", "parsing", "serde", "serde-well-known", "formatting", "loc
 
 [target.'cfg(not(any(target_os = "macos", target_os = "windows")))'.dependencies.sys-locale]
 version = "0.3.1"
-
-[target.'cfg(target_os = "macos")'.dependencies.core-foundation]
-version = "0.10"
-
-[target.'cfg(target_os = "macos")'.dependencies.core-foundation-sys]
-version = "0.8.6"
-
-[target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.62"
-features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_IO", "Win32_System_LibraryLoader", "Win32_System_Ole", "Win32_System_Threading", "Win32_System_Variant", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Globalization_DateTimeFormatting"]

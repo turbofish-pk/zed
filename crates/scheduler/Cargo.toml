@@ -17,7 +17,7 @@ path = "src/scheduler.rs"
 doctest = false
 
 [features]
-test-support = []
+
 wasm-threads = ["dep:wasm_thread", "flume/spin"]
 
 [dependencies.async-task]

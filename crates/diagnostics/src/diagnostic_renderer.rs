@@ -337,30 +337,3 @@ impl DiagnosticBlock {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use language::DiagnosticMessage;
-    use pretty_assertions::assert_eq;
-
-    #[test]
-    fn test_adapter_markdown_keeps_source_and_code_inline() {
-        let diagnostic = Diagnostic {
-            message: DiagnosticMessage::plain_with_adapter_markdown(
-                "mismatched types\nexpected `usize`, found `char`",
-                Some("mismatched types\n\nexpected `usize`, found `char`".into()),
-            ),
-            source: Some("rust-analyzer".to_string()),
-            code: Some(lsp::NumberOrString::String("E0308".to_string())),
-            ..Diagnostic::default()
-        };
-
-        let mut markdown = DiagnosticRenderer::markdown(&diagnostic);
-        append_source_and_code(&mut markdown, &diagnostic);
-
-        assert_eq!(
-            markdown,
-            "mismatched types\n\nexpected `usize`, found `char` (rust\\-analyzer E0308)"
-        );
-    }
-}

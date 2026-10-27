@@ -114,7 +114,7 @@ impl AvailableLanguages {
             .collect()
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub(super) fn name_for_id(&self, id: LanguageId) -> Option<LanguageName> {
         self.0
             .iter()

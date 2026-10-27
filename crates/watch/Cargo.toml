@@ -31,7 +31,7 @@ version = "1.0.12"
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.zlog]
 path = "../zlog"

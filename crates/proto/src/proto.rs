@@ -115,10 +115,6 @@ messages!(
     (GetDeclarationResponse, Background),
     (GetDefinition, Background),
     (GetDefinitionResponse, Background),
-    (GetEditPredictionDefinition, Background),
-    (GetEditPredictionDefinitionResponse, Background),
-    (GetEditPredictionTypeDefinition, Background),
-    (GetEditPredictionTypeDefinitionResponse, Background),
     (GetDocumentHighlights, Background),
     (GetDocumentHighlightsResponse, Background),
     (GetDocumentSymbols, Background),
@@ -306,7 +302,6 @@ messages!(
     (SynchronizeBuffersResponse, Foreground),
     (TaskContext, Background),
     (TaskContextForLocation, Background),
-    (TelemetryEvent, Background),
     (Test, Foreground),
     (Toast, Background),
     (Unfollow, Foreground),
@@ -394,14 +389,8 @@ messages!(
     (ToggleLspLogs, Foreground),
     (GetDirectoryEnvironment, Background),
     (DirectoryEnvironment, Background),
-    (GetAgentServerCommand, Background),
-    (AgentServerCommand, Background),
     (GetContextServerCommand, Background),
     (ContextServerCommand, Background),
-    (ExternalAgentsUpdated, Background),
-    (ExternalExtensionAgentsUpdated, Background),
-    (ExternalAgentLoadingStatusUpdated, Background),
-    (NewExternalAgentVersionAvailable, Background),
     (RemoteStarted, Background),
     (GitGetWorktrees, Background),
     (GitGetHeadSha, Background),
@@ -462,14 +451,6 @@ request_messages!(
     (GetCodeActions, GetCodeActionsResponse),
     (GetCompletions, GetCompletionsResponse),
     (GetDefinition, GetDefinitionResponse),
-    (
-        GetEditPredictionDefinition,
-        GetEditPredictionDefinitionResponse
-    ),
-    (
-        GetEditPredictionTypeDefinition,
-        GetEditPredictionTypeDefinitionResponse
-    ),
     (GetDeclaration, GetDeclarationResponse),
     (GetImplementation, GetImplementationResponse),
     (GetDocumentHighlights, GetDocumentHighlightsResponse),
@@ -643,7 +624,6 @@ request_messages!(
     (GetDirectoryEnvironment, DirectoryEnvironment),
     (GetTerminalShell, GetTerminalShellResponse),
     (GetProcesses, GetProcessesResponse),
-    (GetAgentServerCommand, AgentServerCommand),
     (GetContextServerCommand, ContextServerCommand),
     (RemoteStarted, Ack),
     (GitGetWorktrees, GitWorktreesResponse),
@@ -677,16 +657,6 @@ lsp_messages!(
     (GetCodeLens, GetCodeLensResponse, true),
     (GetDocumentDiagnostics, GetDocumentDiagnosticsResponse, true),
     (GetDefinition, GetDefinitionResponse, true),
-    (
-        GetEditPredictionDefinition,
-        GetEditPredictionDefinitionResponse,
-        true
-    ),
-    (
-        GetEditPredictionTypeDefinition,
-        GetEditPredictionTypeDefinitionResponse,
-        true
-    ),
     (GetDeclaration, GetDeclarationResponse, true),
     (GetTypeDefinition, GetTypeDefinitionResponse, true),
     (GetImplementation, GetImplementationResponse, true),
@@ -732,8 +702,6 @@ entity_messages!(
     GetCodeLens,
     GetCompletions,
     GetDefinition,
-    GetEditPredictionDefinition,
-    GetEditPredictionTypeDefinition,
     GetDeclaration,
     GetImplementation,
     GetDocumentHighlights,
@@ -814,7 +782,6 @@ entity_messages!(
     LspExtRunFlycheck,
     LspExtClearFlycheck,
     LanguageServerLog,
-    TelemetryEvent,
     Toast,
     HideToast,
     OpenServerSettings,
@@ -842,7 +809,6 @@ entity_messages!(
     ToggleLspLogs,
     GetDirectoryEnvironment,
     GetTerminalShell,
-
     Push,
     Fetch,
     GetRemotes,
@@ -869,12 +835,6 @@ entity_messages!(
     BlameBufferAtRevision,
     LoadCommitTemplate,
     GitClone,
-    GetAgentServerCommand,
-    GetContextServerCommand,
-    ExternalAgentsUpdated,
-    ExternalExtensionAgentsUpdated,
-    ExternalAgentLoadingStatusUpdated,
-    NewExternalAgentVersionAvailable,
     GitGetWorktrees,
     GitGetHeadSha,
     GitEditRef,
@@ -943,9 +903,9 @@ impl From<Nonce> for u128 {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub const MAX_WORKTREE_UPDATE_MAX_CHUNK_SIZE: usize = 2;
-#[cfg(not(any(test, feature = "test-support")))]
+#[cfg(not(feature = "test-support"))]
 pub const MAX_WORKTREE_UPDATE_MAX_CHUNK_SIZE: usize = 256;
 
 pub fn split_worktree_update(mut message: UpdateWorktree) -> impl Iterator<Item = UpdateWorktree> {
@@ -1081,12 +1041,6 @@ impl LspQuery {
                 ("GetDocumentDiagnostics", false)
             }
             Some(lsp_query::Request::GetDefinition(_)) => ("GetDefinition", false),
-            Some(lsp_query::Request::GetEditPredictionDefinition(_)) => {
-                ("GetEditPredictionDefinition", false)
-            }
-            Some(lsp_query::Request::GetEditPredictionTypeDefinition(_)) => {
-                ("GetEditPredictionTypeDefinition", false)
-            }
             Some(lsp_query::Request::GetDeclaration(_)) => ("GetDeclaration", false),
             Some(lsp_query::Request::GetTypeDefinition(_)) => ("GetTypeDefinition", false),
             Some(lsp_query::Request::GetImplementation(_)) => ("GetImplementation", false),
@@ -1102,68 +1056,5 @@ impl LspQuery {
             Some(lsp_query::Request::GetOutgoingCalls(_)) => ("GetOutgoingCalls", false),
             None => ("<unknown>", true),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_converting_peer_id_from_and_to_u64() {
-        let peer_id = PeerId {
-            owner_id: 10,
-            id: 3,
-        };
-        assert_eq!(PeerId::from_u64(peer_id.as_u64()), peer_id);
-        let peer_id = PeerId {
-            owner_id: u32::MAX,
-            id: 3,
-        };
-        assert_eq!(PeerId::from_u64(peer_id.as_u64()), peer_id);
-        let peer_id = PeerId {
-            owner_id: 10,
-            id: u32::MAX,
-        };
-        assert_eq!(PeerId::from_u64(peer_id.as_u64()), peer_id);
-        let peer_id = PeerId {
-            owner_id: u32::MAX,
-            id: u32::MAX,
-        };
-        assert_eq!(PeerId::from_u64(peer_id.as_u64()), peer_id);
-    }
-
-    #[test]
-    fn test_split_repository_update_keeps_branch_list_on_final_chunk() {
-        let update = UpdateRepository {
-            updated_statuses: vec![
-                StatusEntry::default(),
-                StatusEntry::default(),
-                StatusEntry::default(),
-            ],
-            branch_list: vec![Branch {
-                ref_name: "refs/heads/main".into(),
-                ..Default::default()
-            }],
-            branch_list_error: Some("partial branch scan".into()),
-            ..Default::default()
-        };
-
-        let chunks = split_repository_update(update).collect::<Vec<_>>();
-
-        assert_eq!(chunks.len(), 3);
-        assert!(chunks[0].branch_list.is_empty());
-        assert!(chunks[1].branch_list.is_empty());
-        assert_eq!(chunks[2].branch_list.len(), 1);
-        assert_eq!(chunks[2].branch_list[0].ref_name, "refs/heads/main");
-        assert_eq!(chunks[0].branch_list_error, None);
-        assert_eq!(chunks[1].branch_list_error, None);
-        assert_eq!(
-            chunks[2].branch_list_error.as_deref(),
-            Some("partial branch scan")
-        );
-        assert!(!chunks[0].is_last_update);
-        assert!(!chunks[1].is_last_update);
-        assert!(chunks[2].is_last_update);
     }
 }

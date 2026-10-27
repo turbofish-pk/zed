@@ -488,7 +488,7 @@ impl Anchor {
         self.excerpt_anchor()?.diff_base_anchor
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn expect_text_anchor(&self) -> text::Anchor {
         self.excerpt_anchor().unwrap().text_anchor
     }

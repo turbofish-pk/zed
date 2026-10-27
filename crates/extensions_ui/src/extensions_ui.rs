@@ -1,13 +1,10 @@
 mod components;
 mod extension_suggestions;
 mod extension_version_selector;
-
 use std::sync::OnceLock;
 use std::time::Duration;
 use std::{any::TypeId, ops::Range, sync::Arc};
-
 use anyhow::Context as _;
-use cloud_api_types::{ExtensionMetadata, ExtensionProvides};
 use collections::{BTreeMap, BTreeSet};
 use command_palette_hooks::CommandPaletteFilter;
 use editor::{Editor, EditorElement, EditorStyle};
@@ -19,10 +16,8 @@ use gpui::{
     InteractiveElement, KeyContext, ParentElement, Render, Styled, Task, TaskExt, TextStyle,
     UniformListScrollHandle, WeakEntity, Window, actions, point, uniform_list,
 };
-
 use picker::{Picker, PickerDelegate};
 use project::DirectoryLister;
-
 use schemars::JsonSchema;
 use serde::Deserialize;
 use settings::{Settings, SettingsContent};
@@ -41,7 +36,6 @@ use workspace::{
     workspace_error::{ErrorAction, ErrorSeverity, WorkspaceError},
 };
 use zed_actions::ExtensionCategoryFilter;
-
 use crate::components::{ExtensionCard, extension_provides_label};
 use crate::extension_version_selector::{
     ExtensionVersionSelector, ExtensionVersionSelectorDelegate,
@@ -295,9 +289,6 @@ enum ExtensionFilter {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 enum Feature {
-    AgentClaude,
-    AgentCodex,
-    AgentGemini,
     ExtensionBasedpyright,
     ExtensionRuff,
     ExtensionTailwind,
@@ -319,12 +310,6 @@ fn keywords_by_feature() -> &'static BTreeMap<Feature, Vec<&'static str>> {
     static KEYWORDS_BY_FEATURE: OnceLock<BTreeMap<Feature, Vec<&'static str>>> = OnceLock::new();
     KEYWORDS_BY_FEATURE.get_or_init(|| {
         BTreeMap::from_iter([
-            (
-                Feature::AgentClaude,
-                vec!["claude", "claude code", "claude agent"],
-            ),
-            (Feature::AgentCodex, vec!["codex", "codex cli"]),
-            (Feature::AgentGemini, vec!["gemini", "gemini cli"]),
             (
                 Feature::ExtensionBasedpyright,
                 vec!["basedpyright", "pyright"],
@@ -1127,11 +1112,7 @@ impl ExtensionsPage {
             .end_icon(Icon::new(IconName::ArrowUpRight).size(IconSize::Small))
             .on_click({
                 move |_event, _window, cx| {
-                    telemetry::event!(
-                        "Documentation Viewed",
-                        source = "Feature Upsell",
-                        url = docs_url,
-                    );
+
                     cx.open_url(docs_url)
                 }
             });
@@ -1166,10 +1147,7 @@ impl ExtensionsPage {
                                                 )
                                                 .on_click(cx.listener(
                                                     move |this, selection, _, cx| {
-                                                        telemetry::event!(
-                                                            "Vim Mode Toggled",
-                                                            source = "Feature Upsell"
-                                                        );
+
                                                         this.update_settings(
                                                             selection,
                                                             cx,
@@ -1192,24 +1170,6 @@ impl ExtensionsPage {
 
     fn render_feature_upsells(&self, cx: &Context<Self>) -> impl IntoElement {
         v_flex().children(self.upsells.iter().map(|feature| match feature {
-            Feature::AgentClaude => self.render_feature_upsell_banner(
-                "Claude Agent support is built-in to Zed!",
-                "https://zed.dev/docs/ai/external-agents#claude-agent",
-                false,
-                cx,
-            ),
-            Feature::AgentCodex => self.render_feature_upsell_banner(
-                "Codex CLI support is built-in to Zed!",
-                "https://zed.dev/docs/ai/external-agents#codex-cli",
-                false,
-                cx,
-            ),
-            Feature::AgentGemini => self.render_feature_upsell_banner(
-                "Gemini CLI support is built-in to Zed!",
-                "https://zed.dev/docs/ai/external-agents#gemini-cli",
-                false,
-                cx,
-            ),
             Feature::ExtensionBasedpyright => self.render_feature_upsell_banner(
                 "Basedpyright (Python language server) support is built-in to Zed!",
                 "https://zed.dev/docs/languages/python#basedpyright",
@@ -1571,8 +1531,7 @@ impl Render for ExtensionsPage {
                     .children(
                         ExtensionProvides::iter()
                             .filter(|provides| match provides {
-                                ExtensionProvides::AgentServers
-                                | ExtensionProvides::Grammars // grammars do not add anything of value to users currently
+                                ExtensionProvides::Grammars // grammars do not add anything of value to users currently
                                 | ExtensionProvides::IndexedDocsProviders
                                 | ExtensionProvides::SlashCommands => false,
                                 _ => true,
@@ -1650,10 +1609,6 @@ impl Item for ExtensionsPage {
 
     fn tab_content_text(&self, _detail: usize, _cx: &App) -> SharedString {
         "Extensions".into()
-    }
-
-    fn telemetry_event_text(&self) -> Option<&'static str> {
-        Some("Extensions Page Opened")
     }
 
     fn show_toolbar(&self) -> bool {

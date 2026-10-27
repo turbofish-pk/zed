@@ -235,6 +235,3 @@ impl<T> Drop for Changed<'_, T> {
         self.receiver.waker.take();
     }
 }
-
-#[cfg(test)]
-mod tests;

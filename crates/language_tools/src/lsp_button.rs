@@ -8,7 +8,7 @@ use std::{
 
 use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
 
-use language::language_settings::{EditPredictionProvider, all_language_settings};
+use language::language_settings::{ all_language_settings};
 
 use client::proto;
 use collections::HashSet;
@@ -342,12 +342,7 @@ impl LanguageServerState {
                 continue;
             };
             let server_selector = server_info.server_selector();
-            let is_remote = self
-                .lsp_store
-                .update(cx, |lsp_store, _| lsp_store.as_remote().is_some())
-                .unwrap_or(false);
-            let has_logs = is_remote
-                || self.workspace.upgrade().is_some_and(|workspace| {
+            let has_logs = self.workspace.upgrade().is_some_and(|workspace| {
                     let project = workspace.read(cx).project();
                     lsp_logs.read(cx).has_server_logs(
                         &server_selector,
@@ -1445,16 +1440,6 @@ impl Render for LspButton {
 
         div().child(
             PopoverMenu::new("lsp-tool")
-                .on_open(Rc::new(move |_window, cx| {
-                    let copilot_enabled = all_language_settings(None, cx).edit_predictions.provider
-                        == EditPredictionProvider::Copilot;
-                    telemetry::event!(
-                        "Toolbar Menu Opened",
-                        name = "Language Servers",
-                        copilot_enabled,
-                        is_via_ssh,
-                    );
-                }))
                 .menu(move |_, cx| {
                     lsp_button
                         .read_with(cx, |lsp_button, _| lsp_button.lsp_menu.clone())
@@ -1479,225 +1464,3 @@ impl Render for LspButton {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn server_id(n: usize) -> LanguageServerId {
-        LanguageServerId(n)
-    }
-
-    fn server_name(s: &str) -> LanguageServerName {
-        LanguageServerName(s.into())
-    }
-
-    fn health_status(name: &str) -> LanguageServerHealthStatus {
-        LanguageServerHealthStatus {
-            name: server_name(name),
-            health: Some((None, ServerHealth::Ok)),
-        }
-    }
-
-    fn servers_for_path(servers: &[(LanguageServerId, &str)]) -> ServersForPath {
-        ServersForPath {
-            servers: servers
-                .iter()
-                .map(|(id, name)| (*id, Some(server_name(name))))
-                .collect(),
-            worktree: None,
-        }
-    }
-
-    /// `remove_server` evicts the id from `health_statuses` so a restarted
-    /// server's new id renders without inheriting the old one's stale entry.
-    /// This is the regression test for #53627.
-    #[test]
-    fn remove_server_drops_health_entry_for_id() {
-        let mut state = LanguageServers::default();
-        state
-            .health_statuses
-            .insert(server_id(1), health_status("rust-analyzer"));
-        state
-            .health_statuses
-            .insert(server_id(2), health_status("typescript-language-server"));
-
-        state.remove_server(server_id(1));
-
-        assert!(!state.health_statuses.contains_key(&server_id(1)));
-        assert!(state.health_statuses.contains_key(&server_id(2)));
-    }
-
-    /// `remove_server` evicts the id from each per-buffer entry; entries that
-    /// become empty are dropped so the map does not grow unbounded across
-    /// many buffer opens/closes.
-    #[test]
-    fn remove_server_evicts_id_from_per_buffer_entries_and_drops_empty_entries() {
-        let mut state = LanguageServers::default();
-        let buffer_a = PathBuf::from("/project/a.rs");
-        let buffer_b = PathBuf::from("/project/b.rs");
-
-        state.servers_per_buffer_abs_path.insert(
-            buffer_a.clone(),
-            servers_for_path(&[(server_id(1), "rust-analyzer")]),
-        );
-        state.servers_per_buffer_abs_path.insert(
-            buffer_b.clone(),
-            servers_for_path(&[(server_id(1), "rust-analyzer"), (server_id(2), "typos-lsp")]),
-        );
-
-        state.remove_server(server_id(1));
-
-        assert!(
-            !state.servers_per_buffer_abs_path.contains_key(&buffer_a),
-            "buffer_a's entry held only the removed server, so the entry itself should be dropped",
-        );
-        let buffer_b_entry = state
-            .servers_per_buffer_abs_path
-            .get(&buffer_b)
-            .expect("buffer_b's entry has another server, so it must be retained");
-        assert!(!buffer_b_entry.servers.contains_key(&server_id(1)));
-        assert!(buffer_b_entry.servers.contains_key(&server_id(2)));
-    }
-
-    /// `binary_statuses` is keyed by name and intentionally shared across
-    /// restart cycles to drive the "Downloading… → Starting…" UX. Removing a
-    /// single server's id must not touch it.
-    #[test]
-    fn remove_server_does_not_touch_binary_statuses() {
-        let mut state = LanguageServers::default();
-        state.binary_statuses.insert(
-            server_name("rust-analyzer"),
-            LanguageServerBinaryStatus {
-                status: BinaryStatus::Starting,
-                message: None,
-            },
-        );
-
-        state.remove_server(server_id(1));
-
-        assert!(
-            state
-                .binary_statuses
-                .contains_key(&server_name("rust-analyzer")),
-            "binary_statuses is name-keyed and shared across restart cycles",
-        );
-    }
-
-    /// Simulates the full restart event sequence: remove old id, register
-    /// new id with same name, write health for the new id. After restart
-    /// only the new id should be visible — no leftover entry from the old
-    /// incarnation.
-    #[test]
-    fn restart_sequence_leaves_only_new_server_id() {
-        let mut state = LanguageServers::default();
-        let buffer = PathBuf::from("/project/main.rs");
-        let name = "rust-analyzer";
-
-        // Pre-restart: server v1 is registered for the buffer with health.
-        state
-            .servers_per_buffer_abs_path
-            .insert(buffer.clone(), servers_for_path(&[(server_id(1), name)]));
-        state
-            .health_statuses
-            .insert(server_id(1), health_status(name));
-
-        // Restart: old id is removed.
-        state.remove_server(server_id(1));
-
-        // New id registers for the same buffer.
-        let entry = state
-            .servers_per_buffer_abs_path
-            .entry(buffer.clone())
-            .or_insert_with(|| ServersForPath {
-                servers: HashMap::default(),
-                worktree: None,
-            });
-        entry.servers.insert(server_id(2), Some(server_name(name)));
-
-        // Health update for the new id arrives.
-        state
-            .health_statuses
-            .insert(server_id(2), health_status(name));
-
-        let entry = state
-            .servers_per_buffer_abs_path
-            .get(&buffer)
-            .expect("buffer must still be tracked");
-        assert_eq!(
-            entry.servers.keys().copied().collect::<Vec<_>>(),
-            vec![server_id(2)],
-            "exactly one server for this buffer — the new incarnation",
-        );
-        assert!(
-            !state.health_statuses.contains_key(&server_id(1)),
-            "the dead server's health entry must not linger",
-        );
-        assert!(
-            state.health_statuses.contains_key(&server_id(2)),
-            "the new server's health entry is present",
-        );
-    }
-
-    #[test]
-    fn tooltip_for_server_binary_handles_runtime_and_standalone_servers() {
-        let node_server = lsp::LanguageServerBinary {
-            path: "/usr/bin/node".into(),
-            arguments: vec![
-                "/zed/languages/basedpyright/langserver.index.js".into(),
-                "--stdio".into(),
-            ],
-            env: None,
-        };
-        assert_eq!(
-            tooltip_for_server_binary(&node_server, PathStyle::Unix),
-            "/zed/languages/basedpyright/langserver.index.js (node)"
-        );
-
-        let node_server_windows = lsp::LanguageServerBinary {
-                path: "C:\\Program Files\\nodejs\\node.exe".into(),
-                arguments: vec![
-                    "C:\\Users\\Zed\\languages\\basedpyright\\node_modules/basedpyright/langserver.index.js".into(),
-                    "--stdio".into(),
-                ],
-                env: None
-        };
-        assert_eq!(
-            tooltip_for_server_binary(&node_server_windows, PathStyle::Windows),
-            "C:\\Users\\Zed\\languages\\basedpyright\\node_modules\\basedpyright\\langserver.index.js (node)"
-        );
-
-        let python_server = lsp::LanguageServerBinary {
-            path: "/usr/bin/python3".into(),
-            arguments: vec!["/zed/languages/pylsp/pylsp".into(), "--stdio".into()],
-            env: None,
-        };
-        assert_eq!(
-            tooltip_for_server_binary(&python_server, PathStyle::Unix),
-            "/zed/languages/pylsp/pylsp (python)"
-        );
-
-        let standalone_server = lsp::LanguageServerBinary {
-            path: "/usr/bin/ty".into(),
-            arguments: vec!["server".into()],
-            env: None,
-        };
-        assert_eq!(
-            tooltip_for_server_binary(&standalone_server, PathStyle::Unix),
-            "/usr/bin/ty"
-        );
-
-        let flagged_node_server = lsp::LanguageServerBinary {
-            path: "/usr/bin/node".into(),
-            arguments: vec![
-                "--max-old-space-size=8192".into(),
-                "/zed/languages/eslint/server.js".into(),
-                "--stdio".into(),
-            ],
-            env: None,
-        };
-        assert_eq!(
-            tooltip_for_server_binary(&flagged_node_server, PathStyle::Unix),
-            "/zed/languages/eslint/server.js (node)"
-        );
-    }
-}

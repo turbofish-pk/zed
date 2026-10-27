@@ -1,6 +1,5 @@
 mod anchor;
-#[cfg(test)]
-mod multi_buffer_tests;
+
 mod path_key;
 mod transaction;
 
@@ -29,7 +28,7 @@ use language::{
     language_settings::{AllLanguageSettings, LanguageSettings},
 };
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 use gpui::AppContext as _;
 
 use rope::DimensionPair;
@@ -2275,7 +2274,7 @@ impl MultiBuffer {
             .all(|state| state.buffer.read(cx).preserve_preview())
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn is_parsing(&self, cx: &App) -> bool {
         self.as_singleton().unwrap().read(cx).is_parsing()
     }
@@ -2832,7 +2831,7 @@ impl MultiBuffer {
         snapshot.diff_transforms = new_diff_transforms;
         snapshot.edit_count += 1;
 
-        #[cfg(any(test, feature = "test-support"))]
+        #[cfg(feature = "test-support")]
         snapshot.check_invariants();
         output_edits
     }
@@ -3179,7 +3178,7 @@ pub fn build_excerpt_ranges(
         .collect()
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl MultiBuffer {
     pub fn build_simple(text: &str, cx: &mut gpui::App) -> Entity<Self> {
         let buffer = cx.new(|cx| Buffer::local(text, cx));
@@ -6950,7 +6949,7 @@ impl MultiBufferSnapshot {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl MultiBufferSnapshot {
     pub fn random_byte_range(
         &self,
@@ -6962,7 +6961,7 @@ impl MultiBufferSnapshot {
         start..end
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     fn check_invariants(&self) {
         let excerpts = self.excerpts.items(());
 

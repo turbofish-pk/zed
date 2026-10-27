@@ -37,7 +37,7 @@ impl Session {
         }
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn test() -> Self {
         Self {
             session_id: uuid::Uuid::new_v4().to_string(),
@@ -46,7 +46,7 @@ impl Session {
         }
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn test_with_old_session(old_session_id: String) -> Self {
         Self {
             session_id: uuid::Uuid::new_v4().to_string(),
@@ -70,7 +70,7 @@ impl AppSession {
     pub fn new(session: Session, cx: &Context<Self>) -> Self {
         let _subscriptions = vec![cx.on_app_quit(Self::app_will_quit)];
 
-        let _serialization_task = if cfg!(not(any(test, feature = "test-support"))) {
+        let _serialization_task = if cfg!(not(feature = "test-support")) {
             let db = KeyValueStore::global(cx);
             cx.spawn(async move |_, cx| {
                 // Disabled in tests: the infinite loop bypasses "parking forbidden" checks,
@@ -122,7 +122,7 @@ impl AppSession {
         self.session.old_session_id.as_deref()
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn replace_session_for_test(&mut self, session: Session) {
         self.session = session;
     }

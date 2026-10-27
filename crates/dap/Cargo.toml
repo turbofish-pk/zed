@@ -17,7 +17,7 @@ path = "src/dap.rs"
 doctest = false
 
 [features]
-test-support = ["gpui/test-support", "util/test-support", "task/test-support", "async-pipe", "settings/test-support"]
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -108,32 +108,7 @@ version = "2.0"
 [dependencies.task]
 path = "../task"
 
-[dependencies.telemetry]
-path = "../telemetry"
+
 
 [dependencies.util]
 path = "../util"
-
-[dev-dependencies.async-pipe]
-git = "https://github.com/zed-industries/async-pipe-rs"
-rev = "82d00a04211cf4e1236029aa03e6b6ce2a74c553"
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]
-
-[dev-dependencies.task]
-path = "../task"
-features = ["test-support"]
-
-[dev-dependencies.util]
-path = "../util"
-features = ["test-support"]
-
-[dev-dependencies.zlog]
-path = "../zlog"

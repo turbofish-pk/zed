@@ -76,4 +76,3 @@ git = "https://github.com/tree-sitter/tree-sitter"
 rev = "803c6ebaac27d69e1808b45058482e868d073ceb"
 
 [features]
-test-support = []

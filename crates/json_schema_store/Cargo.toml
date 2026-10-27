@@ -19,26 +19,6 @@ doctest = false
 [features]
 default = []
 
-[dev-dependencies.fs]
-path = "../fs"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.language]
-path = "../language"
-features = ["test-support"]
-
-[dev-dependencies.project]
-path = "../project"
-features = ["test-support"]
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]
 
 [dependencies.anyhow]
 version = "1.0.86"

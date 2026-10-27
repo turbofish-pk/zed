@@ -12,113 +12,35 @@ workspace = true
 [package.publish]
 workspace = true
 
-[package.metadata.bundle-dev]
-icon = ["resources/app-icon-dev@2x.png", "resources/app-icon-dev.png"]
-identifier = "dev.zed.Zed-Dev"
-name = "Zed Dev"
-category = "Developer Tool"
-osx_minimum_system_version = "12.0"
-osx_info_plist_exts = ["resources/info/*"]
-osx_url_schemes = ["zed"]
-
-[package.metadata.bundle-nightly]
-icon = ["resources/app-icon-nightly@2x.png", "resources/app-icon-nightly.png"]
-identifier = "dev.zed.Zed-Nightly"
-name = "Zed Nightly"
-category = "Developer Tool"
-osx_minimum_system_version = "12.0"
-osx_info_plist_exts = ["resources/info/*"]
-osx_url_schemes = ["zed"]
-
-[package.metadata.bundle-preview]
-icon = ["resources/app-icon-preview@2x.png", "resources/app-icon-preview.png"]
-identifier = "dev.zed.Zed-Preview"
-name = "Zed Preview"
-category = "Developer Tool"
-osx_minimum_system_version = "12.0"
-osx_info_plist_exts = ["resources/info/*"]
-osx_url_schemes = ["zed"]
-
-[package.metadata.bundle-stable]
-icon = ["resources/app-icon@2x.png", "resources/app-icon.png"]
-identifier = "dev.zed.Zed"
-name = "Zed"
-category = "Developer Tool"
-osx_minimum_system_version = "12.0"
-osx_info_plist_exts = ["resources/info/*"]
-osx_url_schemes = ["zed"]
-
-[package.metadata.cargo-shear]
-ignored = ["profiling", "tracing"]
-
 [lints]
 workspace = true
 
 [features]
 tracy = ["ztracing/tracy"]
 track-project-leak = ["gpui/leak-detection"]
-test-support = [
-    "gpui/test-support",
-    "gpui_platform/screen-capture",
-    "dep:image",
-    "workspace/test-support",
-    "project/test-support",
-    "editor/test-support",
-    "terminal_view/test-support",
-    "image_viewer/test-support",
-    "recent_projects/test-support",
-    "repl/test-support",
-    "title_bar/test-support",
-]
-visual-tests = [
-
-]
+mimalloc = ["dep:mimalloc"]
 
 [[bin]]
 name = "zed"
 path = "src/main.rs"
 
-[[bin]]
-name = "zed_visual_test_runner"
-path = "src/visual_test_runner.rs"
-required-features = ["visual-tests"]
-
-[dependencies.acp_thread]
-path = "../acp_thread"
-
-[dependencies.acp_tools]
-path = "../acp_tools"
-
-[dependencies.action_log]
-path = "../action_log"
-optional = true
-
 [dependencies.activity_indicator]
 path = "../activity_indicator"
 
-[dependencies.agent-client-protocol]
-version = "=3.5.0"
-features = ["schemars", "unstable", "unstable_protocol_v2"]
-
-[dependencies.agent]
-path = "../agent"
-
-[dependencies.agent_servers]
-path = "../agent_servers"
-optional = true
-
-[dependencies.agent_settings]
-path = "../agent_settings"
-
-[dependencies.agent_skills]
-path = "../agent_skills"
-
-[dependencies.agent_ui]
-path = "../agent_ui"
-features = ["audio"]
-
 [dependencies.anyhow]
 version = "1.0.86"
+
+[dependencies.ashpd]
+version = "0.13"
+default-features = false
+features = [
+    "async-io",
+    "inhibit",
+    "open_uri",
+    "file_chooser",
+    "settings",
+    "notification",
+]
 
 [dependencies.askpass]
 path = "../askpass"
@@ -126,26 +48,11 @@ path = "../askpass"
 [dependencies.assets]
 path = "../assets"
 
-[dependencies.audio]
-path = "../audio"
-
-[dependencies.auto_update]
-path = "../auto_update"
-
-[dependencies.auto_update_ui]
-path = "../auto_update_ui"
-
 [dependencies.breadcrumbs]
 path = "../breadcrumbs"
 
-[dependencies.call]
-path = "../call"
-
 [dependencies.call_hierarchy]
 path = "../call_hierarchy"
-
-[dependencies.channel]
-path = "../channel"
 
 [dependencies.chrono]
 version = "0.4"
@@ -163,16 +70,6 @@ default-features = false
 [dependencies.client]
 path = "../client"
 
-[dependencies.clock]
-path = "../clock"
-optional = true
-
-[dependencies.codestral]
-path = "../codestral"
-
-[dependencies.collab_ui]
-path = "../collab_ui"
-
 [dependencies.collections]
 path = "../collections"
 version = "0.1.0"
@@ -182,18 +79,6 @@ path = "../command_palette"
 
 [dependencies.component_preview]
 path = "../component_preview"
-
-[dependencies.copilot]
-path = "../copilot"
-
-[dependencies.copilot_chat]
-path = "../copilot_chat"
-
-[dependencies.copilot_ui]
-path = "../copilot_ui"
-
-[dependencies.crashes]
-path = "../crashes"
 
 [dependencies.dap_adapters]
 path = "../dap_adapters"
@@ -210,9 +95,6 @@ path = "../debugger_tools"
 [dependencies.debugger_ui]
 path = "../debugger_ui"
 
-[dependencies.dev_container]
-path = "../dev_container"
-
 [dependencies.diagnostics]
 path = "../diagnostics"
 
@@ -221,10 +103,6 @@ path = "../editor"
 
 [dependencies.encoding_selector]
 path = "../encoding_selector"
-
-[dependencies.env_logger]
-version = "0.11"
-optional = true
 
 [dependencies.extension]
 path = "../extension"
@@ -237,9 +115,6 @@ path = "../extensions_ui"
 
 [dependencies.feature_flags]
 path = "../feature_flags"
-
-[dependencies.feedback]
-path = "../feedback"
 
 [dependencies.file_finder]
 path = "../file_finder"
@@ -258,7 +133,6 @@ path = "../git_hosting_providers"
 
 [dependencies.git_ui]
 path = "../git_ui"
-features = ["call"]
 
 [dependencies.git_ui_core]
 path = "../git_ui_core"
@@ -269,18 +143,15 @@ path = "../go_to_line"
 [dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["profiler", "stacker"]
+features = ["stacker", "wayland"]
 
 [dependencies.gpui_platform]
 path = "../gpui_platform"
 default-features = false
-features = ["screen-capture", "font-kit", "wayland", "x11"]
+features = ["font-kit", "wayland"]
 
 [dependencies.gpui_tokio]
 path = "../gpui_tokio"
-
-[dependencies.hang_telemetry]
-path = "../hang_telemetry"
 
 [dependencies.image]
 version = "0.25.1"
@@ -302,42 +173,9 @@ features = [
     "tiff",
     "webp",
 ]
-optional = true
-
-[dependencies.itertools]
-version = "0.14.0"
-
-[dependencies.rayon]
-version = "1.8"
-
-[dependencies.semver]
-version = "1.0"
-features = ["serde"]
-
-[dependencies.system_specs]
-path = "../system_specs"
-
-[dependencies.tabular_data_preview]
-path = "../tabular_data_preview"
-
-[dependencies.tempfile]
-version = "3.20.0"
-optional = true
-
-[dependencies.edit_prediction]
-path = "../edit_prediction"
-
-[dependencies.edit_prediction_ui]
-path = "../edit_prediction_ui"
-
-[dependencies.http_client]
-path = "../http_client"
 
 [dependencies.image_viewer]
 path = "../image_viewer"
-
-[dependencies.input_latency_ui]
-path = "../input_latency_ui"
 
 [dependencies.inspector_ui]
 path = "../inspector_ui"
@@ -376,13 +214,13 @@ features = ["load-grammars"]
 [dependencies.line_ending_selector]
 path = "../line_ending_selector"
 
-[dependencies.lsp_command_selector]
-path = "../lsp_command_selector"
-
 [dependencies.log]
 version = "0.4"
 default-features = false
 features = ["std"]
+
+[dependencies.lsp_command_selector]
+path = "../lsp_command_selector"
 
 [dependencies.lsp_locations]
 path = "../lsp_locations"
@@ -402,9 +240,6 @@ path = "../migrator"
 [dependencies.mimalloc]
 version = "0.1"
 optional = true
-
-[dependencies.miniprofiler_ui]
-path = "../miniprofiler_ui"
 
 [dependencies.node_runtime]
 path = "../node_runtime"
@@ -430,9 +265,6 @@ path = "../paths"
 [dependencies.picker]
 path = "../picker"
 
-[dependencies.profiling]
-version = "1"
-
 [dependencies.project]
 path = "../project"
 
@@ -442,11 +274,8 @@ path = "../project_panel"
 [dependencies.project_symbols]
 path = "../project_symbols"
 
-[dependencies.prompt_store]
-path = "../prompt_store"
-
-[dependencies.proto]
-path = "../proto"
+[dependencies.rayon]
+version = "1.8"
 
 [dependencies.recent_projects]
 path = "../recent_projects"
@@ -454,26 +283,8 @@ path = "../recent_projects"
 [dependencies.release_channel]
 path = "../release_channel"
 
-[dependencies.remote]
-path = "../remote"
-
 [dependencies.repl]
 path = "../repl"
-
-[dependencies.reqwest]
-git = "https://github.com/zed-industries/reqwest.git"
-rev = "33bc764aa15ff7b200bf7c93bd96e24878d53e14"
-default-features = false
-features = [
-    "http2",
-    "macos-system-configuration",
-    "rustls-tls-native-roots",
-    "socks",
-    "stream",
-    "multipart",
-]
-package = "zed-reqwest"
-version = "0.12.15-zed"
 
 [dependencies.reqwest_client]
 path = "../reqwest_client"
@@ -510,9 +321,6 @@ path = "../settings_ui"
 [dependencies.shellexpand]
 version = "3.1"
 
-[dependencies.sidebar]
-path = "../sidebar"
-
 [dependencies.smol]
 version = "2.0"
 
@@ -525,22 +333,17 @@ path = "../snippets_ui"
 [dependencies.svg_preview]
 path = "../svg_preview"
 
-[dependencies.sysinfo]
-version = "0.39"
-default-features = false
-features = ["system"]
+[dependencies.system_specs]
+path = "../system_specs"
 
 [dependencies.tab_switcher]
 path = "../tab_switcher"
 
+[dependencies.tabular_data_preview]
+path = "../tabular_data_preview"
+
 [dependencies.tasks_ui]
 path = "../tasks_ui"
-
-[dependencies.telemetry]
-path = "../telemetry"
-
-[dependencies.telemetry_events]
-path = "../telemetry_events"
 
 [dependencies.terminal_view]
 path = "../terminal_view"
@@ -568,23 +371,14 @@ features = [
     "local-offset",
 ]
 
-[dependencies.time_format]
-path = "../time_format"
-
 [dependencies.title_bar]
 path = "../title_bar"
 
 [dependencies.toolchain_selector]
 path = "../toolchain_selector"
 
-[dependencies.tracing]
-version = "0.1.40"
-
 [dependencies.ui]
 path = "../ui"
-
-[dependencies.ui_prompt]
-path = "../ui_prompt"
 
 [dependencies.url]
 version = "2.2"
@@ -608,12 +402,6 @@ path = "../vim_mode_setting"
 [dependencies.watch]
 path = "../watch"
 
-[dependencies.web_search]
-path = "../web_search"
-
-[dependencies.web_search_providers]
-path = "../web_search_providers"
-
 [dependencies.which_key]
 path = "../which_key"
 
@@ -622,9 +410,6 @@ path = "../workspace"
 
 [dependencies.zed_actions]
 path = "../zed_actions"
-
-[dependencies.zed_credentials_provider]
-path = "../zed_credentials_provider"
 
 [dependencies.zed_env_vars]
 path = "../zed_env_vars"
@@ -638,61 +423,7 @@ path = "../zlog_settings"
 [dependencies.ztracing]
 path = "../ztracing"
 
-[target.'cfg(target_os = "macos")'.dependencies.nix]
-version = "0.30"
-features = ["user"]
-
-[target.'cfg(target_os = "windows")'.dependencies.etw_tracing]
-path = "../etw_tracing"
-
-[target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.62"
-features = [
-    "Win32_Foundation",
-    "Win32_Graphics_Gdi",
-    "Win32_Security",
-    "Win32_Storage_FileSystem",
-    "Win32_System_Com",
-    "Win32_System_Com_StructuredStorage",
-    "Win32_System_IO",
-    "Win32_System_LibraryLoader",
-    "Win32_System_Ole",
-    "Win32_System_Threading",
-    "Win32_System_Variant",
-    "Win32_UI_Shell",
-    "Win32_UI_Shell_Common",
-    "Win32_UI_Shell_PropertiesSystem",
-    "Win32_UI_WindowsAndMessaging",
-    "Win32_System_Console",
-    "Win32_System_Pipes",
-]
-
-[target.'cfg(target_os = "windows")'.dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["profiler", "windows-manifest"]
-
-[target.'cfg(target_os = "windows")'.build-dependencies.windows_resources]
-path = "../windows_resources"
-
-[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["profiler", "wayland", "x11"]
-
-[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies.ashpd]
-version = "0.13"
-default-features = false
-features = [
-    "async-io",
-    "inhibit",
-    "open_uri",
-    "file_chooser",
-    "settings",
-    "notification",
-]
-
-[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies.image]
+[build-dependencies.image]
 version = "0.25.1"
 default-features = false
 features = [
@@ -713,126 +444,5 @@ features = [
     "webp",
 ]
 
-[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.build-dependencies.image]
-version = "0.25.1"
-default-features = false
-features = [
-    "bmp",
-    "dds",
-    "exr",
-    "ff",
-    "gif",
-    "hdr",
-    "ico",
-    "jpeg",
-    "png",
-    "pnm",
-    "qoi",
-    "rayon",
-    "tga",
-    "tiff",
-    "webp",
-]
-
-[target.'cfg(target_os = "linux")'.build-dependencies]
-pkg-config = "0.3.22"
-
-[dev-dependencies.activity_indicator]
-path = "../activity_indicator"
-features = ["test-support"]
-
-[dev-dependencies.call]
-path = "../call"
-features = ["test-support"]
-
-[dev-dependencies.editor]
-path = "../editor"
-features = ["test-support"]
-
-[dev-dependencies.env_logger]
-version = "0.11"
-
-[dev-dependencies.fs]
-path = "../fs"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["profiler", "test-support"]
-
-[dev-dependencies.image_viewer]
-path = "../image_viewer"
-features = ["test-support"]
-
-[dev-dependencies.itertools]
-version = "0.14.0"
-
-[dev-dependencies.language]
-path = "../language"
-features = ["test-support"]
-
-[dev-dependencies.pretty_assertions]
-version = "1.3.0"
-features = ["unstable"]
-
-[dev-dependencies.project]
-path = "../project"
-features = ["test-support"]
-
-[dev-dependencies.remote]
-path = "../remote"
-features = ["test-support"]
-
-[dev-dependencies.remote_server]
-path = "../remote_server"
-features = ["test-support"]
-
-[dev-dependencies.semver]
-version = "1.0"
-features = ["serde"]
-
-[dev-dependencies.terminal_view]
-path = "../terminal_view"
-features = ["test-support"]
-
-[dev-dependencies.title_bar]
-path = "../title_bar"
-features = ["test-support"]
-
-[dev-dependencies.workspace]
-path = "../workspace"
-features = ["test-support"]
-
-[dev-dependencies.image]
-version = "0.25.1"
-default-features = false
-features = [
-    "bmp",
-    "dds",
-    "exr",
-    "ff",
-    "gif",
-    "hdr",
-    "ico",
-    "jpeg",
-    "png",
-    "pnm",
-    "qoi",
-    "rayon",
-    "tga",
-    "tiff",
-    "webp",
-]
-
-[dev-dependencies.agent_ui]
-path = "../agent_ui"
-features = ["test-support"]
-
-[dev-dependencies.search]
-path = "../search"
-features = ["test-support"]
-
-[dev-dependencies.repl]
-path = "../repl"
-features = ["test-support"]
+[build-dependencies.pkg-config]
+version = "0.3.22"

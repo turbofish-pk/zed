@@ -31,7 +31,7 @@ default-features = false
 path = "../language"
 
 [dependencies.open_path_prompt]
-path = "../open_path_prompt"
+   path = "../open_path_prompt"
 
 [dependencies.paths]
 path = "../paths"

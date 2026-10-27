@@ -6,7 +6,7 @@ use std::{
 };
 use theme::{Theme, ThemeColors, ThemeRegistry};
 use ui::{
-    IntoElement, RenderOnce, component_prelude::Documented, prelude::*, utils::inner_corner_radius,
+    IntoElement, RenderOnce, prelude::*, utils::inner_corner_radius,
 };
 
 #[derive(Clone, PartialEq)]
@@ -18,7 +18,7 @@ pub enum ThemePreviewStyle {
 
 /// Shows a preview of a theme as an abstract illustration
 /// of a thumbnail-sized editor.
-#[derive(IntoElement, RegisterComponent, Documented)]
+#[derive(IntoElement)]
 pub struct ThemePreviewTile {
     theme: Arc<Theme>,
     seed: f32,
@@ -299,81 +299,5 @@ impl RenderOnce for ThemePreviewTile {
             )
             .into_any_element(),
         }
-    }
-}
-
-impl Component for ThemePreviewTile {
-    fn scope() -> ComponentScope {
-        ComponentScope::Onboarding
-    }
-
-    fn name() -> &'static str {
-        "Theme Preview Tile"
-    }
-
-    fn sort_name() -> &'static str {
-        "Theme Preview Tile"
-    }
-
-    fn description() -> &'static str {
-        Self::DOCS
-    }
-
-    fn preview(_window: &mut Window, cx: &mut App) -> AnyElement {
-        let theme_registry = ThemeRegistry::global(cx);
-
-        let one_dark = theme_registry.get("One Dark");
-        let one_light = theme_registry.get("One Light");
-        let gruvbox_dark = theme_registry.get("Gruvbox Dark");
-        let gruvbox_light = theme_registry.get("Gruvbox Light");
-
-        let themes_to_preview = vec![
-            one_dark.clone().ok(),
-            one_light.ok(),
-            gruvbox_dark.ok(),
-            gruvbox_light.ok(),
-        ]
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>();
-
-        v_flex()
-            .gap_6()
-            .p_4()
-            .children({
-                if let Some(one_dark) = one_dark.ok() {
-                    vec![example_group(vec![single_example(
-                        "Default",
-                        div()
-                            .w(px(240.))
-                            .h(px(180.))
-                            .child(ThemePreviewTile::new(one_dark, 0.42))
-                            .into_any_element(),
-                    )])]
-                } else {
-                    vec![]
-                }
-            })
-            .child(
-                example_group(vec![single_example(
-                    "Default Themes",
-                    h_flex()
-                        .gap_4()
-                        .children(
-                            themes_to_preview
-                                .into_iter()
-                                .map(|theme| {
-                                    div()
-                                        .w(px(200.))
-                                        .h(px(140.))
-                                        .child(ThemePreviewTile::new(theme, 0.42))
-                                })
-                                .collect::<Vec<_>>(),
-                        )
-                        .into_any_element(),
-                )])
-                .grow(),
-            )
-            .into_any_element()
     }
 }

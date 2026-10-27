@@ -753,35 +753,3 @@ impl From<Size<Pixels>> for Size<AvailableSpace> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn border_widths_to_taffy_use_stroke_snapping() {
-        let border_widths = Edges {
-            top: Pixels(0.0).into(),
-            right: Pixels(0.4).into(),
-            bottom: Pixels(0.5).into(),
-            left: Pixels(1.6).into(),
-        };
-        let taffy_border = border_widths_to_taffy(&border_widths, Pixels(16.0), 1.0);
-
-        assert_eq!(
-            taffy_border.top,
-            taffy::style::LengthPercentage::length(0.0)
-        );
-        assert_eq!(
-            taffy_border.right,
-            taffy::style::LengthPercentage::length(1.0)
-        );
-        assert_eq!(
-            taffy_border.bottom,
-            taffy::style::LengthPercentage::length(1.0)
-        );
-        assert_eq!(
-            taffy_border.left,
-            taffy::style::LengthPercentage::length(2.0)
-        );
-    }
-}

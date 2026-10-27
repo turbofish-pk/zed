@@ -18,14 +18,14 @@ pub struct ShellBuilder {
 
 impl ShellBuilder {
     /// Create a new ShellBuilder as configured.
-    pub fn new(shell: &Shell, is_windows: bool) -> Self {
+    pub fn new(shell: &Shell) -> Self {
         let (program, args) = match shell {
             Shell::System => (get_system_shell(), Vec::new()),
             Shell::Program(shell) => (shell.clone(), Vec::new()),
             Shell::WithArguments { program, args, .. } => (program.clone(), args.clone()),
         };
 
-        let kind = ShellKind::new(&program, is_windows);
+        let kind = ShellKind::new(&program);
         Self {
             program,
             args,
@@ -50,28 +50,11 @@ impl ShellBuilder {
         if command_to_use_in_label.trim().is_empty() {
             self.program.clone()
         } else {
-            match self.kind {
-                ShellKind::PowerShell | ShellKind::Pwsh => {
-                    format!("{} -C '{}'", self.program, command_to_use_in_label)
-                }
-                ShellKind::Cmd => {
-                    format!("{} /C \"{}\"", self.program, command_to_use_in_label)
-                }
-                ShellKind::Posix
-                | ShellKind::Nushell
-                | ShellKind::Fish
-                | ShellKind::Csh
-                | ShellKind::Tcsh
-                | ShellKind::Rc
-                | ShellKind::Xonsh
-                | ShellKind::Elvish => {
-                    let interactivity = self.interactive.then_some("-i ").unwrap_or_default();
-                    format!(
-                        "{PROGRAM} {interactivity}-c '{command_to_use_in_label}'",
-                        PROGRAM = self.program
-                    )
-                }
-            }
+            let interactivity = self.interactive.then_some("-i ").unwrap_or_default();
+            format!(
+                "{PROGRAM} {interactivity}-c '{command_to_use_in_label}'",
+                PROGRAM = self.program
+            )
         }
     }
 
@@ -98,7 +81,7 @@ impl ShellBuilder {
             let mut combined_command = task_args.iter().fold(task_command, |mut command, arg| {
                 command.push(' ');
                 let shell_variable = if self.substitute_variables {
-                    Cow::Owned(self.kind.to_shell_variable(arg))
+                    Cow::Owned(arg.to_owned())
                 } else {
                     Cow::Borrowed(arg.as_str())
                 };
@@ -122,22 +105,6 @@ impl ShellBuilder {
                         combined_command.insert_str(0, "begin; ");
                         combined_command.push_str("; end </dev/null");
                     }
-                    ShellKind::Nushell
-                    | ShellKind::Csh
-                    | ShellKind::Tcsh
-                    | ShellKind::Rc
-                    | ShellKind::Xonsh
-                    | ShellKind::Elvish => {
-                        combined_command.insert(0, '(');
-                        combined_command.push_str("\n) </dev/null");
-                    }
-                    ShellKind::PowerShell | ShellKind::Pwsh => {
-                        combined_command.insert_str(0, "$null | & {");
-                        combined_command.push_str("}");
-                    }
-                    ShellKind::Cmd => {
-                        combined_command.push_str("< NUL");
-                    }
                 }
             }
 
@@ -158,7 +125,7 @@ impl ShellBuilder {
         if let Some(task_command) = task_command {
             let mut combined_command = task_args.iter().fold(task_command, |mut command, arg| {
                 command.push(' ');
-                command.push_str(&self.kind.to_shell_variable(arg));
+                command.push_str(&arg.to_owned());
                 command
             });
             if self.redirect_stdin {
@@ -169,22 +136,6 @@ impl ShellBuilder {
                     ShellKind::Fish => {
                         combined_command.insert_str(0, "begin; ");
                         combined_command.push_str("; end </dev/null");
-                    }
-                    ShellKind::Nushell
-                    | ShellKind::Csh
-                    | ShellKind::Tcsh
-                    | ShellKind::Rc
-                    | ShellKind::Xonsh
-                    | ShellKind::Elvish => {
-                        combined_command.insert(0, '(');
-                        combined_command.push_str("\n) </dev/null");
-                    }
-                    ShellKind::PowerShell | ShellKind::Pwsh => {
-                        combined_command.insert_str(0, "$null | & {");
-                        combined_command.push_str("}");
-                    }
-                    ShellKind::Cmd => {
-                        combined_command.push_str("< NUL");
                     }
                 }
             }
@@ -217,8 +168,6 @@ impl ShellBuilder {
         mut task_command: Option<String>,
         task_args: &[String],
     ) -> std::process::Command {
-        #[cfg(windows)]
-        let kind = self.kind;
         if task_args.is_empty() {
             task_command = task_command
                 .as_ref()
@@ -229,18 +178,6 @@ impl ShellBuilder {
 
         let mut child = crate::command::new_std_command(program);
 
-        #[cfg(windows)]
-        if kind == ShellKind::Cmd {
-            use std::os::windows::process::CommandExt;
-
-            for arg in args {
-                child.raw_arg(arg);
-            }
-        } else {
-            child.args(args);
-        }
-
-        #[cfg(not(windows))]
         child.args(args);
 
         child
@@ -248,176 +185,5 @@ impl ShellBuilder {
 
     pub fn kind(&self) -> ShellKind {
         self.kind
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_nu_shell_variable_substitution() {
-        let shell = Shell::Program("nu".to_owned());
-        let shell_builder = ShellBuilder::new(&shell, false);
-
-        let (program, args) = shell_builder.build(
-            Some("echo".into()),
-            &[
-                "${hello}".to_string(),
-                "$world".to_string(),
-                "nothing".to_string(),
-                "--$something".to_string(),
-                "$".to_string(),
-                "${test".to_string(),
-            ],
-        );
-
-        assert_eq!(program, "nu");
-        assert_eq!(
-            args,
-            vec![
-                "-i",
-                "-c",
-                "echo '$env.hello' '$env.world' nothing '--($env.something)' '$' '${test'"
-            ]
-        );
-    }
-
-    #[test]
-    fn test_literal_args_skip_variable_substitution() {
-        let shell = Shell::Program("nu".to_owned());
-        let (program, args) = ShellBuilder::new(&shell, false)
-            .non_interactive()
-            .literal_args()
-            .build(
-                Some("ssh".into()),
-                &[
-                    "host".to_string(),
-                    "cd \"$HOME\"/project && exec \"$HOME\"/'a b' exec".to_string(),
-                    "${braced}".to_string(),
-                ],
-            );
-
-        assert_eq!(program, "nu");
-        assert_eq!(
-            args,
-            vec![
-                "-c",
-                "ssh host \"cd \\\"$HOME\\\"/project && exec \\\"$HOME\\\"/'a b' exec\" '${braced}'"
-            ]
-        );
-    }
-
-    #[test]
-    fn redirect_stdin_to_dev_null_precedence() {
-        let shell = Shell::Program("nu".to_owned());
-        let shell_builder = ShellBuilder::new(&shell, false);
-
-        let (program, args) = shell_builder
-            .redirect_stdin_to_dev_null()
-            .build(Some("echo".into()), &["nothing".to_string()]);
-
-        assert_eq!(program, "nu");
-        assert_eq!(args, vec!["-i", "-c", "(echo nothing\n) </dev/null"]);
-    }
-
-    #[test]
-    fn redirect_stdin_to_dev_null_fish() {
-        let shell = Shell::Program("fish".to_owned());
-        let shell_builder = ShellBuilder::new(&shell, false);
-
-        let (program, args) = shell_builder
-            .redirect_stdin_to_dev_null()
-            .build(Some("echo".into()), &["test".to_string()]);
-
-        assert_eq!(program, "fish");
-        assert_eq!(args, vec!["-i", "-c", "begin; echo test; end </dev/null"]);
-    }
-
-    #[test]
-    fn redirect_stdin_to_dev_null_preserves_heredoc() {
-        let shell = Shell::Program("sh".to_owned());
-        let shell_builder = ShellBuilder::new(&shell, false);
-
-        let command = "cat <<EOF\nhello\nEOF";
-        let (program, args) = shell_builder
-            .redirect_stdin_to_dev_null()
-            .build(Some(command.into()), &[]);
-
-        assert_eq!(program, "sh");
-        assert_eq!(
-            args,
-            vec!["-i", "-c", "exec </dev/null\ncat <<EOF\nhello\nEOF"]
-        );
-    }
-
-    #[test]
-    fn non_interactive_omits_interactive_flag() {
-        // Headless hosts (e.g. the eval CLI) build the agent's shell command
-        // non-interactively so it works without a controlling TTY.
-        let shell = Shell::Program("sh".to_owned());
-        let shell_builder = ShellBuilder::new(&shell, false).non_interactive();
-
-        let (program, args) = shell_builder.build(Some("echo hello".into()), &[]);
-
-        assert_eq!(program, "sh");
-        assert_eq!(args, vec!["-c", "echo hello"]);
-        assert!(
-            !args.iter().any(|arg| arg == "-i"),
-            "non-interactive shell command must not include `-i`"
-        );
-    }
-
-    #[test]
-    fn does_not_quote_sole_command_only() {
-        let shell = Shell::Program("fish".to_owned());
-        let shell_builder = ShellBuilder::new(&shell, false);
-
-        let (program, args) = shell_builder.build(Some("echo".into()), &[]);
-
-        assert_eq!(program, "fish");
-        assert_eq!(args, vec!["-i", "-c", "echo"]);
-
-        let shell = Shell::Program("fish".to_owned());
-        let shell_builder = ShellBuilder::new(&shell, false);
-
-        let (program, args) = shell_builder.build(Some("echo oo".into()), &[]);
-
-        assert_eq!(program, "fish");
-        assert_eq!(args, vec!["-i", "-c", "echo oo"]);
-    }
-
-    #[test]
-    fn windows_powershell_preserves_spaced_arg_as_single_shell_argument() {
-        let worktree_root = r"C:\worktrees\Godot Projects\sample-game";
-        let shell = Shell::Program("powershell".to_owned());
-
-        let (program, args) = ShellBuilder::new(&shell, true)
-            .build(Some("echo".into()), &[worktree_root.to_string()]);
-
-        assert_eq!(program, "powershell");
-        assert_eq!(
-            args,
-            vec!["-C".to_string(), format!("echo '{worktree_root}'")]
-        );
-    }
-
-    #[test]
-    fn windows_cmd_preserves_spaced_arg_as_single_shell_argument() {
-        let worktree_root = r"C:\worktrees\Godot Projects\sample-game";
-        let shell = Shell::Program("cmd".to_owned());
-
-        let (program, args) = ShellBuilder::new(&shell, true)
-            .build(Some("echo".into()), &[worktree_root.to_string()]);
-
-        assert_eq!(program, "cmd");
-        assert_eq!(
-            args,
-            vec![
-                "/S".to_string(),
-                "/C".to_string(),
-                format!("\"echo ^\"{worktree_root}^\"\""),
-            ]
-        );
     }
 }

@@ -21,34 +21,14 @@ doctest = false
 
 [features]
 default = []
-test-support = []
 
-[dependencies.agent]
-path = "../agent"
-
-[dependencies.agent_settings]
-path = "../agent_settings"
-
-[dependencies.agent_skills]
-path = "../agent_skills"
 
 [dependencies.anyhow]
 version = "1.0.86"
 
-[dependencies.audio]
-path = "../audio"
 
 [dependencies.client]
 path = "../client"
-
-[dependencies.cloud_api_types]
-path = "../cloud_api_types"
-
-[dependencies.component]
-path = "../component"
-
-[dependencies.codestral]
-path = "../codestral"
 
 [dependencies.collections]
 path = "../collections"
@@ -57,21 +37,6 @@ version = "0.1.0"
 [dependencies.context_server]
 path = "../context_server"
 
-[dependencies.copilot]
-path = "../copilot"
-
-[dependencies.copilot_ui]
-path = "../copilot_ui"
-
-[dependencies.cpal]
-git = "https://github.com/RustAudio/cpal"
-rev = "e1612d5d98152f8dc2a62e1b51ef7cbf4f7f26b7"
-
-[dependencies.edit_prediction]
-path = "../edit_prediction"
-
-[dependencies.edit_prediction_ui]
-path = "../edit_prediction_ui"
 
 [dependencies.editor]
 path = "../editor"
@@ -113,9 +78,6 @@ version = "0.14.0"
 [dependencies.language]
 path = "../language"
 
-[dependencies.language_model]
-path = "../language_model"
-
 [dependencies.log]
 version = "0.4"
 default-features = false
@@ -143,12 +105,6 @@ path = "../project"
 
 [dependencies.release_channel]
 path = "../release_channel"
-
-[dependencies.rodio]
-git = "https://github.com/RustAudio/rodio"
-rev = "3ee9745862279ce1d18db593155016e7ce024aeb"
-default-features = false
-features = ["wav", "playback", "wav_output", "recording"]
 
 [dependencies.schemars]
 version = "1.0"
@@ -179,8 +135,6 @@ path = "../shell_command_parser"
 version = "0.28"
 features = ["derive"]
 
-[dependencies.telemetry]
-path = "../telemetry"
 
 [dependencies.theme]
 path = "../theme"
@@ -209,13 +163,10 @@ path = "../zed_actions"
 [dependencies.zed_credentials_provider]
 path = "../zed_credentials_provider"
 
-[dev-dependencies.credentials_provider]
-path = "../credentials_provider"
-features = ["test-support"]
 
 [dev-dependencies.fs]
 path = "../fs"
-features = ["test-support"]
+
 
 [dev-dependencies.futures]
 version = "0.3.34"
@@ -223,22 +174,13 @@ version = "0.3.34"
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
-
-[dev-dependencies.language_models]
-path = "../language_models"
-features = ["test-support"]
 
 [dev-dependencies.paths]
 path = "../paths"
 
-[dev-dependencies.pretty_assertions]
-version = "1.3.0"
-features = ["unstable"]
-
 [dev-dependencies.project]
 path = "../project"
-features = ["test-support"]
+
 
 [dev-dependencies.serde_json]
 version = "1.0.144"
@@ -246,8 +188,7 @@ features = ["preserve_order", "raw_value"]
 
 [dev-dependencies.settings]
 path = "../settings"
-features = ["test-support"]
+
 
 [dev-dependencies.workspace]
 path = "../workspace"
-features = ["test-support"]

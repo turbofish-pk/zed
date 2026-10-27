@@ -17,7 +17,7 @@ path = "src/markdown_preview.rs"
 doctest = false
 
 [features]
-test-support = []
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -75,11 +75,11 @@ path = "../buffer_diff"
 
 [dev-dependencies.db]
 path = "../db"
-features = ["test-support"]
+
 
 [dev-dependencies.editor]
 path = "../editor"
-features = ["test-support"]
+
 
 [dev-dependencies.fs]
 path = "../fs"
@@ -87,7 +87,7 @@ path = "../fs"
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.serde_json]
 version = "1.0.144"
@@ -95,4 +95,3 @@ features = ["preserve_order", "raw_value"]
 
 [dev-dependencies.workspace]
 path = "../workspace"
-features = ["test-support"]

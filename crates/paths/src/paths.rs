@@ -123,11 +123,7 @@ pub fn config_dir() -> &'static PathBuf {
     CONFIG_DIR.get_or_init(|| {
         if let Some(custom_dir) = CUSTOM_DATA_DIR.get() {
             custom_dir.join("config")
-        } else if cfg!(target_os = "windows") {
-            dirs::config_dir()
-                .expect("failed to determine RoamingAppData directory")
-                .join(APP_NAME)
-        } else if cfg!(any(target_os = "linux", target_os = "freebsd")) {
+        }  else if cfg!(any(target_os = "linux", target_os = "freebsd")) {
             if let Ok(flatpak_xdg_config) = std::env::var("FLATPAK_XDG_CONFIG_HOME") {
                 flatpak_xdg_config.into()
             } else {
@@ -193,35 +189,13 @@ pub fn state_dir() -> &'static PathBuf {
 pub fn temp_dir() -> &'static PathBuf {
     static TEMP_DIR: OnceLock<PathBuf> = OnceLock::new();
     TEMP_DIR.get_or_init(|| {
-        if cfg!(target_os = "macos") {
-            return dirs::cache_dir()
-                .expect("failed to determine cachesDirectory directory")
-                .join(APP_NAME);
+        if let Ok(flatpak_xdg_cache) = std::env::var("FLATPAK_XDG_CACHE_HOME") {
+            flatpak_xdg_cache.into()
+        } else {
+            dirs::cache_dir().expect("failed to determine XDG_CACHE_HOME directory")
         }
-
-        if cfg!(target_os = "windows") {
-            return dirs::cache_dir()
-                .expect("failed to determine LocalAppData directory")
-                .join(APP_NAME);
-        }
-
-        if cfg!(any(target_os = "linux", target_os = "freebsd")) {
-            return if let Ok(flatpak_xdg_cache) = std::env::var("FLATPAK_XDG_CACHE_HOME") {
-                flatpak_xdg_cache.into()
-            } else {
-                dirs::cache_dir().expect("failed to determine XDG_CACHE_HOME directory")
-            }
-            .join(APP_NAME_LOWERCASE);
-        }
-
-        home_dir().join(".cache").join(APP_NAME_LOWERCASE)
+        .join(APP_NAME_LOWERCASE)
     })
-}
-
-/// Returns the path to the hang traces directory.
-pub fn hang_traces_dir() -> &'static PathBuf {
-    static LOGS_DIR: OnceLock<PathBuf> = OnceLock::new();
-    LOGS_DIR.get_or_init(|| data_dir().join("hang_traces"))
 }
 
 /// Returns the path to the logs directory.
@@ -258,20 +232,6 @@ pub fn old_log_file() -> &'static PathBuf {
 pub fn database_dir() -> &'static PathBuf {
     static DATABASE_DIR: OnceLock<PathBuf> = OnceLock::new();
     DATABASE_DIR.get_or_init(|| data_dir().join("db"))
-}
-
-/// Returns the path to the crashes directory, if it exists for the current platform.
-pub fn crashes_dir() -> &'static Option<PathBuf> {
-    static CRASHES_DIR: OnceLock<Option<PathBuf>> = OnceLock::new();
-    CRASHES_DIR.get_or_init(|| {
-        cfg!(target_os = "macos").then_some(home_dir().join("Library/Logs/DiagnosticReports"))
-    })
-}
-
-/// Returns the path to the retired crashes directory, if it exists for the current platform.
-pub fn crashes_retired_dir() -> &'static Option<PathBuf> {
-    static CRASHES_RETIRED_DIR: OnceLock<Option<PathBuf>> = OnceLock::new();
-    CRASHES_RETIRED_DIR.get_or_init(|| crashes_dir().as_ref().map(|dir| dir.join("Retired")))
 }
 
 /// Returns the path to the `settings.json` file.
@@ -451,20 +411,6 @@ pub fn debug_adapters_dir() -> &'static PathBuf {
     DEBUG_ADAPTERS_DIR.get_or_init(|| data_dir().join("debug_adapters"))
 }
 
-/// Returns the path to the external agents directory
-///
-/// This is where agent servers are downloaded to
-pub fn external_agents_dir() -> &'static PathBuf {
-    static EXTERNAL_AGENTS_DIR: OnceLock<PathBuf> = OnceLock::new();
-    EXTERNAL_AGENTS_DIR.get_or_init(|| data_dir().join("external_agents"))
-}
-
-/// Returns the path to the Copilot directory.
-pub fn copilot_dir() -> &'static PathBuf {
-    static COPILOT_DIR: OnceLock<PathBuf> = OnceLock::new();
-    COPILOT_DIR.get_or_init(|| data_dir().join("copilot"))
-}
-
 /// Returns the path to the default Prettier directory.
 pub fn default_prettier_dir() -> &'static PathBuf {
     static DEFAULT_PRETTIER_DIR: OnceLock<PathBuf> = OnceLock::new();
@@ -623,12 +569,12 @@ fn add_vscode_user_data_paths(paths: &mut Vec<PathBuf>, product_name: &str) {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub fn global_gitignore_path() -> Option<PathBuf> {
     Some(home_dir().join(".config").join("git").join("ignore"))
 }
 
-#[cfg(not(any(test, feature = "test-support")))]
+#[cfg(not(feature = "test-support"))]
 pub fn global_gitignore_path() -> Option<PathBuf> {
     static GLOBAL_GITIGNORE_PATH: OnceLock<Option<PathBuf>> = OnceLock::new();
     GLOBAL_GITIGNORE_PATH

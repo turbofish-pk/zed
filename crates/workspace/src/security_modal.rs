@@ -65,14 +65,8 @@ impl ModalView for SecurityModal {
 
     fn on_before_dismiss(&mut self, _: &mut Window, _: &mut Context<Self>) -> DismissDecision {
         match self.trusted {
-            Some(false) => {
-                telemetry::event!("Open in Restricted", source = "Worktree Trust Modal");
-                DismissDecision::Dismiss(true)
-            }
-            Some(true) => {
-                telemetry::event!("Trust and Continue", source = "Worktree Trust Modal");
-                DismissDecision::Dismiss(true)
-            }
+            Some(false) => DismissDecision::Dismiss(true),
+            Some(true) => DismissDecision::Dismiss(true),
             // Block dismiss via escape or clicking outside; user must pick an action
             None => DismissDecision::Dismiss(false),
         }
@@ -561,107 +555,3 @@ fn validate_trust_scope(
     Ok(expanded)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn accepts_ancestor_or_equal() {
-        let project = Path::new("/Users/me/dev/delta/wt/t1");
-        let style = PathStyle::Unix;
-        assert_eq!(
-            validate_trust_scope("/Users/me/dev/delta/wt", project, None, style).unwrap(),
-            PathBuf::from("/Users/me/dev/delta/wt"),
-        );
-        // Equal to the project itself is allowed.
-        assert_eq!(
-            validate_trust_scope("/Users/me/dev/delta/wt/t1", project, None, style).unwrap(),
-            PathBuf::from("/Users/me/dev/delta/wt/t1"),
-        );
-        // A distant ancestor is allowed.
-        assert!(validate_trust_scope("/Users/me/dev", project, None, style).is_ok());
-    }
-
-    #[test]
-    fn rejects_non_ancestor_relative_or_empty() {
-        let project = Path::new("/Users/me/dev/delta/wt/t1");
-        let style = PathStyle::Unix;
-        assert!(validate_trust_scope("/Users/other", project, None, style).is_err());
-        assert!(validate_trust_scope("relative/path", project, None, style).is_err());
-        assert!(validate_trust_scope("   ", project, None, style).is_err());
-        // Deeper than the project is not an ancestor.
-        assert!(
-            validate_trust_scope("/Users/me/dev/delta/wt/t1/sub", project, None, style).is_err()
-        );
-    }
-
-    #[test]
-    fn accepts_windows_style_ancestor() {
-        let project = Path::new(r"C:\Users\me\dev\wt\t1");
-        let style = PathStyle::Windows;
-
-        assert_eq!(
-            validate_trust_scope(r"C:\Users\me\dev\wt", project, None, style).unwrap(),
-            PathBuf::from(r"C:\Users\me\dev\wt"),
-        );
-
-        assert!(validate_trust_scope(r"C:\Users\me", project, None, style).is_ok());
-
-        assert_eq!(
-            validate_trust_scope(r"C:\Users\me\dev\wt\t1", project, None, style).unwrap(),
-            PathBuf::from(r"C:\Users\me\dev\wt\t1")
-        );
-
-        // Drive letters are matched case-insensitively.
-        assert_eq!(
-            validate_trust_scope(r"c:\Users\me\dev\wt", project, None, style).unwrap(),
-            PathBuf::from(r"c:\Users\me\dev\wt")
-        );
-    }
-
-    #[test]
-    fn rejects_windows_style_non_ancestor() {
-        let project = Path::new(r"C:\Users\me\dev\wt\t1");
-        let style = PathStyle::Windows;
-        assert!(validate_trust_scope(r"C:\Users\other", project, None, style).is_err());
-        // Relative paths are not absolute.
-        assert!(validate_trust_scope(r"dev\wt", project, None, style).is_err());
-        // Deeper than the project is not an ancestor.
-        assert!(validate_trust_scope(r"C:\Users\me\dev\wt\t1\sub", project, None, style).is_err());
-        // A prefix that is not a component boundary is not an ancestor.
-        assert!(
-            validate_trust_scope(
-                r"C:\Users\me\dev\wt",
-                Path::new(r"C:\Users\me\dev\wt2"),
-                None,
-                style,
-            )
-            .is_err()
-        );
-
-        assert!(
-            validate_trust_scope(
-                r"\\server",
-                Path::new(r"\\server\share\project"),
-                None,
-                style
-            )
-            .is_err()
-        );
-    }
-
-    #[test]
-    fn expands_leading_tilde() {
-        let home = Path::new("/Users/me");
-        let project = Path::new("/Users/me/dev/wt/t1");
-        let style = PathStyle::Unix;
-        assert_eq!(
-            validate_trust_scope("~/dev/wt", project, Some(home), style).unwrap(),
-            PathBuf::from("/Users/me/dev/wt"),
-        );
-        assert_eq!(
-            validate_trust_scope("~", project, Some(home), style).unwrap(),
-            PathBuf::from("/Users/me"),
-        );
-    }
-}

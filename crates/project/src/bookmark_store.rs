@@ -180,7 +180,7 @@ impl BookmarkStore {
         cx.notify();
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn paths_failed_to_open(&self) -> &HashSet<Arc<Path>> {
         &self.paths_failed_to_open
     }

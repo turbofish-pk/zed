@@ -712,13 +712,6 @@ impl KeymapEditor {
                     .map(|keystroke| keystroke.inner().unparse(os))
                     .collect::<Vec<String>>()
                     .join(" ");
-
-                telemetry::event!(
-                    "Keystroke Search Completed",
-                    action_query = action_query,
-                    keystroke_query = keystroke_query,
-                    keystroke_exact_match = exact_match
-                )
             }
         }));
         cx.spawn(async move |this, cx| {
@@ -1354,15 +1347,6 @@ impl KeymapEditor {
         let action = keybind.action().name;
         let source = keybind.keybind_source().map(|source| source.name());
 
-        telemetry::event!(
-            "Edit Keybinding Modal Opened",
-            keystroke = keystroke,
-            action = action,
-            source = source,
-            context = context,
-            arguments = arguments,
-        );
-
         let temp_dir = self.action_args_temp_dir.as_ref().map(|dir| dir.path());
 
         self.workspace
@@ -1489,7 +1473,6 @@ impl KeymapEditor {
             return;
         };
 
-        telemetry::event!("Keybinding Context Copied", context = context);
         cx.write_to_clipboard(gpui::ClipboardItem::new_string(context));
     }
 
@@ -1506,7 +1489,6 @@ impl KeymapEditor {
             return;
         };
 
-        telemetry::event!("Keybinding Action Copied", action = action);
         cx.write_to_clipboard(gpui::ClipboardItem::new_string(action));
     }
 
@@ -3359,7 +3341,6 @@ impl ActionArgumentsEditor {
                     editor.disable_mouse_wheel_zoom();
                     editor.set_searchable(false);
                     editor.disable_scrollbars_and_minimap(window, cx);
-                    editor.set_show_edit_predictions(Some(false), window, cx);
                     editor.set_show_gutter(false, cx);
                     Self::set_editor_text(&mut editor, arguments, window, cx);
                     editor
@@ -3684,8 +3665,6 @@ async fn save_keybinding_update(
         }
     };
 
-    let (new_keybinding, removed_keybinding, source) = operation.generate_telemetry(os);
-
     let updated_keymap_contents = settings::KeymapFile::update_keybinding(
         operation,
         keymap_contents,
@@ -3702,12 +3681,6 @@ async fn save_keybinding_update(
     .await
     .context("Failed to write keymap file")?;
 
-    telemetry::event!(
-        "Keybinding Updated",
-        new_keybinding = new_keybinding,
-        removed_keybinding = removed_keybinding,
-        source = source
-    );
     Ok(())
 }
 
@@ -3740,7 +3713,6 @@ async fn remove_keybinding(
         target_keybind_source: existing.keybind_source().unwrap_or(KeybindSource::User),
     };
 
-    let (new_keybinding, removed_keybinding, source) = operation.generate_telemetry(os);
     let updated_keymap_contents = settings::KeymapFile::update_keybinding(
         operation,
         keymap_contents,
@@ -3757,12 +3729,6 @@ async fn remove_keybinding(
     .await
     .context("Failed to write keymap file")?;
 
-    telemetry::event!(
-        "Keybinding Removed",
-        new_keybinding = new_keybinding,
-        removed_keybinding = removed_keybinding,
-        source = source
-    );
     Ok(())
 }
 
@@ -4052,488 +4018,3 @@ mod persistence {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use fs::FakeFs;
-    use gpui::{TestAppContext, VisualTestContext};
-    use project::Project;
-    use serde_json::json;
-    use settings::KeymapFileLoadResult;
-    use workspace::{AppState, MultiWorkspace};
-
-    async fn reload_keymap_from_file(fs: &Arc<FakeFs>, cx: &mut TestAppContext) {
-        let content = fs.load(paths::keymap_file().as_path()).await.unwrap();
-        cx.update(|cx| {
-            let mut key_bindings = match KeymapFile::load(&content, cx) {
-                KeymapFileLoadResult::Success { key_bindings } => key_bindings,
-                KeymapFileLoadResult::SomeFailedToLoad { error_message, .. } => {
-                    panic!("keymap failed to load: {error_message:?}")
-                }
-                KeymapFileLoadResult::JsonParseFailure { error } => {
-                    panic!("keymap json parse failure: {error}")
-                }
-            };
-            cx.clear_key_bindings();
-            for key_binding in &mut key_bindings {
-                key_binding.set_meta(KeybindSource::User.meta());
-            }
-            cx.bind_keys(key_bindings);
-            KeymapEventChannel::trigger_keymap_changed(cx);
-        });
-    }
-
-    async fn setup_keymap_editor(
-        cx: &mut TestAppContext,
-        keymap_content: &str,
-    ) -> (Arc<FakeFs>, Entity<KeymapEditor>, VisualTestContext) {
-        cx.update(|cx| {
-            let _state = AppState::test(cx);
-            editor::init(cx);
-            cx.set_global(KeymapEventChannel::new());
-        });
-
-        let fs = FakeFs::new(cx.executor());
-        fs.insert_tree(
-            paths::config_dir(),
-            json!({ "keymap.json": keymap_content }),
-        )
-        .await;
-
-        reload_keymap_from_file(&fs, cx).await;
-
-        let project = Project::test(fs.clone(), [], cx).await;
-        let window_handle =
-            cx.add_window(|window, cx| MultiWorkspace::test_new(project.clone(), window, cx));
-        let workspace = window_handle
-            .read_with(cx, |multi_workspace, _| multi_workspace.workspace().clone())
-            .unwrap();
-        let mut cx = VisualTestContext::from_window(window_handle.into(), cx);
-        let keymap_editor = cx
-            .update(|window, cx| cx.new(|cx| KeymapEditor::new(workspace.downgrade(), window, cx)));
-        cx.run_until_parked();
-        (fs, keymap_editor, cx)
-    }
-
-    fn visible_rows_for_action(editor: &KeymapEditor, action_name: &str) -> Vec<usize> {
-        editor
-            .matches
-            .iter()
-            .enumerate()
-            .filter(|(_, string_match)| {
-                let binding = &editor.keybindings[string_match.candidate_id];
-                binding.action().name == action_name && binding.keystrokes().is_some()
-            })
-            .map(|(index, _)| index)
-            .collect()
-    }
-
-    #[test]
-    fn test_partial_keystroke_matching() {
-        // A released modifier becomes a key, but must still act as a modifier in partial searches.
-        for (query, binding, expected) in [
-            ("ctrl", "ctrl-f1", true),
-            ("alt", "alt-f1", true),
-            ("shift", "shift-f1", true),
-            ("cmd", "cmd-f1", true),
-            ("fn", "fn-f1", true),
-            ("ctrl", "ctrl", true),
-            ("ctrl", "alt-f1", false),
-            ("alt", "shift-f1", false),
-            ("shift", "cmd-f1", false),
-            ("cmd", "fn-f1", false),
-            ("fn", "ctrl-f1", false),
-            ("ctrl-shift", "ctrl-shift-f1", true),
-            ("ctrl-shift", "shift-f1", false),
-            ("f1", "ctrl-f1", true),
-            ("ctrl-f1", "ctrl-shift-f1", true),
-            ("ctrl-f1", "f1", false),
-            ("f1", "f2", false),
-            ("a->a", "ctrl-a", true),
-            ("a->å", "ctrl-a", false),
-        ] {
-            let query = KeybindingKeystroke::from_keystroke(
-                gpui::Keystroke::parse(query).expect("valid query"),
-            );
-            let binding = KeybindingKeystroke::from_keystroke(
-                gpui::Keystroke::parse(binding).expect("valid binding"),
-            );
-            assert_eq!(
-                keystroke_matches_partially(&query, &binding),
-                expected,
-                "query: {query:?}, binding: {binding:?}"
-            );
-        }
-    }
-
-    #[gpui::test]
-    async fn test_modifier_search_keeps_matching_shortcuts_after_release(cx: &mut TestAppContext) {
-        let keymap_content = r#"[{"bindings": {
-            "ctrl-k": "zed::OpenKeymap",
-            "ctrl": "zed::OpenKeymap"
-        }}]"#;
-        let (_fs, keymap_editor, mut cx) = setup_keymap_editor(cx, keymap_content).await;
-        let workspace = keymap_editor.read_with(&cx, |editor, _| editor.workspace.clone());
-        // Mount and activate the editor so keystroke search installs its interceptor.
-        workspace
-            .update_in(&mut cx, |workspace, window, cx| {
-                workspace.add_item_to_active_pane(
-                    Box::new(keymap_editor.clone()),
-                    None,
-                    true,
-                    window,
-                    cx,
-                );
-                window.activate_window();
-            })
-            .expect("workspace exists");
-        cx.run_until_parked();
-        cx.update(|window, cx| window.draw(cx).clear(cx));
-        keymap_editor.update_in(&mut cx, |editor, window, cx| {
-            editor.toggle_keystroke_search(&ToggleKeystrokeSearch, window, cx);
-            editor.toggle_exact_keystroke_matching(&ToggleExactKeystrokeMatching, window, cx);
-        });
-        cx.update(|window, cx| window.draw(cx).clear(cx));
-
-        // While held, Control is a modifier query that finds Ctrl-K.
-        cx.simulate_modifiers_change(gpui::Modifiers::control());
-        cx.run_until_parked();
-        keymap_editor.read_with(&cx, |editor, cx| {
-            assert_eq!(visible_rows_for_action(editor, "zed::OpenKeymap").len(), 1);
-            let query = editor.current_keystroke_query(cx);
-            assert_eq!(query.len(), 1);
-            assert!(query[0].key().is_empty());
-            assert!(query[0].modifiers().control);
-        });
-
-        // On release, Control becomes a key but partial search must match both forms.
-        cx.simulate_modifiers_change(gpui::Modifiers::none());
-        cx.run_until_parked();
-        keymap_editor.read_with(&cx, |editor, cx| {
-            let query = editor.current_keystroke_query(cx);
-            assert_eq!(query.len(), 1);
-            assert_eq!(query[0].key(), "control");
-            assert!(!query[0].modifiers().modified());
-            assert_eq!(
-                visible_rows_for_action(editor, "zed::OpenKeymap").len(),
-                2,
-                "Control must find both the standalone binding and Ctrl-K; query: {:?}",
-                query
-            );
-        });
-
-        // Exact search narrows the same query to the standalone Control binding.
-        keymap_editor.update_in(&mut cx, |editor, window, cx| {
-            editor.toggle_exact_keystroke_matching(&ToggleExactKeystrokeMatching, window, cx);
-        });
-        cx.run_until_parked();
-        keymap_editor.read_with(&cx, |editor, _| {
-            let rows = visible_rows_for_action(editor, "zed::OpenKeymap");
-            assert_eq!(rows.len(), 1);
-            let binding = &editor.keybindings[editor.matches[rows[0]].candidate_id];
-            let keystrokes = binding.keystrokes().expect("binding has keystrokes");
-            assert_eq!(keystrokes.len(), 1);
-            assert_eq!(keystrokes[0].key(), "control");
-        });
-
-        // Returning to partial search restores both matches.
-        keymap_editor.update_in(&mut cx, |editor, window, cx| {
-            editor.toggle_exact_keystroke_matching(&ToggleExactKeystrokeMatching, window, cx);
-        });
-        cx.run_until_parked();
-        keymap_editor.read_with(&cx, |editor, _| {
-            assert_eq!(visible_rows_for_action(editor, "zed::OpenKeymap").len(), 2);
-        });
-    }
-
-    #[gpui::test]
-    async fn test_delete_one_of_two_identical_user_bindings(cx: &mut TestAppContext) {
-        let keymap_content = r#"[
-    {
-        "bindings": {
-            "alt-cmd-shift-c": "zed::OpenKeymap"
-        }
-    },
-    {
-        "bindings": {
-            "alt-cmd-shift-c": "zed::OpenKeymap"
-        }
-    }
-]"#;
-        let (fs, keymap_editor, mut cx) = setup_keymap_editor(cx, keymap_content).await;
-        let cx = &mut cx;
-
-        let rows = keymap_editor.read_with(cx, |editor, _| {
-            visible_rows_for_action(editor, "zed::OpenKeymap")
-        });
-        assert_eq!(
-            rows.len(),
-            2,
-            "expected the two duplicate bindings to show as two rows"
-        );
-
-        keymap_editor.update_in(cx, |editor, window, cx| {
-            editor.selected_index = Some(rows[1]);
-            editor.delete_binding(&DeleteBinding, window, cx);
-        });
-        cx.run_until_parked();
-
-        let content = fs.load(paths::keymap_file().as_path()).await.unwrap();
-        assert_eq!(
-            content.matches("alt-cmd-shift-c").count(),
-            1,
-            "expected exactly one binding remaining in the keymap file, got:\n{content}"
-        );
-
-        // Simulate the keymap file watcher reacting to the change.
-        reload_keymap_from_file(&fs, cx).await;
-        cx.run_until_parked();
-
-        let rows = keymap_editor.read_with(cx, |editor, _| {
-            visible_rows_for_action(editor, "zed::OpenKeymap")
-        });
-        assert_eq!(rows.len(), 1, "expected one row remaining after deletion");
-    }
-
-    // Regression test: one of the two entries in the keymap file uses a
-    // deprecated alias of the action (`editor::CopyRelativePath` instead of
-    // `workspace::CopyRelativePath`). Both rows display identically in the
-    // keymap editor (aliases resolve to the canonical action on load), but
-    // deletion targets the canonical action name, so `KeymapFile::update_keybinding`
-    // used to never find the alias entry, making it impossible to delete.
-    #[gpui::test]
-    async fn test_delete_binding_with_deprecated_action_alias(cx: &mut TestAppContext) {
-        let keymap_content = r#"[
-    {
-        "bindings": {
-            "alt-cmd-shift-c": "editor::CopyRelativePath"
-        }
-    },
-    {
-        "bindings": {
-            "alt-cmd-shift-c": "workspace::CopyRelativePath"
-        }
-    }
-]"#;
-        let (fs, keymap_editor, mut cx) = setup_keymap_editor(cx, keymap_content).await;
-        let cx = &mut cx;
-
-        let rows = keymap_editor.read_with(cx, |editor, _| {
-            visible_rows_for_action(editor, "workspace::CopyRelativePath")
-        });
-        assert_eq!(
-            rows.len(),
-            2,
-            "both the alias and the canonical entry should show as (identical) rows"
-        );
-
-        // Delete the first row. Both rows report the canonical action name, so
-        // `find_binding` matches the canonical file entry and removes it.
-        keymap_editor.update_in(cx, |editor, window, cx| {
-            editor.selected_index = Some(rows[0]);
-            editor.delete_binding(&DeleteBinding, window, cx);
-        });
-        cx.run_until_parked();
-
-        let content = fs.load(paths::keymap_file().as_path()).await.unwrap();
-        assert_eq!(
-            content.matches("alt-cmd-shift-c").count(),
-            1,
-            "first deletion should remove one of the two entries, got:\n{content}"
-        );
-
-        // Simulate the keymap file watcher reacting to the change.
-        reload_keymap_from_file(&fs, cx).await;
-        cx.run_until_parked();
-
-        let rows = keymap_editor.read_with(cx, |editor, _| {
-            visible_rows_for_action(editor, "workspace::CopyRelativePath")
-        });
-        assert_eq!(
-            rows.len(),
-            1,
-            "one row should remain after the first deletion"
-        );
-
-        // Delete the remaining row (the alias entry). `find_binding` must
-        // resolve the deprecated alias in the file to the canonical action
-        // name to find and remove it.
-        keymap_editor.update_in(cx, |editor, window, cx| {
-            editor.selected_index = Some(rows[0]);
-            editor.delete_binding(&DeleteBinding, window, cx);
-        });
-        cx.run_until_parked();
-
-        let content = fs.load(paths::keymap_file().as_path()).await.unwrap();
-        assert_eq!(
-            content.matches("alt-cmd-shift-c").count(),
-            0,
-            "second deletion should remove the remaining (alias) entry, got:\n{content}"
-        );
-    }
-
-    #[test]
-    fn normalized_ctx_cmp() {
-        #[track_caller]
-        fn cmp(a: &str, b: &str) -> bool {
-            let a = gpui::KeyBindingContextPredicate::parse(a)
-                .expect("Failed to parse keybinding context a");
-            let b = gpui::KeyBindingContextPredicate::parse(b)
-                .expect("Failed to parse keybinding context b");
-            normalized_ctx_eq(&a, &b)
-        }
-
-        // Basic equality - identical expressions
-        assert!(cmp("a && b", "a && b"));
-        assert!(cmp("a || b", "a || b"));
-        assert!(cmp("a == b", "a == b"));
-        assert!(cmp("a != b", "a != b"));
-        assert!(cmp("a > b", "a > b"));
-        assert!(cmp("!a", "!a"));
-
-        // AND operator - associative/commutative
-        assert!(cmp("a && b", "b && a"));
-        assert!(cmp("a && b && c", "c && b && a"));
-        assert!(cmp("a && b && c", "b && a && c"));
-        assert!(cmp("a && b && c && d", "d && c && b && a"));
-
-        // OR operator - associative/commutative
-        assert!(cmp("a || b", "b || a"));
-        assert!(cmp("a || b || c", "c || b || a"));
-        assert!(cmp("a || b || c", "b || a || c"));
-        assert!(cmp("a || b || c || d", "d || c || b || a"));
-
-        // Equality operator - associative/commutative
-        assert!(cmp("a == b", "b == a"));
-        assert!(cmp("x == y", "y == x"));
-
-        // Inequality operator - associative/commutative
-        assert!(cmp("a != b", "b != a"));
-        assert!(cmp("x != y", "y != x"));
-
-        // Complex nested expressions with associative operators
-        assert!(cmp("(a && b) || c", "c || (a && b)"));
-        assert!(cmp("(a && b) || c", "c || (b && a)"));
-        assert!(cmp("(a || b) && c", "c && (a || b)"));
-        assert!(cmp("(a || b) && c", "c && (b || a)"));
-        assert!(cmp("(a && b) || (c && d)", "(c && d) || (a && b)"));
-        assert!(cmp("(a && b) || (c && d)", "(d && c) || (b && a)"));
-
-        // Multiple levels of nesting
-        assert!(cmp("((a && b) || c) && d", "d && ((a && b) || c)"));
-        assert!(cmp("((a && b) || c) && d", "d && (c || (b && a))"));
-        assert!(cmp("a && (b || (c && d))", "(b || (c && d)) && a"));
-        assert!(cmp("a && (b || (c && d))", "(b || (d && c)) && a"));
-
-        // Negation with associative operators
-        assert!(cmp("!a && b", "b && !a"));
-        assert!(cmp("!a || b", "b || !a"));
-        assert!(cmp("!(a && b) || c", "c || !(a && b)"));
-        assert!(cmp("!(a && b) || c", "c || !(b && a)"));
-
-        // Descendant operator (>) - NOT associative/commutative
-        assert!(cmp("a > b", "a > b"));
-        assert!(!cmp("a > b", "b > a"));
-        assert!(!cmp("a > b > c", "c > b > a"));
-        assert!(!cmp("a > b > c", "a > c > b"));
-
-        // Mixed operators with descendant
-        assert!(cmp("(a > b) && c", "c && (a > b)"));
-        assert!(!cmp("(a > b) && c", "c && (b > a)"));
-        assert!(cmp("(a > b) || (c > d)", "(c > d) || (a > b)"));
-        assert!(!cmp("(a > b) || (c > d)", "(b > a) || (d > c)"));
-
-        // Negative cases - different operators
-        assert!(!cmp("a && b", "a || b"));
-        assert!(!cmp("a == b", "a != b"));
-        assert!(!cmp("a && b", "a > b"));
-        assert!(!cmp("a || b", "a > b"));
-        assert!(!cmp("a == b", "a && b"));
-        assert!(!cmp("a != b", "a || b"));
-
-        // Negative cases - different operands
-        assert!(!cmp("a && b", "a && c"));
-        assert!(!cmp("a && b", "c && d"));
-        assert!(!cmp("a || b", "a || c"));
-        assert!(!cmp("a || b", "c || d"));
-        assert!(!cmp("a == b", "a == c"));
-        assert!(!cmp("a != b", "a != c"));
-        assert!(!cmp("a > b", "a > c"));
-        assert!(!cmp("a > b", "c > b"));
-
-        // Negative cases - with negation
-        assert!(!cmp("!a", "a"));
-        assert!(!cmp("!a && b", "a && b"));
-        assert!(!cmp("!(a && b)", "a && b"));
-        assert!(!cmp("!a || b", "a || b"));
-        assert!(!cmp("!(a || b)", "a || b"));
-
-        // Negative cases - complex expressions
-        assert!(!cmp("(a && b) || c", "(a || b) && c"));
-        assert!(!cmp("a && (b || c)", "a || (b && c)"));
-        assert!(!cmp("(a && b) || (c && d)", "(a || b) && (c || d)"));
-        assert!(!cmp("a > b && c", "a && b > c"));
-
-        // Edge cases - multiple same operands
-        assert!(cmp("a && a", "a && a"));
-        assert!(cmp("a || a", "a || a"));
-        assert!(cmp("a && a && b", "b && a && a"));
-        assert!(cmp("a || a || b", "b || a || a"));
-
-        // Edge cases - deeply nested
-        assert!(cmp(
-            "((a && b) || (c && d)) && ((e || f) && g)",
-            "((e || f) && g) && ((c && d) || (a && b))"
-        ));
-        assert!(cmp(
-            "((a && b) || (c && d)) && ((e || f) && g)",
-            "(g && (f || e)) && ((d && c) || (b && a))"
-        ));
-
-        // Edge cases - repeated patterns
-        assert!(cmp("(a && b) || (a && b)", "(b && a) || (b && a)"));
-        assert!(cmp("(a || b) && (a || b)", "(b || a) && (b || a)"));
-
-        // Negative cases - subtle differences
-        assert!(!cmp("a && b && c", "a && b"));
-        assert!(!cmp("a || b || c", "a || b"));
-        assert!(!cmp("(a && b) || c", "a && (b || c)"));
-
-        // a > b > c is not the same as a > c, should not be equal
-        assert!(!cmp("a > b > c", "a > c"));
-
-        // Double negation with complex expressions
-        assert!(cmp("!(!(a && b))", "a && b"));
-        assert!(cmp("!(!(a || b))", "a || b"));
-        assert!(cmp("!(!(a > b))", "a > b"));
-        assert!(cmp("!(!a) && b", "a && b"));
-        assert!(cmp("!(!a) || b", "a || b"));
-        assert!(cmp("!(!(a && b)) || c", "(a && b) || c"));
-        assert!(cmp("!(!(a && b)) || c", "(b && a) || c"));
-        assert!(cmp("!(!a)", "a"));
-        assert!(cmp("a", "!(!a)"));
-        assert!(cmp("!(!(!a))", "!a"));
-        assert!(cmp("!(!(!(!a)))", "a"));
-    }
-
-    #[test]
-    fn binding_is_unbound_by_unbind_respects_precedence() {
-        let binding = gpui::KeyBinding::new("tab", zed_actions::OpenKeymap, None);
-        let unbind =
-            gpui::KeyBinding::new("tab", gpui::Unbind(binding.action().name().into()), None);
-
-        let unbind_then_binding = vec![&unbind, &binding];
-        assert!(!binding_is_unbound_by_unbind(
-            &binding,
-            1,
-            &unbind_then_binding,
-        ));
-
-        let binding_then_unbind = vec![&binding, &unbind];
-        assert!(binding_is_unbound_by_unbind(
-            &binding,
-            0,
-            &binding_then_unbind,
-        ));
-    }
-}

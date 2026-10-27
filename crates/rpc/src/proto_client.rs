@@ -398,16 +398,10 @@ impl AnyProtoClient {
                             Response::GetDefinitionResponse(response) => {
                                 to_any_envelope(&envelope, response)
                             }
-                            Response::GetEditPredictionDefinitionResponse(response) => {
-                                to_any_envelope(&envelope, response)
-                            }
                             Response::GetDeclarationResponse(response) => {
                                 to_any_envelope(&envelope, response)
                             }
                             Response::GetTypeDefinitionResponse(response) => {
-                                to_any_envelope(&envelope, response)
-                            }
-                            Response::GetEditPredictionTypeDefinitionResponse(response) => {
                                 to_any_envelope(&envelope, response)
                             }
                             Response::GetImplementationResponse(response) => {
@@ -662,12 +656,12 @@ fn to_any_envelope<T: EnvelopedMessage>(
     }) as Box<_>
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub struct NoopProtoClient {
     handler_set: parking_lot::Mutex<ProtoMessageHandlerSet>,
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl NoopProtoClient {
     pub fn new() -> Arc<Self> {
         Arc::new(Self {
@@ -676,7 +670,7 @@ impl NoopProtoClient {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl ProtoClient for NoopProtoClient {
     fn request(
         &self,

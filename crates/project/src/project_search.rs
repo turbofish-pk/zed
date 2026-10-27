@@ -17,9 +17,9 @@ use futures::FutureExt as _;
 use futures::{SinkExt, StreamExt, select_biased, stream::FuturesOrdered};
 use gpui::{App, AppContext, AsyncApp, BackgroundExecutor, Entity, Priority, Task};
 use language::{Buffer, BufferSnapshot, Point};
-use parking_lot::Mutex;
+
 use postage::oneshot;
-use rpc::{AnyProtoClient, proto};
+
 use text::Rope;
 
 use encoding_rs::Encoding;
@@ -30,7 +30,7 @@ use util::{ResultExt, maybe, rel_path::RelPath};
 use worktree::{Entry, ProjectEntryId, Snapshot, Worktree, WorktreeSettings};
 
 use crate::{
-    Project, ProjectItem, ProjectPath, RemotelyCreatedModels,
+  ProjectItem, ProjectPath,
     buffer_store::BufferStore,
     search::{MatchPositionHint, SearchQuery, SearchResult},
     worktree_store::WorktreeStore,
@@ -49,12 +49,6 @@ enum SearchKind {
     Local {
         fs: Arc<dyn Fs>,
         worktrees: Vec<Entity<Worktree>>,
-    },
-    /// Query remote host for candidates. As of writing, the host runs a local search in "buffers with matches only" mode.
-    Remote {
-        client: AnyProtoClient,
-        remote_id: u64,
-        models: Arc<Mutex<RemotelyCreatedModels>>,
     },
     /// Run search against a known set of candidates. Even when working with a remote host, this won't round-trip to host.
     OpenBuffersOnly,
@@ -133,23 +127,6 @@ impl Search {
         }
     }
 
-    pub(crate) fn remote(
-        buffer_store: Entity<BufferStore>,
-        worktree_store: Entity<WorktreeStore>,
-        limit: usize,
-        client_state: (AnyProtoClient, u64, Arc<Mutex<RemotelyCreatedModels>>),
-    ) -> Self {
-        Self {
-            kind: SearchKind::Remote {
-                client: client_state.0,
-                remote_id: client_state.1,
-                models: client_state.2,
-            },
-            buffer_store,
-            worktree_store,
-            limit,
-        }
-    }
     pub(crate) fn open_buffers_only(
         buffer_store: Entity<BufferStore>,
         worktree_store: Entity<WorktreeStore>,
@@ -192,7 +169,6 @@ impl Search {
                         let sort_key = (file.worktree_id(cx).to_proto(), file.path().clone());
                         entryless_file_buffers.push((sort_key, handle));
                     }
-                    (SearchKind::Remote { .. }, _) => {}
                     _ => {
                         self.limit = self.limit.saturating_sub(1);
                         unnamed_buffers.push(handle);
@@ -281,89 +257,7 @@ impl Search {
                             tasks,
                         )
                     }
-                    SearchKind::Remote {
-                        client,
-                        remote_id,
-                        models,
-                    } => {
-                        let (handle, rx) = self
-                            .buffer_store
-                            .update(cx, |this, _| this.register_project_search_result_handle());
-
-                        let cancel_ongoing_search = util::defer({
-                            let client = client.clone();
-                            move || {
-                                _ = client.send(proto::FindSearchCandidatesCancelled {
-                                    project_id: remote_id,
-                                    handle,
-                                });
-                            }
-                        });
-                        let request = client.request(proto::FindSearchCandidates {
-                            project_id: remote_id,
-                            query: Some(query.to_proto()),
-                            limit: self.limit as _,
-                            handle,
-                        });
-
-                        let buffer_store = self.buffer_store;
-                        let guard = cx.update(|cx| {
-                            Project::retain_remotely_created_models_impl(
-                                &models,
-                                &buffer_store,
-                                &self.worktree_store,
-                                cx,
-                            )
-                        });
-
-                        let issue_remote_buffers_request = cx
-                            .spawn(async move |cx| {
-                                let _ = maybe!(async move {
-                                    request.await?;
-
-                                    let (buffer_tx, buffer_rx) = bounded(24);
-
-                                    let wait_for_remote_buffers = cx.spawn(async move |cx| {
-                                        while let Ok(buffer_id) = rx.recv().await {
-                                            let buffer =
-                                                buffer_store.update(cx, |buffer_store, cx| {
-                                                    buffer_store
-                                                        .wait_for_remote_buffer(buffer_id, cx)
-                                                });
-                                            buffer_tx.send(buffer).await?;
-                                        }
-                                        anyhow::Ok(())
-                                    });
-
-                                    let forward_buffers = cx.background_spawn(async move {
-                                        while let Ok(buffer) = buffer_rx.recv().await {
-                                            let _ = grab_buffer_snapshot_tx
-                                                .send((buffer.await?, MatchPositionHint::default()))
-                                                .await;
-                                        }
-                                        anyhow::Ok(())
-                                    });
-                                    let (left, right) = futures::future::join(
-                                        wait_for_remote_buffers,
-                                        forward_buffers,
-                                    )
-                                    .await;
-                                    left?;
-                                    right?;
-
-                                    drop(guard);
-                                    cancel_ongoing_search.abort();
-                                    anyhow::Ok(())
-                                })
-                                .await
-                                .log_err();
-                            })
-                            .boxed_local();
-                        (
-                            FindSearchCandidates::Remote,
-                            vec![issue_remote_buffers_request],
-                        )
-                    }
+         
                 };
 
                 let should_find_all_matches = !tx.is_closed();

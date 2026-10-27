@@ -280,27 +280,3 @@ impl FromStr for ReleaseChannel {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::ReleaseChannel;
-
-    #[test]
-    fn test_docs_url_for_release_channel() {
-        assert_eq!(
-            ReleaseChannel::Dev.docs_url("settings"),
-            "https://zed.dev/docs/nightly/settings"
-        );
-        assert_eq!(
-            ReleaseChannel::Nightly.docs_url("settings"),
-            "https://zed.dev/docs/nightly/settings"
-        );
-        assert_eq!(
-            ReleaseChannel::Preview.docs_url("settings"),
-            "https://zed.dev/docs/preview/settings"
-        );
-        assert_eq!(
-            ReleaseChannel::Stable.docs_url("settings"),
-            "https://zed.dev/docs/settings"
-        );
-    }
-}

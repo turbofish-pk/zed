@@ -297,8 +297,6 @@ impl ComponentStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Display, EnumString)]
 pub enum ComponentScope {
-    Agent,
-    Collaboration,
     #[strum(serialize = "Data Display")]
     DataDisplay,
     Editor,

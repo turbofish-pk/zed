@@ -3838,178 +3838,6 @@ impl ProjectPanel {
         })
     }
 
-    fn download_from_remote(
-        &mut self,
-        _: &DownloadFromRemote,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let entries = self.effective_entries();
-        if entries.is_empty() {
-            return;
-        }
-
-        let project = self.project.read(cx);
-
-        // Collect file entries with their worktree_id, path, and relative path for destination
-        // For directories, we collect all files under them recursively
-        let mut files_to_download: Vec<(WorktreeId, Arc<RelPath>, PathBuf)> = Vec::new();
-
-        for selected in entries.iter() {
-            let Some(worktree) = project.worktree_for_id(selected.worktree_id, cx) else {
-                continue;
-            };
-            let worktree = worktree.read(cx);
-            let Some(entry) = worktree.entry_for_id(selected.entry_id) else {
-                continue;
-            };
-
-            if entry.is_file() {
-                // Single file: use just the filename
-                let filename = entry
-                    .path
-                    .file_name()
-                    .map(str::to_string)
-                    .unwrap_or_default();
-                files_to_download.push((
-                    selected.worktree_id,
-                    entry.path.clone(),
-                    PathBuf::from(filename),
-                ));
-            } else if entry.is_dir() {
-                // Directory: collect all files recursively, preserving relative paths
-                let dir_name = entry
-                    .path
-                    .file_name()
-                    .map(str::to_string)
-                    .unwrap_or_default();
-                let base_path = entry.path.clone();
-
-                // Use traverse_from_path to iterate all entries under this directory
-                let mut traversal = worktree.traverse_from_path(true, true, true, &entry.path);
-                while let Some(child_entry) = traversal.entry() {
-                    // Stop when we're no longer under the directory
-                    if !child_entry.path.starts_with(&base_path) {
-                        break;
-                    }
-
-                    if child_entry.is_file() {
-                        // Calculate relative path from the directory root
-                        let relative_path = child_entry
-                            .path
-                            .strip_prefix(&base_path)
-                            .map(|p| PathBuf::from(dir_name.clone()).join(p.as_unix_str()))
-                            .unwrap_or_else(|_| {
-                                PathBuf::from(
-                                    child_entry
-                                        .path
-                                        .file_name()
-                                        .map(str::to_string)
-                                        .unwrap_or_default(),
-                                )
-                            });
-                        files_to_download.push((
-                            selected.worktree_id,
-                            child_entry.path.clone(),
-                            relative_path,
-                        ));
-                    }
-                    traversal.advance();
-                }
-            }
-        }
-
-        if files_to_download.is_empty() {
-            return;
-        }
-
-        let total_files = files_to_download.len();
-        let workspace = self.workspace.clone();
-
-        let destination_dir = cx.prompt_for_paths(PathPromptOptions {
-            files: false,
-            directories: true,
-            multiple: false,
-            prompt: Some("Download".into()),
-        });
-
-        let fs = self.fs.clone();
-        let notification_id =
-            workspace::notifications::NotificationId::Named("download-progress".into());
-        cx.spawn_in(window, async move |this, cx| {
-            if let Ok(Ok(Some(mut paths))) = destination_dir.await {
-                if let Some(dest_dir) = paths.pop() {
-                    // Show initial toast
-                    workspace
-                        .update(cx, |workspace, cx| {
-                            workspace.show_toast(
-                                workspace::Toast::new(
-                                    notification_id.clone(),
-                                    format!("Downloading 0/{} files...", total_files),
-                                ),
-                                cx,
-                            );
-                        })
-                        .ok();
-
-                    for (index, (worktree_id, entry_path, relative_path)) in
-                        files_to_download.into_iter().enumerate()
-                    {
-                        // Update progress toast
-                        workspace
-                            .update(cx, |workspace, cx| {
-                                workspace.show_toast(
-                                    workspace::Toast::new(
-                                        notification_id.clone(),
-                                        format!(
-                                            "Downloading {}/{} files...",
-                                            index + 1,
-                                            total_files
-                                        ),
-                                    ),
-                                    cx,
-                                );
-                            })
-                            .ok();
-
-                        let destination_path = dest_dir.join(&relative_path);
-
-                        // Create parent directories if needed
-                        if let Some(parent) = destination_path.parent() {
-                            if !parent.exists() {
-                                fs.create_dir(parent).await.log_err();
-                            }
-                        }
-
-                        let download_task = this.update(cx, |this, cx| {
-                            let project = this.project.clone();
-                            project.update(cx, |project, cx| {
-                                project.download_file(worktree_id, entry_path, destination_path, cx)
-                            })
-                        });
-                        if let Ok(task) = download_task {
-                            task.await.log_err();
-                        }
-                    }
-
-                    // Show completion toast
-                    workspace
-                        .update(cx, |workspace, cx| {
-                            workspace.show_toast(
-                                workspace::Toast::new(
-                                    notification_id.clone(),
-                                    format!("Downloaded {} files", total_files),
-                                ),
-                                cx,
-                            );
-                        })
-                        .ok();
-                }
-            }
-        })
-        .detach();
-    }
-
     fn duplicate(&mut self, _: &Duplicate, window: &mut Window, cx: &mut Context<Self>) {
         let entries = self.disjoint_effective_entries_excluding_roots(cx);
         if entries.is_empty() {
@@ -4892,18 +4720,7 @@ impl ProjectPanel {
                     });
                 }
                 let elapsed = now.elapsed();
-                if this.last_reported_update.elapsed() > Duration::from_secs(3600) {
-                    telemetry::event!(
-                        "Project Panel Updated",
-                        elapsed_ms = elapsed.as_millis() as u64,
-                        worktree_entries = this
-                            .state
-                            .visible_entries
-                            .iter()
-                            .map(|worktree| worktree.entries.len())
-                            .sum::<usize>(),
-                    )
-                }
+                if this.last_reported_update.elapsed() > Duration::from_secs(3600) {}
                 if this.update_visible_entries_task.focus_filename_editor {
                     this.update_visible_entries_task.focus_filename_editor = false;
                     this.filename_editor.update(cx, |editor, cx| {
@@ -7714,17 +7531,13 @@ impl Render for ProjectPanel {
                         })
                 })
                 .when(
-                    project.is_local() || project.is_via_wsl_with_host_interop(cx),
+                    true,
                     |el| {
                         el.on_action(cx.listener(Self::reveal_in_finder))
                             .on_action(cx.listener(Self::open_system))
                             .on_action(cx.listener(Self::open_in_terminal))
                     },
                 )
-                .when(project.is_via_remote_server(), |el| {
-                    el.on_action(cx.listener(Self::open_in_terminal))
-                        .on_action(cx.listener(Self::download_from_remote))
-                })
                 .track_focus(&self.focus_handle(cx))
                 .child(
                     v_flex()
@@ -8160,7 +7973,6 @@ impl Render for ProjectPanel {
                         KeyBinding::for_action_in(&workspace::Open::default(), &focus_handle, cx),
                     )
                     .on_open_project(move |_, window, cx| {
-                        telemetry::event!("Project Panel Add Project Clicked");
                         workspace
                             .update(cx, |_, cx| {
                                 window
@@ -8169,7 +7981,6 @@ impl Render for ProjectPanel {
                             .log_err();
                     })
                     .on_clone_repo(move |_, window, cx| {
-                        telemetry::event!("Project Panel Clone Repo Clicked");
                         workspace_clone
                             .update(cx, |_, cx| {
                                 window.dispatch_action(git::Clone.boxed_clone(), cx);
@@ -8434,7 +8245,3 @@ fn explain_move_error(err: anyhow::Error, names: Option<&(String, String)>) -> a
         _ => err,
     }
 }
-
-#[cfg(test)]
-mod project_panel_tests;
-mod tests;

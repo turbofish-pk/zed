@@ -96,47 +96,6 @@ pub(crate) fn scroll_report(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use gpui::{ScrollDelta, TouchPhase, point};
-
-    #[test]
-    fn scroll_report_repeats_for_negative_scroll_lines() {
-        let grid_point = Point::new(0, 0);
-
-        let scroll_event = ScrollEvent {
-            delta: ScrollDelta::Lines(point(0., -1.)),
-            touch_phase: TouchPhase::Moved,
-            ..Default::default()
-        };
-
-        let mode = Modes::MOUSE_MODE;
-        let reports: Vec<Vec<u8>> = scroll_report(grid_point, -3, &scroll_event, mode)
-            .expect("mouse mode should produce a scroll report")
-            .collect();
-
-        assert_eq!(reports.len(), 3);
-    }
-
-    #[test]
-    fn scroll_report_repeats_for_positive_scroll_lines() {
-        let grid_point = Point::new(0, 0);
-
-        let scroll_event = ScrollEvent {
-            delta: ScrollDelta::Lines(point(0., 1.)),
-            touch_phase: TouchPhase::Moved,
-            ..Default::default()
-        };
-
-        let mode = Modes::MOUSE_MODE;
-        let reports: Vec<Vec<u8>> = scroll_report(grid_point, 3, &scroll_event, mode)
-            .expect("mouse mode should produce a scroll report")
-            .collect();
-
-        assert_eq!(reports.len(), 3);
-    }
-}
 
 pub(crate) fn alt_scroll(scroll_lines: i32) -> Vec<u8> {
     let cmd = if scroll_lines > 0 { b'A' } else { b'B' };

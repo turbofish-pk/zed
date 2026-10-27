@@ -111,4 +111,3 @@ optional = true
 
 [features]
 load-grammars = ["tree-sitter", "tree-sitter-bash", "tree-sitter-c", "tree-sitter-cpp", "tree-sitter-css", "tree-sitter-diff", "tree-sitter-gitcommit", "tree-sitter-go", "tree-sitter-go-mod", "tree-sitter-gowork", "tree-sitter-jsdoc", "tree-sitter-json", "tree-sitter-md", "tree-sitter-python", "tree-sitter-regex", "tree-sitter-rust", "tree-sitter-typescript", "tree-sitter-yaml"]
-test-support = ["load-grammars", "tree-sitter/wasm"]

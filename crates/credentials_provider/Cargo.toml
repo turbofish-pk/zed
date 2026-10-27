@@ -18,7 +18,7 @@ test = false
 doctest = false
 
 [features]
-test-support = ["dep:futures", "dep:parking_lot"]
+
 
 [dependencies.anyhow]
 version = "1.0.86"

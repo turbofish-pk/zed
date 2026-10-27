@@ -1,7 +1,7 @@
 use gpui::{Action as _, App};
 use itertools::Itertools as _;
 use settings::{
-    AudioInputDeviceName, AudioOutputDeviceName, EditPredictionDataCollectionChoice,
+    AudioInputDeviceName, AudioOutputDeviceName,
     LanguageSettingsContent, SemanticTokens, SettingsContent,
 };
 use std::sync::{Arc, OnceLock};
@@ -12,10 +12,6 @@ use ui::IntoElement;
 use crate::{
     ActionLink, DynamicItem, PROJECT, SettingField, SettingItem, SettingsFieldMetadata,
     SettingsPage, SettingsPageItem, SubPageLink, USER, active_language, all_language_names,
-    pages::{
-         render_sandbox_settings_page,
- render_tool_permissions_setup_page,
-    },
 };
 
 const DEFAULT_STRING: String = String::new();
@@ -416,75 +412,6 @@ fn general_page(cx: &App) -> SettingsPage {
                     .unimplemented(),
                 ),
                 metadata: None,
-            }),
-        ]
-    }
-
-    fn privacy_section() -> [SettingsPageItem; 4] {
-        [
-            SettingsPageItem::SectionHeader("Privacy"),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Telemetry Diagnostics",
-                description: "Send debug information like crash reports.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("telemetry.diagnostics"),
-                    pick: |settings_content| {
-                        settings_content
-                            .telemetry
-                            .as_ref()
-                            .and_then(|telemetry| telemetry.diagnostics.as_ref())
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content
-                            .telemetry
-                            .get_or_insert_default()
-                            .diagnostics = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Telemetry Metrics",
-                description: "Send anonymized usage data like what languages you're using Zed with.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("telemetry.metrics"),
-                    pick: |settings_content| {
-                        settings_content
-                            .telemetry
-                            .as_ref()
-                            .and_then(|telemetry| telemetry.metrics.as_ref())
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content.telemetry.get_or_insert_default().metrics = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Anthropic Data Retention",
-                description: "Allow sending requests to Anthropic models that cannot be offered with Zero Data Retention.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("telemetry.anthropic_retention"),
-                    pick: |settings_content| {
-                        settings_content
-                            .telemetry
-                            .as_ref()
-                            .and_then(|telemetry| telemetry.anthropic_retention.as_ref())
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content
-                            .telemetry
-                            .get_or_insert_default()
-                            .anthropic_retention = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
             }),
         ]
     }
@@ -1173,92 +1100,6 @@ fn appearance_page() -> SettingsPage {
         ]
     }
 
-    fn agent_panel_font_section() -> [SettingsPageItem; 5] {
-        [
-            SettingsPageItem::SectionHeader("Agent Panel Font"),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "UI Font Family",
-                description: "Font family for agent response text in the agent panel. Falls back to the regular UI font family.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent_ui_font_family"),
-                    pick: |settings_content| {
-                        settings_content
-                            .theme
-                            .agent_ui_font_family
-                            .as_ref()
-                            .or(settings_content.theme.ui_font_family.as_ref())
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content.theme.agent_ui_font_family = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "UI Font Size",
-                description: "Font size for agent response text in the agent panel. Falls back to the regular UI font size.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent_ui_font_size"),
-                    pick: |settings_content| {
-                        settings_content
-                            .theme
-                            .agent_ui_font_size
-                            .as_ref()
-                            .or(settings_content.theme.ui_font_size.as_ref())
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content.theme.agent_ui_font_size = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Buffer Font Family",
-                description: "Font family for user messages in the agent panel. Falls back to the regular buffer font family.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent_buffer_font_family"),
-                    pick: |settings_content| {
-                        settings_content
-                            .theme
-                            .agent_buffer_font_family
-                            .as_ref()
-                            .or(settings_content.theme.buffer_font_family.as_ref())
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content.theme.agent_buffer_font_family = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Buffer Font Size",
-                description: "Font size for user messages text in the agent panel.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent_buffer_font_size"),
-                    pick: |settings_content| {
-                        settings_content
-                            .theme
-                            .agent_buffer_font_size
-                            .as_ref()
-                            .or(settings_content.theme.buffer_font_size.as_ref())
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content.theme.agent_buffer_font_size = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-        ]
-    }
-
     fn markdown_preview_font_section() -> [SettingsPageItem; 5] {
         [
             SettingsPageItem::SectionHeader("Markdown Preview Font"),
@@ -1364,7 +1205,7 @@ fn appearance_page() -> SettingsPage {
             SettingsPageItem::SectionHeader("Mermaid Font"),
             SettingsPageItem::SettingItem(SettingItem {
                 title: "Font Family",
-                description: "Font family for Mermaid diagrams in the agent panel and markdown preview. Falls back to the UI font family.",
+                description: "Font family for Mermaid diagrams in the markdown preview. Falls back to the UI font family.",
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("mermaid_font_family"),
@@ -1665,7 +1506,6 @@ fn appearance_page() -> SettingsPage {
         theme_section(),
         buffer_font_section(),
         ui_font_section(),
-        agent_panel_font_section(),
         markdown_preview_font_section(),
         mermaid_font_section(),
         text_rendering_section(),
@@ -2966,7 +2806,7 @@ fn editor_page() -> SettingsPage {
         ]
     }
 
-    fn toolbar_section() -> [SettingsPageItem; 6] {
+    fn toolbar_section() -> [SettingsPageItem; 5] {
         [
             SettingsPageItem::SectionHeader("Toolbar"),
             SettingsPageItem::SettingItem(SettingItem {
@@ -3045,31 +2885,6 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Review",
-                description: "Show agent review buttons in the editor toolbar.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("toolbar.agent_review"),
-                    pick: |settings_content| {
-                        settings_content
-                            .editor
-                            .toolbar
-                            .as_ref()?
-                            .agent_review
-                            .as_ref()
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content
-                            .editor
-                            .toolbar
-                            .get_or_insert_default()
-                            .agent_review = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
                 title: "Code Actions",
                 description: "Show code action buttons in the editor toolbar.",
                 field: Box::new(SettingField {
@@ -3097,7 +2912,7 @@ fn editor_page() -> SettingsPage {
         ]
     }
 
-    fn vim_settings_section() -> [SettingsPageItem; 14] {
+    fn vim_settings_section() -> [SettingsPageItem; 13] {
         [
             SettingsPageItem::SectionHeader("Vim"),
             SettingsPageItem::SettingItem(SettingItem {
@@ -3226,29 +3041,6 @@ fn editor_page() -> SettingsPage {
                             .vim
                             .get_or_insert_default()
                             .use_regex_search = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Edit Predictions in Normal Mode",
-                description: "Whether edit predictions are shown in normal mode. By default, edit predictions are only shown in insert and replace modes.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("vim.show_edit_predictions_in_normal_mode"),
-                    pick: |settings_content| {
-                        settings_content
-                            .vim
-                            .as_ref()?
-                            .show_edit_predictions_in_normal_mode
-                            .as_ref()
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content
-                            .vim
-                            .get_or_insert_default()
-                            .show_edit_predictions_in_normal_mode = value;
                     },
                 }),
                 metadata: None,
@@ -6968,144 +6760,6 @@ fn panels_page() -> SettingsPage {
         ]
     }
 
-    fn agent_panel_section() -> [SettingsPageItem; 7] {
-        [
-            SettingsPageItem::SectionHeader("Agent Panel"),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Button",
-                description: "Whether to show the agent panel button in the status bar.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent.button"),
-                    pick: |settings_content| settings_content.agent.as_ref()?.button.as_ref(),
-                    write: |settings_content, value, _| {
-                        settings_content.agent.get_or_insert_default().button = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Dock",
-                description: "Where to dock the agent panel.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent.dock"),
-                    pick: |settings_content| settings_content.agent.as_ref()?.dock.as_ref(),
-                    write: |settings_content, value, _| {
-                        settings_content.agent.get_or_insert_default().dock = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Flexible Sizing",
-                description: "Whether the agent panel should use flexible (proportional) sizing when docked to the left or right. When enabled, the default width does not control the panel width, and resetting the panel restores the default proportion.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent.flexible"),
-                    pick: |settings_content| settings_content.agent.as_ref()?.flexible.as_ref(),
-                    write: |settings_content, value, _| {
-                        settings_content.agent.get_or_insert_default().flexible = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Default Width",
-                description: "Default fixed width when the agent panel is docked to the left or right and flexible sizing is disabled.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent.default_width"),
-                    pick: |settings_content| {
-                        settings_content.agent.as_ref()?.default_width.as_ref()
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content.agent.get_or_insert_default().default_width = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Default Height",
-                description: "Default height when the agent panel is docked to the bottom.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("agent.default_height"),
-                    pick: |settings_content| {
-                        settings_content.agent.as_ref()?.default_height.as_ref()
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content
-                            .agent
-                            .get_or_insert_default()
-                            .default_height = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::DynamicItem(DynamicItem {
-                discriminant: SettingItem {
-                    files: USER,
-                    title: "Limit Content Width",
-                    description: "Whether to constrain the agent panel content to a maximum width, centering it when the panel is wider, for optimal readability.",
-                    field: Box::new(SettingField::<bool> {
-                        organization_override: None,
-                        json_path: Some("agent.limit_content_width"),
-                        pick: |settings_content| {
-                            settings_content
-                                .agent
-                                .as_ref()?
-                                .limit_content_width
-                                .as_ref()
-                        },
-                        write: |settings_content, value, _| {
-                            settings_content
-                                .agent
-                                .get_or_insert_default()
-                                .limit_content_width = value;
-                        },
-                    }),
-                    metadata: None,
-                },
-                pick_discriminant: |settings_content| {
-                    let enabled = settings_content
-                        .agent
-                        .as_ref()?
-                        .limit_content_width
-                        .unwrap_or(true);
-                    Some(if enabled { 1 } else { 0 })
-                },
-                fields: vec![
-                    vec![],
-                    vec![SettingItem {
-                        files: USER,
-                        title: "Max Content Width",
-                        description: "Maximum content width in pixels. Content will be centered when the panel is wider than this value.",
-                        field: Box::new(SettingField {
-                            organization_override: None,
-                            json_path: Some("agent.max_content_width"),
-                            pick: |settings_content| {
-                                settings_content.agent.as_ref()?.max_content_width.as_ref()
-                            },
-                            write: |settings_content, value, _| {
-                                settings_content
-                                    .agent
-                                    .get_or_insert_default()
-                                    .max_content_width = value;
-                            },
-                        }),
-                        metadata: None,
-                    }],
-                ],
-            }),
-        ]
-    }
-
     SettingsPage {
         title: "Panels",
         items: concat_sections![
@@ -7115,7 +6769,6 @@ fn panels_page() -> SettingsPage {
             git_panel_section(),
             debugger_panel_section(),
             collaboration_panel_section(),
-            agent_panel_section(),
         ],
     }
 }
@@ -8627,7 +8280,6 @@ fn version_control_page() -> SettingsPage {
         ],
     }
 }
-
 
 fn network_page() -> SettingsPage {
     fn network_section() -> [SettingsPageItem; 3] {
@@ -10552,7 +10204,6 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
     )
 }
 
-
 fn show_scrollbar_or_editor(
     settings_content: &SettingsContent,
     show: fn(&SettingsContent) -> Option<&settings::ShowScrollbar>,
@@ -10596,50 +10247,4 @@ fn write_helix_mode_inner(settings: &mut SettingsContent, value: Option<bool>) {
         settings.vim_mode = Some(false);
     }
     settings.helix_mode = value;
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_write_vim_helix_mode() {
-        // Enabling vim mode while `vim_mode` and `helix_mode` are not yet set
-        // should only update the `vim_mode` setting.
-        let mut settings = SettingsContent::default();
-        write_vim_mode_inner(&mut settings, Some(true));
-        assert_eq!(settings.vim_mode, Some(true));
-        assert_eq!(settings.helix_mode, None);
-
-        // Enabling helix mode while `vim_mode` and `helix_mode` are not yet set
-        // should only update the `helix_mode` setting.
-        let mut settings = SettingsContent::default();
-        write_helix_mode_inner(&mut settings, Some(true));
-        assert_eq!(settings.helix_mode, Some(true));
-        assert_eq!(settings.vim_mode, None);
-
-        // Disabling helix mode should only touch `helix_mode` setting when
-        // `vim_mode` is not set.
-        write_helix_mode_inner(&mut settings, Some(false));
-        assert_eq!(settings.helix_mode, Some(false));
-        assert_eq!(settings.vim_mode, None);
-
-        // Enabling vim mode should update `vim_mode` but leave `helix_mode`
-        // untouched.
-        write_vim_mode_inner(&mut settings, Some(true));
-        assert_eq!(settings.vim_mode, Some(true));
-        assert_eq!(settings.helix_mode, Some(false));
-
-        // Enabling helix mode should update `helix_mode` and disable
-        // `vim_mode`.
-        write_helix_mode_inner(&mut settings, Some(true));
-        assert_eq!(settings.helix_mode, Some(true));
-        assert_eq!(settings.vim_mode, Some(false));
-
-        // Enabling vim mode should update `vim_mode` and disable
-        // `helix_mode`.
-        write_vim_mode_inner(&mut settings, Some(true));
-        assert_eq!(settings.vim_mode, Some(true));
-        assert_eq!(settings.helix_mode, Some(false));
-    }
 }

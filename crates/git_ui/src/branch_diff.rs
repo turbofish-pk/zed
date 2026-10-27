@@ -2,19 +2,16 @@ use crate::{
     branch_picker,
     diff_multibuffer::DiffMultibuffer,
     project_diff::{
-        self, CompareWithBranch, DeployBranchDiff, ProjectDiff, ReviewDiff,
-        render_send_review_to_agent_button,
+        self, CompareWithBranch, DeployBranchDiff, ProjectDiff,
     },
 };
-use agent_settings::AgentSettings;
 use anyhow::{Context as _, Result, anyhow};
 use editor::{
     Addon, Editor, EditorEvent, HiddenDiffHunkRenderer, SplittableEditor,
-    actions::SendReviewToAgent,
 };
-use git::{repository::DiffType, status::FileStatus};
+use git::status::FileStatus;
 use gpui::{
-    Action, App, AppContext as _, Entity, EventEmitter, FocusHandle, Focusable, Render,
+    App, AppContext as _, Entity, EventEmitter, FocusHandle, Focusable, Render,
     SharedString, Subscription, Task, WeakEntity,
 };
 use language::{BufferId, Capability};
@@ -38,7 +35,6 @@ use workspace::{
     notifications::NotifyTaskExt,
     searchable::SearchableItemHandle,
 };
-use zed_actions::agent::ReviewBranchDiff;
 
 /// The workspace item for a branch (merge-base) diff: "Changes since {branch}".
 /// It wraps a single [`DiffMultibuffer`] over [`DiffBase::Merge`] and delegates
@@ -82,7 +78,7 @@ impl BranchDiff {
         window: &mut Window,
         cx: &mut Context<Workspace>,
     ) {
-        telemetry::event!("Git Branch Diff Opened");
+       
         let project = workspace.project().clone();
         let Some(intended_repo) = project.read(cx).active_repository(cx) else {
             let workspace = cx.entity().downgrade();
@@ -245,7 +241,7 @@ impl BranchDiff {
             .detach_and_notify_err(workspace_weak, window, cx);
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn new_with_default_branch(
         project: Entity<Project>,
         workspace: Entity<Workspace>,
@@ -388,50 +384,7 @@ impl BranchDiff {
         });
     }
 
-    fn review_diff(&mut self, _: &ReviewDiff, window: &mut Window, cx: &mut Context<Self>) {
-        let DiffBase::Merge { base_ref } = self.diff_base(cx).clone() else {
-            return;
-        };
-        let Some(repo) = self.repo(cx) else {
-            return;
-        };
-
-        let diff_receiver = repo.update(cx, |repo, cx| {
-            repo.diff(
-                DiffType::MergeBase {
-                    base_ref: base_ref.clone(),
-                },
-                cx,
-            )
-        });
-
-        let workspace = self.workspace.clone();
-        window
-            .spawn(cx, {
-                let workspace = workspace.clone();
-                async move |cx| {
-                    let diff_text = diff_receiver.await??;
-
-                    if let Some(workspace) = workspace.upgrade() {
-                        workspace.update_in(cx, |_workspace, window, cx| {
-                            window.dispatch_action(
-                                ReviewBranchDiff {
-                                    diff_text: diff_text.into(),
-                                    base_ref,
-                                }
-                                .boxed_clone(),
-                                cx,
-                            );
-                        })?;
-                    }
-
-                    anyhow::Ok(())
-                }
-            })
-            .detach_and_notify_err(workspace, window, cx);
-    }
-
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn editor(&self, cx: &App) -> Entity<SplittableEditor> {
         self.diff.read(cx).editor().clone()
     }
@@ -482,9 +435,6 @@ impl Item for BranchDiff {
         }
     }
 
-    fn telemetry_event_text(&self) -> Option<&'static str> {
-        Some("Branch Diff Opened")
-    }
 
     fn as_searchable(&self, _: &Entity<Self>, cx: &App) -> Option<Box<dyn SearchableItemHandle>> {
         Some(Box::new(self.diff.read(cx).editor().clone()))
@@ -635,7 +585,6 @@ impl Render for BranchDiff {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .size_full()
-            .on_action(cx.listener(Self::review_diff))
             .child(self.diff.clone())
     }
 }
@@ -713,16 +662,6 @@ impl BranchDiffToolbar {
     fn branch_diff(&self, _: &App) -> Option<Entity<BranchDiff>> {
         self.branch_diff.as_ref()?.upgrade()
     }
-
-    fn dispatch_action(&self, action: &dyn Action, window: &mut Window, cx: &mut Context<Self>) {
-        if let Some(branch_diff) = self.branch_diff(cx) {
-            branch_diff.focus_handle(cx).focus(window, cx);
-        }
-        let action = action.boxed_clone();
-        cx.defer(move |cx| {
-            cx.dispatch_action(action.as_ref());
-        })
-    }
 }
 
 impl EventEmitter<ToolbarItemEvent> for BranchDiffToolbar {}
@@ -758,12 +697,6 @@ impl Render for BranchDiffToolbar {
         let Some(branch_diff) = self.branch_diff(cx) else {
             return div();
         };
-        let focus_handle = branch_diff.focus_handle(cx);
-        let review_count = branch_diff
-            .read(cx)
-            .diff
-            .read(cx)
-            .total_review_comment_count();
         let (additions, deletions) = branch_diff
             .read(cx)
             .diff
@@ -796,10 +729,6 @@ impl Render for BranchDiffToolbar {
             .multibuffer()
             .read(cx)
             .is_empty();
-        let is_ai_enabled = AgentSettings::get_global(cx).enabled(cx);
-
-        let show_review_button = !is_multibuffer_empty && is_ai_enabled;
-
         h_flex()
             .my_neg_1()
             .py_1()
@@ -872,401 +801,6 @@ impl Render for BranchDiffToolbar {
                         Tooltip::text("Select Base Branch"),
                     ),
             )
-            .when(show_review_button, |this| {
-                let focus_handle = focus_handle.clone();
-                this.child(Divider::vertical()).child(
-                    Button::new("review-diff", "Review Diff")
-                        .start_icon(
-                            Icon::new(IconName::ZedAssistant)
-                                .size(IconSize::Small)
-                                .color(Color::Muted),
-                        )
-                        .tooltip(move |_, cx| {
-                            Tooltip::with_meta_in(
-                                "Review Diff",
-                                Some(&ReviewDiff),
-                                "Send this diff for your last agent to review.",
-                                &focus_handle,
-                                cx,
-                            )
-                        })
-                        .on_click(cx.listener(|this, _, window, cx| {
-                            this.dispatch_action(&ReviewDiff, window, cx);
-                        })),
-                )
-            })
-            .when(review_count > 0, |this| {
-                this.child(Divider::vertical()).child(
-                    render_send_review_to_agent_button(review_count, &focus_handle).on_click(
-                        cx.listener(|this, _, window, cx| {
-                            this.dispatch_action(&SendReviewToAgent, window, cx)
-                        }),
-                    ),
-                )
-            })
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use anyhow::anyhow;
-    use collections::HashMap;
-    use editor::test::editor_test_context::assert_state_with_diff;
-    use git::status::{FileStatus, TrackedStatus, UnmergedStatus, UnmergedStatusCode};
-    use gpui::TestAppContext;
-    use project::FakeFs;
-    use serde_json::json;
-    use settings::{DiffViewStyle, SettingsStore};
-    use std::path::Path;
-    use std::sync::Arc;
-    use unindent::Unindent as _;
-    use util::{
-        path,
-        rel_path::{RelPath, rel_path},
-    };
-    use workspace::MultiWorkspace;
-
-    use super::*;
-
-    fn init_test(cx: &mut TestAppContext) {
-        cx.update(|cx| {
-            let store = SettingsStore::test(cx);
-            cx.set_global(store);
-            cx.update_global::<SettingsStore, _>(|store, cx| {
-                store.update_user_settings(cx, |settings| {
-                    settings.editor.diff_view_style = Some(DiffViewStyle::Unified);
-                });
-            });
-            theme_settings::init(theme::LoadThemes::JustBase, cx);
-            editor::init(cx);
-            crate::init(cx);
-        });
-    }
-
-    #[gpui::test(iterations = 50)]
-    async fn test_split_diff_conflict_path_transition_with_dirty_buffer_invalid_anchor_panics(
-        cx: &mut TestAppContext,
-    ) {
-        init_test(cx);
-
-        cx.update(|cx| {
-            cx.update_global::<SettingsStore, _>(|store, cx| {
-                store.update_user_settings(cx, |settings| {
-                    settings.editor.diff_view_style = Some(DiffViewStyle::Split);
-                });
-            });
-        });
-
-        let build_conflict_text: fn(usize) -> String = |tag: usize| {
-            let mut lines = (0..80)
-                .map(|line_index| format!("line {line_index}"))
-                .collect::<Vec<_>>();
-            for offset in [5usize, 20, 37, 61] {
-                lines[offset] = format!("base-{tag}-line-{offset}");
-            }
-            format!("{}\n", lines.join("\n"))
-        };
-        let initial_conflict_text = build_conflict_text(0);
-        let fs = FakeFs::new(cx.executor());
-        fs.insert_tree(
-            path!("/project"),
-            json!({
-                ".git": {},
-                "helper.txt": "same\n",
-                "conflict.txt": initial_conflict_text,
-            }),
-        )
-        .await;
-        fs.with_git_state(path!("/project/.git").as_ref(), true, |state| {
-            state
-                .refs
-                .insert("MERGE_HEAD".into(), "conflict-head".into());
-        })
-        .unwrap();
-        fs.set_status_for_repo(
-            path!("/project/.git").as_ref(),
-            &[(
-                "conflict.txt",
-                FileStatus::Unmerged(UnmergedStatus {
-                    first_head: UnmergedStatusCode::Updated,
-                    second_head: UnmergedStatusCode::Updated,
-                }),
-            )],
-        );
-        fs.set_merge_base_content_for_repo(
-            path!("/project/.git").as_ref(),
-            &[
-                ("conflict.txt", build_conflict_text(1)),
-                ("helper.txt", "same\n".to_string()),
-            ],
-        );
-
-        let project = Project::test(fs.clone(), [path!("/project").as_ref()], cx).await;
-        let (multi_workspace, cx) =
-            cx.add_window_view(|window, cx| MultiWorkspace::test_new(project.clone(), window, cx));
-        let workspace = multi_workspace.read_with(cx, |mw, _| mw.workspace().clone());
-        let _branch_diff = cx
-            .update(|window, cx| {
-                BranchDiff::new_with_default_branch(project.clone(), workspace, window, cx)
-            })
-            .await
-            .unwrap();
-        cx.run_until_parked();
-
-        let buffer = project
-            .update(cx, |project, cx| {
-                project.open_local_buffer(path!("/project/conflict.txt"), cx)
-            })
-            .await
-            .unwrap();
-        buffer.update(cx, |buffer, cx| buffer.edit([(0..0, "dirty\n")], None, cx));
-        assert!(buffer.read_with(cx, |buffer, _| buffer.is_dirty()));
-        cx.run_until_parked();
-
-        cx.update(|window, cx| {
-            let fs = fs.clone();
-            window
-                .spawn(cx, async move |cx| {
-                    cx.background_executor().simulate_random_delay().await;
-                    fs.with_git_state(path!("/project/.git").as_ref(), true, |state| {
-                        state.refs.insert("HEAD".into(), "head-1".into());
-                        state.refs.remove("MERGE_HEAD");
-                    })
-                    .unwrap();
-                    fs.set_status_for_repo(
-                        path!("/project/.git").as_ref(),
-                        &[
-                            (
-                                "conflict.txt",
-                                FileStatus::Tracked(TrackedStatus {
-                                    index_status: git::status::StatusCode::Modified,
-                                    worktree_status: git::status::StatusCode::Modified,
-                                }),
-                            ),
-                            (
-                                "helper.txt",
-                                FileStatus::Tracked(TrackedStatus {
-                                    index_status: git::status::StatusCode::Modified,
-                                    worktree_status: git::status::StatusCode::Modified,
-                                }),
-                            ),
-                        ],
-                    );
-                    // FakeFs assigns deterministic OIDs by entry position; flipping order churns
-                    // conflict diff identity without reaching into view internals.
-                    fs.set_merge_base_content_for_repo(
-                        path!("/project/.git").as_ref(),
-                        &[
-                            ("helper.txt", "helper-base\n".to_string()),
-                            ("conflict.txt", build_conflict_text(2)),
-                        ],
-                    );
-                })
-                .detach();
-        });
-
-        cx.update(|window, cx| {
-            let buffer = buffer.clone();
-            window
-                .spawn(cx, async move |cx| {
-                    cx.background_executor().simulate_random_delay().await;
-                    for edit_index in 0..10 {
-                        if edit_index > 0 {
-                            cx.background_executor().simulate_random_delay().await;
-                        }
-                        buffer.update(cx, |buffer, cx| {
-                            let len = buffer.len();
-                            if edit_index % 2 == 0 {
-                                buffer.edit(
-                                    [(0..0, format!("status-burst-head-{edit_index}\n"))],
-                                    None,
-                                    cx,
-                                );
-                            } else {
-                                buffer.edit(
-                                    [(len..len, format!("status-burst-tail-{edit_index}\n"))],
-                                    None,
-                                    cx,
-                                );
-                            }
-                        });
-                    }
-                })
-                .detach();
-        });
-
-        cx.run_until_parked();
-    }
-
-    #[gpui::test]
-    async fn test_branch_diff(cx: &mut TestAppContext) {
-        init_test(cx);
-
-        let fs = FakeFs::new(cx.executor());
-        fs.insert_tree(
-            path!("/project"),
-            json!({
-                ".git": {},
-                "a.txt": "C",
-                "b.txt": "new",
-                "c.txt": "in-merge-base-and-work-tree",
-                "d.txt": "created-in-head",
-            }),
-        )
-        .await;
-        let project = Project::test(fs.clone(), [path!("/project").as_ref()], cx).await;
-        let (multi_workspace, cx) =
-            cx.add_window_view(|window, cx| MultiWorkspace::test_new(project.clone(), window, cx));
-        let workspace = multi_workspace.read_with(cx, |mw, _| mw.workspace().clone());
-        let diff = cx
-            .update(|window, cx| {
-                BranchDiff::new_with_default_branch(project.clone(), workspace, window, cx)
-            })
-            .await
-            .unwrap();
-        cx.run_until_parked();
-
-        fs.set_head_for_repo(
-            Path::new(path!("/project/.git")),
-            &[("a.txt", "B".into()), ("d.txt", "created-in-head".into())],
-            "sha",
-        );
-        fs.set_merge_base_content_for_repo(
-            Path::new(path!("/project/.git")),
-            &[
-                ("a.txt", "A".into()),
-                ("c.txt", "in-merge-base-and-work-tree".into()),
-            ],
-        );
-        cx.run_until_parked();
-
-        let editor = diff.read_with(cx, |diff, cx| diff.editor(cx).read(cx).rhs_editor().clone());
-
-        let expected_diff = "
-                - A
-                + C
-                + ˇnew
-                + created-in-head"
-            .unindent();
-        assert_state_with_diff(&editor, cx, &expected_diff);
-
-        cx.update(|window, cx| {
-            editor.focus_handle(cx).focus(window, cx);
-            window.dispatch_action(git::Restore.boxed_clone(), cx);
-        });
-        cx.run_until_parked();
-        assert_state_with_diff(&editor, cx, &expected_diff);
-
-        let statuses: HashMap<Arc<RelPath>, Option<FileStatus>> =
-            editor.update(cx, |editor, cx| {
-                editor
-                    .buffer()
-                    .read(cx)
-                    .all_buffers()
-                    .iter()
-                    .map(|buffer| {
-                        (
-                            buffer.read(cx).file().unwrap().path().clone(),
-                            editor.status_for_buffer_id(buffer.read(cx).remote_id(), cx),
-                        )
-                    })
-                    .collect()
-            });
-
-        assert_eq!(
-            statuses,
-            HashMap::from_iter([
-                (
-                    rel_path("a.txt").into_arc(),
-                    Some(FileStatus::Tracked(TrackedStatus {
-                        index_status: git::status::StatusCode::Modified,
-                        worktree_status: git::status::StatusCode::Modified
-                    }))
-                ),
-                (rel_path("b.txt").into_arc(), Some(FileStatus::Untracked)),
-                (
-                    rel_path("d.txt").into_arc(),
-                    Some(FileStatus::Tracked(TrackedStatus {
-                        index_status: git::status::StatusCode::Added,
-                        worktree_status: git::status::StatusCode::Added
-                    }))
-                )
-            ])
-        );
-    }
-
-    #[gpui::test]
-    async fn test_branch_diff_action_matches_existing_item_by_base_ref(cx: &mut TestAppContext) {
-        init_test(cx);
-
-        let fs = FakeFs::new(cx.executor());
-        fs.insert_tree(
-            path!("/project"),
-            json!({
-                ".git": {},
-                "a.txt": "changed",
-            }),
-        )
-        .await;
-        let project = Project::test(fs.clone(), [path!("/project").as_ref()], cx).await;
-        let (multi_workspace, cx) =
-            cx.add_window_view(|window, cx| MultiWorkspace::test_new(project.clone(), window, cx));
-        let workspace = multi_workspace.read_with(cx, |mw, _| mw.workspace().clone());
-
-        let target_branch_diff = cx
-            .update(|window, cx| {
-                let Some(repository) = project.read(cx).active_repository(cx) else {
-                    return Task::ready(Err(anyhow!("No active repository")));
-                };
-                BranchDiff::new_with_branch_base(
-                    project.clone(),
-                    workspace.clone(),
-                    "topic".into(),
-                    repository,
-                    None,
-                    window,
-                    cx,
-                )
-            })
-            .await
-            .unwrap();
-        workspace.update_in(cx, |workspace, window, cx| {
-            workspace.add_item_to_active_pane(
-                Box::new(target_branch_diff.clone()),
-                None,
-                true,
-                window,
-                cx,
-            );
-        });
-        cx.run_until_parked();
-
-        cx.focus(&workspace);
-        cx.update(|window, cx| {
-            window.dispatch_action(DeployBranchDiff.boxed_clone(), cx);
-        });
-        cx.run_until_parked();
-
-        let (active_base_ref, mut base_refs) = workspace.update(cx, |workspace, cx| {
-            let active_item = workspace.active_item_as::<BranchDiff>(cx).unwrap();
-            let active_base_ref = match active_item.read(cx).diff_base(cx) {
-                DiffBase::Merge { base_ref } => base_ref.to_string(),
-                DiffBase::Head | DiffBase::Index | DiffBase::Staged => {
-                    panic!("expected active item to be a branch diff")
-                }
-            };
-            let base_refs = workspace
-                .items_of_type::<BranchDiff>(cx)
-                .filter_map(|item| match item.read(cx).diff_base(cx) {
-                    DiffBase::Merge { base_ref } => Some(base_ref.to_string()),
-                    DiffBase::Head | DiffBase::Index | DiffBase::Staged => None,
-                })
-                .collect::<Vec<_>>();
-            (active_base_ref, base_refs)
-        });
-        base_refs.sort();
-
-        assert_eq!(active_base_ref, "origin/main");
-        assert_eq!(base_refs, vec!["origin/main", "topic"]);
-    }
-}

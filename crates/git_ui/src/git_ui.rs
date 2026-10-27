@@ -61,7 +61,6 @@ pub mod text_diff_view;
 pub mod unstaged_diff;
 
 pub use blame_ui::GitBlameStatus;
-pub use conflict_view::MergeConflictIndicator;
 
 pub fn init(cx: &mut App) {
     editor::set_blame_renderer(blame_ui::GitBlameRenderer, cx);
@@ -150,32 +149,10 @@ pub fn init(cx: &mut App) {
         workspace.register_action(
             |workspace, action: &zed_actions::OpenWorktreeInNewWindow, window, cx| {
                 let path = action.path.clone();
-                let is_remote = !workspace.project().read(cx).is_local();
 
-                if is_remote {
-                    let connection_options =
-                        workspace.project().read(cx).remote_connection_options(cx);
-                    let app_state = workspace.app_state().clone();
-                    let workspace_handle = workspace.weak_handle();
-                    cx.spawn_in(window, async move |_, cx| {
-                        if let Some(connection_options) = connection_options {
-                            git_ui_core::worktree_picker::open_remote_worktree(
-                                connection_options,
-                                vec![path],
-                                app_state,
-                                workspace_handle,
-                                cx,
-                            )
-                            .await?;
-                        }
-                        anyhow::Ok(())
-                    })
+                workspace
+                    .open_workspace_for_paths(OpenMode::NewWindow, vec![path], window, cx)
                     .detach_and_log_err(cx);
-                } else {
-                    workspace
-                        .open_workspace_for_paths(OpenMode::NewWindow, vec![path], window, cx)
-                        .detach_and_log_err(cx);
-                }
             },
         );
 
@@ -183,7 +160,7 @@ pub fn init(cx: &mut App) {
         if project.is_read_only(cx) {
             return;
         }
-        if !project.is_via_collab() {
+   
             workspace.register_action(
                 |workspace, _: &zed_actions::git::CreatePullRequest, window, cx| {
                     if let Some(panel) = workspace.panel::<git_panel::GitPanel>(cx) {
@@ -249,7 +226,7 @@ pub fn init(cx: &mut App) {
                     panel.pull(true, window, cx);
                 });
             });
-        }
+        
         workspace.register_action(|workspace, action: &git::StashAll, window, cx| {
             let Some(panel) = workspace.panel::<git_panel::GitPanel>(cx) else {
                 return;
@@ -1493,221 +1470,3 @@ impl Render for GitCloneModal {
 impl EventEmitter<DismissEvent> for GitCloneModal {}
 
 impl ModalView for GitCloneModal {}
-
-#[cfg(test)]
-mod view_commit_tests {
-    use super::*;
-    use gpui::{TestAppContext, VisualTestContext, WindowHandle};
-    use language::language_settings::AllLanguageSettings;
-    use project::project_settings::ProjectSettings;
-    use project::{FakeFs, Project, WorktreeSettings};
-    use serde_json::json;
-    use settings::{Settings as _, SettingsStore};
-    use std::path::Path;
-    use std::sync::Arc;
-    use theme::LoadThemes;
-    use util::path;
-    use workspace::WorkspaceSettings;
-
-    fn init_test(cx: &mut TestAppContext) {
-        zlog::init_test();
-        cx.update(|cx| {
-            let settings_store = SettingsStore::test(cx);
-            cx.set_global(settings_store);
-            theme_settings::init(LoadThemes::JustBase, cx);
-            AllLanguageSettings::register(cx);
-            editor::init(cx);
-            ProjectSettings::register(cx);
-            WorktreeSettings::register(cx);
-            WorkspaceSettings::register(cx);
-        });
-    }
-
-    async fn setup_git_repo(cx: &mut TestAppContext) -> Arc<FakeFs> {
-        let fs = FakeFs::new(cx.background_executor.clone());
-        fs.insert_tree(
-            "/root",
-            json!({
-                "project": {
-                    ".git": {},
-                    "src": {
-                        "main.rs": "fn main() {}"
-                    }
-                }
-            }),
-        )
-        .await;
-        fs
-    }
-
-    async fn create_test_workspace(
-        fs: Arc<FakeFs>,
-        cx: &mut TestAppContext,
-    ) -> (Entity<Project>, WindowHandle<Workspace>) {
-        let project = Project::test(fs.clone(), [Path::new(path!("/root/project"))], cx).await;
-        let workspace =
-            cx.add_window(|window, cx| Workspace::test_new(project.clone(), window, cx));
-        cx.read(|cx| {
-            project
-                .read(cx)
-                .worktrees(cx)
-                .next()
-                .unwrap()
-                .read(cx)
-                .as_local()
-                .unwrap()
-                .scan_complete()
-        })
-        .await;
-        (project, workspace)
-    }
-
-    #[gpui::test]
-    async fn test_show_ref_picker_with_repository(cx: &mut TestAppContext) {
-        init_test(cx);
-        let fs = setup_git_repo(cx).await;
-
-        fs.set_status_for_repo(
-            Path::new("/root/project/.git"),
-            &[("src/main.rs", git::status::StatusCode::Modified.worktree())],
-        );
-
-        let (_project, workspace) = create_test_workspace(fs, cx).await;
-        let cx = &mut VisualTestContext::from_window(*workspace, cx);
-
-        let initial_modal_state = workspace
-            .read_with(cx, |workspace, cx| {
-                workspace.active_modal::<RefPickerModal>(cx).is_some()
-            })
-            .unwrap_or(false);
-
-        let _ = workspace.update(cx, |workspace, window, cx| {
-            show_ref_picker(workspace, &git::ViewCommit, window, cx);
-        });
-
-        let final_modal_state = workspace
-            .read_with(cx, |workspace, cx| {
-                workspace.active_modal::<RefPickerModal>(cx).is_some()
-            })
-            .unwrap_or(false);
-
-        assert!(!initial_modal_state);
-        assert!(final_modal_state);
-    }
-
-    #[gpui::test]
-    async fn test_create_tag_at_head(cx: &mut TestAppContext) {
-        init_test(cx);
-        let fs = setup_git_repo(cx).await;
-        let commit = Oid::try_from("abcdef1234567890abcdef1234567890abcdef12")
-            .expect("commit SHA should be valid");
-        fs.set_head_for_repo(Path::new("/root/project/.git"), &[], commit.to_string());
-        let (_project, workspace) = create_test_workspace(fs.clone(), cx).await;
-        let cx = &mut VisualTestContext::from_window(*workspace, cx);
-        cx.executor().run_until_parked();
-
-        workspace
-            .update(cx, |workspace, window, cx| {
-                create_tag_at_head(workspace, window, cx);
-            })
-            .expect("workspace should exist");
-
-        let modal = workspace
-            .update(cx, |workspace, _, cx| {
-                workspace.active_modal::<CreateTagModal>(cx)
-            })
-            .expect("workspace should exist")
-            .expect("create tag modal should be open");
-        assert_eq!(modal.read_with(cx, |modal, _| modal.commit), commit);
-        assert!(modal.read_with(cx, |modal, _| modal.at_head));
-
-        modal.update_in(cx, |modal, window, cx| {
-            modal.editor.update(cx, |editor, cx| {
-                editor.set_text("v1.0.0", window, cx);
-            });
-            modal.confirm(&Confirm, window, cx);
-        });
-        cx.run_until_parked();
-
-        let tagged_commit = fs
-            .with_git_state(Path::new("/root/project/.git"), false, |state| {
-                state.refs.get("refs/tags/v1.0.0").cloned()
-            })
-            .expect("fake git state should exist");
-        assert_eq!(tagged_commit, Some(commit.to_string()));
-    }
-
-    #[gpui::test]
-    async fn test_create_tag_from_commit_context_menu(cx: &mut TestAppContext) {
-        init_test(cx);
-        let fs = setup_git_repo(cx).await;
-        let head = Oid::try_from("abcdef1234567890abcdef1234567890abcdef12")
-            .expect("HEAD SHA should be valid");
-        let selected_commit = Oid::try_from("1234567890abcdef1234567890abcdef12345678")
-            .expect("selected commit SHA should be valid");
-        fs.set_head_for_repo(Path::new("/root/project/.git"), &[], head.to_string());
-        let (_project, workspace) = create_test_workspace(fs.clone(), cx).await;
-        let cx = &mut VisualTestContext::from_window(*workspace, cx);
-        cx.executor().run_until_parked();
-
-        let (repository, focus_handle, workspace_handle) = workspace
-            .update(cx, |workspace, _, cx| {
-                let repository = workspace
-                    .project()
-                    .read(cx)
-                    .active_repository(cx)
-                    .expect("active repository should exist");
-                (repository, workspace.focus_handle(cx), cx.weak_entity())
-            })
-            .expect("workspace should exist");
-        let context_menu = cx.update(|window, cx| {
-            commit_context_menu::commit_context_menu(
-                commit_context_menu::CommitContextMenuData {
-                    sha: selected_commit,
-                    tag_names: Vec::new(),
-                },
-                commit_context_menu::CommitContextMenuSource::GitPanel,
-                None,
-                focus_handle,
-                Some(repository.downgrade()),
-                workspace_handle,
-                window,
-                cx,
-            )
-        });
-
-        context_menu.update_in(cx, |menu, window, cx| {
-            menu.select_first(&menu::SelectFirst, window, cx);
-            menu.select_next(&menu::SelectNext, window, cx);
-            menu.select_next(&menu::SelectNext, window, cx);
-            menu.confirm(&Confirm, window, cx);
-        });
-
-        let modal = workspace
-            .update(cx, |workspace, _, cx| {
-                workspace.active_modal::<CreateTagModal>(cx)
-            })
-            .expect("workspace should exist")
-            .expect("create tag modal should be open");
-        assert_eq!(
-            modal.read_with(cx, |modal, _| modal.commit),
-            selected_commit
-        );
-        assert!(!modal.read_with(cx, |modal, _| modal.at_head));
-
-        modal.update_in(cx, |modal, window, cx| {
-            modal.editor.update(cx, |editor, cx| {
-                editor.set_text("v1.0.0", window, cx);
-            });
-            modal.confirm(&Confirm, window, cx);
-        });
-        cx.run_until_parked();
-
-        let tagged_commit = fs
-            .with_git_state(Path::new("/root/project/.git"), false, |state| {
-                state.refs.get("refs/tags/v1.0.0").cloned()
-            })
-            .expect("fake git state should exist");
-        assert_eq!(tagged_commit, Some(selected_commit.to_string()));
-    }
-}

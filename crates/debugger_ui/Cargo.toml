@@ -17,7 +17,6 @@ path = "src/debugger_ui.rs"
 doctest = false
 
 [features]
-test-support = ["dap/test-support", "dap_adapters/test-support", "debugger_tools/test-support", "editor/test-support", "gpui/test-support", "project/test-support", "util/test-support", "workspace/test-support", "unindent", "dep:command_palette_hooks"]
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -173,57 +172,3 @@ path = "../workspace"
 
 [dependencies.zed_actions]
 path = "../zed_actions"
-
-[dev-dependencies.command_palette_hooks]
-path = "../command_palette_hooks"
-
-[dev-dependencies.dap]
-path = "../dap"
-features = ["test-support"]
-
-[dev-dependencies.dap_adapters]
-path = "../dap_adapters"
-features = ["test-support"]
-
-[dev-dependencies.debugger_tools]
-path = "../debugger_tools"
-features = ["test-support"]
-
-[dev-dependencies.editor]
-path = "../editor"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.language]
-path = "../language"
-features = ["test-support"]
-
-[dev-dependencies.pretty_assertions]
-version = "1.3.0"
-features = ["unstable"]
-
-[dev-dependencies.project]
-path = "../project"
-features = ["test-support"]
-
-[dev-dependencies.tree-sitter-go]
-git = "https://github.com/zed-industries/tree-sitter-go"
-rev = "6862a49e3c5a7567a6c576420e9a8f944e198a85"
-
-[dev-dependencies.unindent]
-version = "0.2.0"
-
-[dev-dependencies.util]
-path = "../util"
-features = ["test-support"]
-
-[dev-dependencies.workspace]
-path = "../workspace"
-features = ["test-support"]
-
-[dev-dependencies.zlog]
-path = "../zlog"

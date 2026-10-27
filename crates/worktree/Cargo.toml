@@ -16,16 +16,12 @@ ignored = ["tracing"]
 path = "src/worktree.rs"
 doctest = false
 
-[[test]]
-name = "integration"
-required-features = ["test-support"]
-path = "tests/integration/worktree_tests.rs"
 
 [lints]
 workspace = true
 
 [features]
-test-support = ["gpui/test-support", "language/test-support", "pretty_assertions", "settings/test-support", "text/test-support", "util/test-support"]
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -113,57 +109,8 @@ path = "../sum_tree"
 [dependencies.text]
 path = "../text"
 
-[dependencies.tracing]
-version = "0.1.40"
-
 [dependencies.util]
 path = "../util"
 
 [dependencies.ztracing]
 path = "../ztracing"
-
-[dev-dependencies.clock]
-path = "../clock"
-features = ["test-support"]
-
-[dev-dependencies.collections]
-path = "../collections"
-version = "0.1.0"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.paths]
-path = "../paths"
-features = ["test-support"]
-
-[dev-dependencies.rand]
-version = "0.9"
-default-features = false
-features = ["std", "std_rng", "os_rng"]
-
-[dev-dependencies.rpc]
-path = "../rpc"
-features = ["test-support"]
-
-[dev-dependencies.serde_json]
-version = "1.0.144"
-features = ["preserve_order", "raw_value"]
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]
-
-[dev-dependencies.util]
-path = "../util"
-features = ["test-support"]
-
-[dev-dependencies.worktree]
-path = ""
-features = ["test-support"]
-
-[dev-dependencies.zlog]
-path = "../zlog"

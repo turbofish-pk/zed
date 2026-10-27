@@ -17,7 +17,7 @@ path = "src/db.rs"
 doctest = false
 
 [features]
-test-support = []
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -58,11 +58,3 @@ features = ["serde", "v5", "v7"]
 
 [dependencies.zed_env_vars]
 path = "../zed_env_vars"
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.tempfile]
-version = "3.20.0"

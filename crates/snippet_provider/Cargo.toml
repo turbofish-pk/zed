@@ -16,7 +16,7 @@ workspace = true
 doctest = false
 
 [features]
-test-support = []
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -69,12 +69,12 @@ features = ["std", "indexmap2"]
 
 [dev-dependencies.fs]
 path = "../fs"
-features = ["test-support"]
+
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.indoc]
 version = "2"

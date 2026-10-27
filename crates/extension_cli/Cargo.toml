@@ -23,9 +23,6 @@ version = "1.0.86"
 version = "4.4"
 features = ["derive", "wrap_help"]
 
-[dependencies.cloud_api_types]
-path = "../cloud_api_types"
-
 [dependencies.env_logger]
 version = "0.11"
 

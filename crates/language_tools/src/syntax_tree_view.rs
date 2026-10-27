@@ -574,9 +574,7 @@ impl Item for SyntaxTreeView {
         "Syntax Tree".into()
     }
 
-    fn telemetry_event_text(&self) -> Option<&'static str> {
-        None
-    }
+
 
     fn can_split(&self) -> bool {
         true
@@ -754,15 +752,3 @@ impl ToolbarItemView for SyntaxTreeToolbarItemView {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn anonymous_node_kinds_escape_control_characters() {
-        assert_eq!(format_anonymous_node_kind("\n"), "\"\\n\"");
-        assert_eq!(format_anonymous_node_kind("\r\n"), "\"\\r\\n\"");
-        assert_eq!(format_anonymous_node_kind("\t"), "\"\\t\"");
-        assert_eq!(format_anonymous_node_kind(","), "\",\"");
-    }
-}

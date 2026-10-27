@@ -397,10 +397,10 @@ pub trait DebugAdapter: 'static + Send + Sync {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub struct FakeAdapter {}
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl FakeAdapter {
     pub const ADAPTER_NAME: &'static str = "fake-adapter";
 
@@ -409,7 +409,7 @@ impl FakeAdapter {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 #[async_trait(?Send)]
 impl DebugAdapter for FakeAdapter {
     fn name(&self) -> DebugAdapterName {

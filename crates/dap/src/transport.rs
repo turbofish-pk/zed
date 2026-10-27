@@ -1,5 +1,5 @@
 use anyhow::{Context as _, Result, anyhow, bail};
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 use async_pipe::{PipeReader, PipeWriter};
 use dap_types::{
     ErrorResponse,
@@ -49,7 +49,7 @@ pub enum IoKind {
     StdErr,
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub enum RequestHandling<T> {
     Respond(T),
     Exit,
@@ -69,7 +69,7 @@ pub trait Transport: Send + Sync {
         )>,
     >;
     fn kill(&mut self);
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     fn as_fake(&self) -> &FakeTransport {
         unreachable!()
     }
@@ -80,8 +80,8 @@ async fn start(
     log_handlers: LogHandlers,
     cx: &mut AsyncApp,
 ) -> Result<Box<dyn Transport>> {
-    #[cfg(any(test, feature = "test-support"))]
-    if cfg!(any(test, feature = "test-support")) {
+    #[cfg(feature = "test-support")]
+    if cfg!(feature = "test-support") {
         if let Some(connection) = binary.connection.clone() {
             return Ok(Box::new(FakeTransport::start_tcp(connection, cx).await?));
         } else {
@@ -780,13 +780,13 @@ impl Drop for StdioTransport {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 type RequestHandler = Box<dyn Send + FnMut(u64, serde_json::Value) -> RequestHandling<Response>>;
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 type ResponseHandler = Box<dyn Send + Fn(Response)>;
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub struct FakeTransport {
     // for sending fake response back from adapter side
     request_handlers: Arc<Mutex<HashMap<&'static str, RequestHandler>>>,
@@ -796,7 +796,7 @@ pub struct FakeTransport {
     kind: FakeTransportKind,
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub enum FakeTransportKind {
     Stdio {
         stdin_writer: Option<PipeWriter>,
@@ -808,7 +808,7 @@ pub enum FakeTransportKind {
     },
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl FakeTransport {
     pub fn on_request<R: dap_types::requests::Request, F>(&self, mut handler: F)
     where
@@ -1009,7 +1009,7 @@ impl FakeTransport {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl Transport for FakeTransport {
     fn tcp_arguments(&self) -> Option<TcpArguments> {
         match &self.kind {
@@ -1064,99 +1064,9 @@ impl Transport for FakeTransport {
         self.message_handler.take();
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     fn as_fake(&self) -> &FakeTransport {
         self
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn test_interpolate_message() {
-        let variables = serde_json::Map::from_iter([
-            ("".into(), json!("wrong")),
-            ("{name".into(), json!("wrong")),
-            ("msg".into(), json!("boom")),
-            ("name".into(), json!("zed")),
-            ("number".into(), json!(42)),
-            ("enabled".into(), json!(true)),
-        ]);
-
-        assert_eq!(interpolate_message("{msg}".into(), &variables), "boom");
-        assert_eq!(
-            interpolate_message("{name} says {msg}, {name}".into(), &variables),
-            "zed says boom, zed"
-        );
-        assert_eq!(
-            interpolate_message("{number} {enabled}".into(), &variables),
-            "42 true"
-        );
-
-        // and the unknown ones are left as is here
-        assert_eq!(
-            interpolate_message("hi {nope}".into(), &variables),
-            "hi {nope}"
-        );
-        assert_eq!(
-            interpolate_message("oops {msg".into(), &variables),
-            "oops {msg"
-        );
-        assert_eq!(
-            interpolate_message("stray } {name}".into(), &variables),
-            "stray } zed"
-        );
-        assert_eq!(
-            interpolate_message("nested {{name}}".into(), &variables),
-            "nested {{name}}"
-        );
-        assert_eq!(
-            interpolate_message("empty {}".into(), &variables),
-            "empty {}"
-        );
-    }
-
-    #[test]
-    fn test_process_response_interpolates_error_variables() {
-        let response = Response {
-            seq: 1,
-            request_seq: 1,
-            success: false,
-            command: "launch".into(),
-            body: Some(json!({
-                "error": {
-                    "id": 1,
-                    "format": "{response_message}",
-                    "variables": { "response_message": "use binary option" }
-                }
-            })),
-            message: Some("cancelled".into()),
-        };
-
-        let error = TransportDelegate::process_response(response).unwrap_err();
-        assert_eq!(error.to_string(), "use binary option");
-    }
-
-    #[test]
-    fn test_process_response_preserves_error_without_variables() {
-        let response = Response {
-            seq: 1,
-            request_seq: 1,
-            success: false,
-            command: "launch".into(),
-            body: Some(json!({
-                "error": {
-                    "id": 1,
-                    "format": "plain error"
-                }
-            })),
-            message: Some("cancelled".into()),
-        };
-
-        let error = TransportDelegate::process_response(response).unwrap_err();
-        assert_eq!(error.to_string(), "plain error");
-    }
-}

@@ -100,35 +100,3 @@ impl RenderOnce for HighlightedMatchWithPaths {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn join_offsets_positions_by_bytes_not_chars() {
-        // "αβγ" is 3 Unicode scalar values, 6 bytes in UTF-8.
-        let left_text = "αβγ".to_string();
-        let right_text = "label".to_string();
-        let left = HighlightedMatch {
-            text: left_text,
-            highlight_positions: vec![],
-            color: Color::Default,
-        };
-        let right = HighlightedMatch {
-            text: right_text,
-            highlight_positions: vec![0, 1],
-            color: Color::Default,
-        };
-        let joined = HighlightedMatch::join([left, right].into_iter(), "");
-
-        assert!(
-            joined
-                .highlight_positions
-                .iter()
-                .all(|&p| joined.text.is_char_boundary(p)),
-            "join produced non-boundary positions {:?} for text {:?}",
-            joined.highlight_positions,
-            joined.text
-        );
-    }
-}

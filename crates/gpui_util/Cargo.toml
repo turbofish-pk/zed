@@ -20,8 +20,6 @@ features = ["std", "serde"]
 [dependencies.anyhow]
 version = "1.0.86"
 
-[target.'cfg(target_os = "windows")'.dependencies.which]
-version = "8"
 
 [lints]
 workspace = true

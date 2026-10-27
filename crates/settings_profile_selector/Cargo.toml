@@ -40,19 +40,19 @@ path = "../zed_actions"
 
 [dev-dependencies.editor]
 path = "../editor"
-features = ["test-support"]
+
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.menu]
 path = "../menu"
 
 [dev-dependencies.project]
 path = "../project"
-features = ["test-support"]
+
 
 [dev-dependencies.serde_json]
 version = "1.0.144"
@@ -60,15 +60,14 @@ features = ["preserve_order", "raw_value"]
 
 [dev-dependencies.settings]
 path = "../settings"
-features = ["test-support"]
+
 
 [dev-dependencies.theme]
 path = "../theme"
-features = ["test-support"]
+
 
 [dev-dependencies.theme_settings]
 path = "../theme_settings"
 
 [dev-dependencies.workspace]
 path = "../workspace"
-features = ["test-support"]

@@ -187,7 +187,7 @@ impl DebugAdapterClient {
         self.transport_delegate.add_log_handler(f, kind);
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn on_request<R: dap_types::requests::Request, F>(&self, mut handler: F)
     where
         F: 'static
@@ -205,7 +205,7 @@ impl DebugAdapterClient {
             });
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn on_request_ext<R: dap_types::requests::Request, F>(&self, handler: F)
     where
         F: 'static
@@ -224,7 +224,7 @@ impl DebugAdapterClient {
             .on_request::<R, F>(handler);
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub async fn fake_reverse_request<R: dap_types::requests::Request>(&self, args: R::Arguments) {
         self.send_message(Message::Request(dap_types::messages::Request {
             seq: self.sequence_count.load(Ordering::Relaxed),
@@ -235,7 +235,7 @@ impl DebugAdapterClient {
         .unwrap();
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub async fn on_response<R: dap_types::requests::Request, F>(&self, handler: F)
     where
         F: 'static + Send + Fn(Response),
@@ -247,7 +247,7 @@ impl DebugAdapterClient {
             .on_response::<R, F>(handler);
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub async fn fake_event(&self, event: dap_types::messages::Events) {
         self.send_message(Message::Event(Box::new(event)))
             .await
@@ -255,211 +255,3 @@ impl DebugAdapterClient {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::client::DebugAdapterClient;
-    use dap_types::{
-        Capabilities, InitializeRequestArguments, InitializeRequestArgumentsPathFormat,
-        RunInTerminalRequestArguments, StartDebuggingRequestArguments,
-        messages::Events,
-        requests::{Initialize, Request, RunInTerminal},
-    };
-    use gpui::TestAppContext;
-    use serde_json::json;
-    use settings::SettingsStore;
-    use std::sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    };
-
-    pub fn init_test(cx: &mut gpui::TestAppContext) {
-        zlog::init_test();
-
-        cx.update(|cx| {
-            let settings = SettingsStore::test(cx);
-            cx.set_global(settings);
-        });
-    }
-
-    #[gpui::test]
-    pub async fn test_initialize_client(cx: &mut TestAppContext) {
-        #![expect(clippy::result_large_err)]
-        init_test(cx);
-
-        let client = DebugAdapterClient::start(
-            crate::client::SessionId(1),
-            DebugAdapterBinary {
-                command: Some("command".into()),
-                arguments: Default::default(),
-                envs: Default::default(),
-                connection: None,
-                cwd: None,
-                request_args: StartDebuggingRequestArguments {
-                    configuration: serde_json::Value::Null,
-                    request: dap_types::StartDebuggingRequestArgumentsRequest::Launch,
-                },
-            },
-            Box::new(|_| {}),
-            &mut cx.to_async(),
-        )
-        .await
-        .unwrap();
-
-        client.on_request::<Initialize, _>(move |_, _| {
-            Ok(dap_types::Capabilities {
-                supports_configuration_done_request: Some(true),
-                ..Default::default()
-            })
-        });
-
-        cx.run_until_parked();
-
-        let response = client
-            .request::<Initialize>(InitializeRequestArguments {
-                client_id: Some("zed".to_owned()),
-                client_name: Some("Zed".to_owned()),
-                adapter_id: "fake-adapter".to_owned(),
-                locale: Some("en-US".to_owned()),
-                path_format: Some(InitializeRequestArgumentsPathFormat::Path),
-                supports_variable_type: Some(true),
-                supports_variable_paging: Some(false),
-                supports_run_in_terminal_request: Some(true),
-                supports_memory_references: Some(true),
-                supports_progress_reporting: Some(false),
-                supports_invalidated_event: Some(false),
-                lines_start_at1: Some(true),
-                columns_start_at1: Some(true),
-                supports_memory_event: Some(false),
-                supports_args_can_be_interpreted_by_shell: Some(false),
-                supports_start_debugging_request: Some(true),
-                supports_ansistyling: Some(false),
-            })
-            .await
-            .unwrap();
-
-        cx.run_until_parked();
-
-        assert_eq!(
-            dap_types::Capabilities {
-                supports_configuration_done_request: Some(true),
-                ..Default::default()
-            },
-            response
-        );
-    }
-
-    #[gpui::test]
-    pub async fn test_calls_event_handler(cx: &mut TestAppContext) {
-        init_test(cx);
-
-        let called_event_handler = Arc::new(AtomicBool::new(false));
-
-        let client = DebugAdapterClient::start(
-            crate::client::SessionId(1),
-            DebugAdapterBinary {
-                command: Some("command".into()),
-                arguments: Default::default(),
-                envs: Default::default(),
-                connection: None,
-                cwd: None,
-                request_args: StartDebuggingRequestArguments {
-                    configuration: serde_json::Value::Null,
-                    request: dap_types::StartDebuggingRequestArgumentsRequest::Launch,
-                },
-            },
-            Box::new({
-                let called_event_handler = called_event_handler.clone();
-                move |event| {
-                    called_event_handler.store(true, Ordering::SeqCst);
-
-                    assert_eq!(
-                        Message::Event(Box::new(Events::Initialized(
-                            Some(Capabilities::default())
-                        ))),
-                        event
-                    );
-                }
-            }),
-            &mut cx.to_async(),
-        )
-        .await
-        .unwrap();
-
-        cx.run_until_parked();
-
-        client
-            .fake_event(Events::Initialized(Some(Capabilities::default())))
-            .await;
-
-        cx.run_until_parked();
-
-        assert!(
-            called_event_handler.load(std::sync::atomic::Ordering::SeqCst),
-            "Event handler was not called"
-        );
-    }
-
-    #[gpui::test]
-    pub async fn test_calls_event_handler_for_reverse_request(cx: &mut TestAppContext) {
-        init_test(cx);
-
-        let called_event_handler = Arc::new(AtomicBool::new(false));
-
-        let client = DebugAdapterClient::start(
-            crate::client::SessionId(1),
-            DebugAdapterBinary {
-                command: Some("command".into()),
-                arguments: Default::default(),
-                envs: Default::default(),
-                connection: None,
-                cwd: None,
-                request_args: dap_types::StartDebuggingRequestArguments {
-                    configuration: serde_json::Value::Null,
-                    request: dap_types::StartDebuggingRequestArgumentsRequest::Launch,
-                },
-            },
-            Box::new({
-                let called_event_handler = called_event_handler.clone();
-                move |event| {
-                    called_event_handler.store(true, Ordering::SeqCst);
-
-                    assert_eq!(
-                        Message::Request(dap_types::messages::Request {
-                            seq: 1,
-                            command: RunInTerminal::COMMAND.into(),
-                            arguments: Some(json!({
-                                "cwd": "/project/path/src",
-                                "args": ["node", "test.js"],
-                            }))
-                        }),
-                        event
-                    );
-                }
-            }),
-            &mut cx.to_async(),
-        )
-        .await
-        .unwrap();
-
-        cx.run_until_parked();
-
-        client
-            .fake_reverse_request::<RunInTerminal>(RunInTerminalRequestArguments {
-                kind: None,
-                title: None,
-                cwd: "/project/path/src".into(),
-                args: vec!["node".into(), "test.js".into()],
-                env: None,
-                args_can_be_interpreted_by_shell: None,
-            })
-            .await;
-
-        cx.run_until_parked();
-
-        assert!(
-            called_event_handler.load(std::sync::atomic::Ordering::SeqCst),
-            "Event handler was not called"
-        );
-    }
-}

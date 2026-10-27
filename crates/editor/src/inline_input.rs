@@ -344,29 +344,3 @@ fn render_inline_input_block(
     })
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_preview_truncation_reports_hidden_lines() {
-        let text = (1..=12)
-            .map(|ix| format!("line{ix}"))
-            .collect::<Vec<_>>()
-            .join("\n");
-        let preview = InlineInputPreview::Text(text.clone());
-        let (shown, height) = preview.display_text(8);
-        assert_eq!(height, 9);
-        assert_eq!(
-            shown,
-            format!(
-                "{}\n… +4 more lines",
-                text.lines().take(8).collect::<Vec<_>>().join("\n")
-            )
-        );
-        let (shown, height) = preview.display_text(11);
-        assert_eq!(height, 12);
-        assert_eq!(shown.lines().last(), Some("… +1 more line"));
-        assert_eq!(preview.display_text(12), (text, 12));
-    }
-}

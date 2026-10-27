@@ -415,10 +415,7 @@ impl UndoManager {
         self.can_redo.load(Ordering::Relaxed)
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_is_via_collab(&mut self, is_via_collab: bool) {
-        self.is_via_collab = is_via_collab;
-    }
+
 }
 
 #[derive(Debug)]

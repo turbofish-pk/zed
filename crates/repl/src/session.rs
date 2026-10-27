@@ -125,21 +125,6 @@ impl EditorBlock {
         })
     }
 
-    fn handle_message(
-        &mut self,
-        message: &JupyterMessage,
-        window: &mut Window,
-        cx: &mut Context<Session>,
-    ) {
-        self.execution_view.update(cx, |execution_view, cx| {
-            if matches!(&message.content, JupyterMessageContent::InputRequest(_)) {
-                execution_view.handle_input_request(message, window, cx);
-            } else {
-                execution_view.push_message(&message.content, window, cx);
-            }
-        });
-    }
-
     fn create_output_area_renderer(
         execution_view: Entity<ExecutionView>,
         on_close: CloseBlockFn,
@@ -269,91 +254,16 @@ impl Session {
         let kernel_language = self.kernel_specification.language();
         let entity_id = self.editor.entity_id();
 
-        // For WSL Remote kernels, use project root instead of potentially temporary working directory
-        // which causes .venv/bin/python checks to fail
-        let is_remote_execution = matches!(
-            self.kernel_specification,
-            crate::KernelSpecification::WslRemote(_) | crate::KernelSpecification::SshRemote(_)
-        );
-
-        let working_directory = if is_remote_execution {
-            // For WSL Remote kernels, use project root instead of potentially temporary working directory
-            // which causes .venv/bin/python checks to fail
-            self.editor
-                .upgrade()
-                .and_then(|editor| editor.read(cx).project().cloned())
-                .and_then(|project| {
-                    project
-                        .read(cx)
-                        .worktrees(cx)
-                        .next()
-                        .map(|worktree| worktree.read(cx).abs_path().to_path_buf())
-                })
-                .unwrap_or_else(temp_dir)
-        } else {
-            self.editor
-                .upgrade()
-                .and_then(|editor| editor.read(cx).working_directory(cx))
-                .unwrap_or_else(temp_dir)
-        };
-
-        telemetry::event!(
-            "Kernel Status Changed",
-            kernel_language,
-            kernel_status = KernelStatus::Starting.to_string(),
-            repl_session_id = cx.entity_id().to_string(),
-        );
+        self.editor
+            .upgrade()
+            .and_then(|editor| editor.read(cx).working_directory(cx))
+            .unwrap_or_else(temp_dir);
 
         let session_view = cx.entity();
 
         let kernel = match self.kernel_specification.clone() {
-            KernelSpecification::Jupyter(kernel_specification) => NativeRunningKernel::new(
-                kernel_specification,
-                entity_id,
-                working_directory,
-                self.fs.clone(),
-                session_view,
-                window,
-                cx,
-            ),
             KernelSpecification::PythonEnv(env_specification) => NativeRunningKernel::new(
                 env_specification.as_local_spec(),
-                entity_id,
-                working_directory,
-                self.fs.clone(),
-                session_view,
-                window,
-                cx,
-            ),
-            KernelSpecification::JupyterServer(remote_kernel_specification) => {
-                RemoteRunningKernel::new(
-                    remote_kernel_specification,
-                    working_directory,
-                    session_view,
-                    window,
-                    cx,
-                )
-            }
-            KernelSpecification::SshRemote(spec) => {
-                let project = self
-                    .editor
-                    .upgrade()
-                    .and_then(|editor| editor.read(cx).project().cloned());
-                if let Some(project) = project {
-                    SshRunningKernel::new(
-                        spec,
-                        working_directory,
-                        project,
-                        session_view,
-                        window,
-                        cx,
-                    )
-                } else {
-                    Task::ready(Err(anyhow::anyhow!("No project associated with editor")))
-                }
-            }
-            KernelSpecification::WslRemote(spec) => WslRunningKernel::new(
-                spec,
                 entity_id,
                 working_directory,
                 self.fs.clone(),
@@ -822,17 +732,6 @@ impl Session {
         if let Kernel::Shutdown = kernel {
             cx.emit(SessionEvent::Shutdown(self.editor.clone()));
         }
-
-        let kernel_status = KernelStatus::from(&kernel).to_string();
-        let kernel_language = self.kernel_specification.language();
-
-        telemetry::event!(
-            "Kernel Status Changed",
-            kernel_language,
-            kernel_status,
-            repl_session_id = cx.entity_id().to_string(),
-        );
-
         self.kernel = kernel;
     }
 
@@ -919,109 +818,6 @@ pub enum SessionEvent {
 
 impl EventEmitter<SessionEvent> for Session {}
 
-impl Render for Session {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let (status_text, interrupt_button) = match &self.kernel {
-            Kernel::RunningKernel(kernel) => (
-                kernel
-                    .kernel_info()
-                    .as_ref()
-                    .map(|info| info.language_info.name.clone()),
-                Some(
-                    Button::new("interrupt", "Interrupt")
-                        .style(ButtonStyle::Subtle)
-                        .on_click(cx.listener(move |session, _, _, cx| {
-                            session.interrupt(cx);
-                        })),
-                ),
-            ),
-            Kernel::StartingKernel(_) => (Some("Starting".into()), None),
-            Kernel::ErroredLaunch(err) => (Some(format!("Error: {err}")), None),
-            Kernel::ShuttingDown => (Some("Shutting Down".into()), None),
-            Kernel::Shutdown => (Some("Shutdown".into()), None),
-            Kernel::Restarting => (Some("Restarting".into()), None),
-        };
 
-        KernelListItem::new(self.kernel_specification.clone())
-            .status_color(match &self.kernel {
-                Kernel::RunningKernel(kernel) => match kernel.execution_state() {
-                    ExecutionState::Idle => Color::Success,
-                    ExecutionState::Busy => Color::Modified,
-                    ExecutionState::Unknown => Color::Modified,
-                    ExecutionState::Starting => Color::Modified,
-                    ExecutionState::Restarting => Color::Modified,
-                    ExecutionState::Terminating => Color::Disabled,
-                    ExecutionState::AutoRestarting => Color::Modified,
-                    ExecutionState::Dead => Color::Disabled,
-                    ExecutionState::Other(_) => Color::Modified,
-                },
-                Kernel::StartingKernel(_) => Color::Modified,
-                Kernel::ErroredLaunch(_) => Color::Error,
-                Kernel::ShuttingDown => Color::Modified,
-                Kernel::Shutdown => Color::Disabled,
-                Kernel::Restarting => Color::Modified,
-            })
-            .child(Label::new(self.kernel_specification.name()))
-            .children(status_text.map(|status_text| Label::new(format!("({status_text})"))))
-            .button(
-                Button::new("shutdown", "Shutdown")
-                    .style(ButtonStyle::Subtle)
-                    .disabled(self.kernel.is_shutting_down())
-                    .on_click(cx.listener(move |session, _, window, cx| {
-                        session.shutdown(window, cx);
-                    })),
-            )
-            .buttons(interrupt_button)
-    }
-}
 
-impl KernelSession for Session {
-    fn route(&mut self, message: &JupyterMessage, window: &mut Window, cx: &mut Context<Self>) {
-        let parent_message_id = match message.parent_header.as_ref() {
-            Some(header) => &header.msg_id,
-            None => return,
-        };
 
-        match &message.content {
-            JupyterMessageContent::Status(status) => {
-                self.kernel.set_execution_state(&status.execution_state);
-
-                telemetry::event!(
-                    "Kernel Status Changed",
-                    kernel_language = self.kernel_specification.language(),
-                    kernel_status = KernelStatus::from(&self.kernel).to_string(),
-                    repl_session_id = cx.entity_id().to_string(),
-                );
-
-                cx.notify();
-            }
-            JupyterMessageContent::KernelInfoReply(reply) => {
-                self.kernel.set_kernel_info(reply);
-                cx.notify();
-            }
-            JupyterMessageContent::UpdateDisplayData(update) => {
-                let display_id = if let Some(display_id) = update.transient.display_id.clone() {
-                    display_id
-                } else {
-                    return;
-                };
-
-                self.blocks.iter_mut().for_each(|(_, block)| {
-                    block.execution_view.update(cx, |execution_view, cx| {
-                        execution_view.update_display_data(&update.data, &display_id, window, cx);
-                    });
-                });
-                return;
-            }
-            _ => {}
-        }
-
-        if let Some(block) = self.blocks.get_mut(parent_message_id) {
-            block.handle_message(message, window, cx);
-        }
-    }
-
-    fn kernel_errored(&mut self, error_message: String, cx: &mut Context<Self>) {
-        self.kernel_errored(error_message, cx);
-    }
-}

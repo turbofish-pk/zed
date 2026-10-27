@@ -37,8 +37,5 @@ features = ["derive"]
 [dependencies.theme]
 path = "../theme"
 
-[dev-dependencies.documented]
-version = "0.10"
-
 [features]
 default = []

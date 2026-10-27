@@ -18,7 +18,7 @@ doctest = false
 
 [features]
 default = []
-test-support = ["remote/test-support", "remote_connection/test-support", "project/test-support", "workspace/test-support"]
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -33,9 +33,6 @@ path = "../askpass"
 
 [dependencies.db]
 path = "../db"
-
-[dependencies.dev_container]
-path = "../dev_container"
 
 [dependencies.editor]
 path = "../editor"
@@ -70,9 +67,6 @@ path = "../menu"
 [dependencies.node_runtime]
 path = "../node_runtime"
 
-[dependencies.open_path_prompt]
-path = "../open_path_prompt"
-
 [dependencies.ordered-float]
 version = "5"
 
@@ -88,12 +82,6 @@ path = "../project"
 [dependencies.release_channel]
 path = "../release_channel"
 
-[dependencies.remote]
-path = "../remote"
-
-[dependencies.remote_connection]
-path = "../remote_connection"
-
 [dependencies.semver]
 version = "1.0"
 features = ["serde"]
@@ -104,9 +92,6 @@ features = ["preserve_order", "raw_value"]
 
 [dependencies.settings]
 path = "../settings"
-
-[dependencies.telemetry]
-path = "../telemetry"
 
 [dependencies.ui]
 path = "../ui"
@@ -126,12 +111,9 @@ path = "../zed_actions"
 [dependencies.indoc]
 version = "2"
 
-[target.'cfg(target_os = "windows")'.dependencies.windows-registry]
-version = "0.6.0"
-
 [dev-dependencies.editor]
 path = "../editor"
-features = ["test-support"]
+
 
 [dev-dependencies.extension]
 path = "../extension"
@@ -142,36 +124,22 @@ path = "../fs"
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.http_client]
 path = "../http_client"
 
 [dev-dependencies.language]
 path = "../language"
-features = ["test-support"]
 
 [dev-dependencies.picker]
 path = "../picker"
-features = ["test-support"]
 
 [dev-dependencies.project]
 path = "../project"
-features = ["test-support"]
 
 [dev-dependencies.release_channel]
 path = "../release_channel"
-
-[dev-dependencies.remote]
-path = "../remote"
-features = ["test-support"]
-
-[dev-dependencies.remote_connection]
-path = "../remote_connection"
-features = ["test-support"]
-
-[dev-dependencies.remote_server]
-path = "../remote_server"
 
 [dev-dependencies.rpc]
 path = "../rpc"
@@ -182,8 +150,6 @@ features = ["preserve_order", "raw_value"]
 
 [dev-dependencies.settings]
 path = "../settings"
-features = ["test-support"]
 
 [dev-dependencies.workspace]
 path = "../workspace"
-features = ["test-support"]

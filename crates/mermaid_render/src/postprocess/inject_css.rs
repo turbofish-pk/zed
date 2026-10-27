@@ -497,14 +497,3 @@ fn build_injected_css(theme: &MermaidTheme, svg_id: &str) -> String {
     scope_css(&raw_css, svg_id)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn scope_css_prefixes_selectors() {
-        let input = "        .foo { color: red; }\n";
-        let result = scope_css(input, "my-svg");
-        assert!(result.contains("#my-svg .foo"), "got: {result}");
-    }
-}

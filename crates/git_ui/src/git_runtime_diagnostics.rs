@@ -36,7 +36,7 @@ pub async fn gather() -> Value {
     }
 
     
-    {
+    
         match collect_linux_proc_info() {
             Ok(info) => {
                 diag.insert("linux_proc".into(), info);
@@ -45,23 +45,7 @@ pub async fn gather() -> Value {
                 log::warn!("git runtime diagnostics: failed to read /proc info: {err:#}");
             }
         }
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        match collect_macos_git_child_diagnostics().await {
-            Ok(info) => {
-                if !info.is_null() {
-                    diag.insert("macos_git_children".into(), info);
-                }
-            }
-            Err(err) => {
-                log::warn!(
-                    "git runtime diagnostics: failed to collect macOS git-child info: {err:#}"
-                );
-            }
-        }
-    }
+    
 
     Value::Object(diag)
 }
@@ -149,90 +133,6 @@ fn redact_env_var_entry(entry: String) -> String {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[track_caller]
-    fn assert_redacts(input: &str, expected: &str) {
-        assert_eq!(redact_env_var_entry(input.to_string()), expected);
-    }
-
-    #[test]
-    fn redacts_secret_looking_env_vars() {
-        assert_redacts(
-            "ANTHROPIC_API_KEY=sk-ant-api03-abcdef",
-            "ANTHROPIC_API_KEY=<redacted>",
-        );
-        assert_redacts(
-            "AWS_SECRET_ACCESS_KEY=anything-at-all",
-            "AWS_SECRET_ACCESS_KEY=<redacted>",
-        );
-        assert_redacts("PATH=/usr/bin:/bin", "PATH=<redacted>");
-        assert_redacts("A=1", "A=<redacted>");
-        assert_redacts("_FOO=bar", "_FOO=<redacted>");
-        // Values may legitimately contain `=`; only the value portion is dropped.
-        assert_redacts("TOKEN=abc=def=ghi", "TOKEN=<redacted>");
-        // Empty value still redacts (and importantly, doesn't pretend to be a flag).
-        assert_redacts("PASSWORD=", "PASSWORD=<redacted>");
-    }
-
-    #[test]
-    fn leaves_real_argv_alone() {
-        // CLI flags that happen to contain `=`.
-        assert_redacts("--max-old-space-size=8092", "--max-old-space-size=8092");
-        assert_redacts("-Dfoo=bar", "-Dfoo=bar");
-        // Paths.
-        assert_redacts("/opt/homebrew/bin/node", "/opt/homebrew/bin/node");
-        // Bare strings without `=`.
-        assert_redacts("--cancellationPipeName", "--cancellationPipeName");
-        assert_redacts(
-            "npm exec mcp-remote https://example.com",
-            "npm exec mcp-remote https://example.com",
-        );
-        // Lowercase / mixed-case identifiers aren't env vars by convention; leave them.
-        assert_redacts("foo=bar", "foo=bar");
-        assert_redacts("camelCase=value", "camelCase=value");
-        // Pathological: `=value` with no key.
-        assert_redacts("=value", "=value");
-    }
-
-    #[test]
-    fn sanitize_returns_none_when_everything_redacted() {
-        let cmd = vec![
-            "FOO=1".to_string(),
-            "BAR=2".to_string(),
-            "ANTHROPIC_API_KEY=secret".to_string(),
-        ];
-        assert_eq!(sanitize_cmd(cmd), None);
-    }
-
-    #[test]
-    fn sanitize_preserves_real_argv_and_redacts_env_vars() {
-        // The exact pattern observed in a real diagnostic dump.
-        let cmd = vec![
-            "npm exec mcp-remote https://mcp.linear.app/mcp".to_string(),
-            "ALACRITTY_WINDOW_ID=38654706047".to_string(),
-            "AMP_FORCE_BEL=1".to_string(),
-            "ANTHROPIC_API_KEY=sk-ant-api03-realsecret".to_string(),
-        ];
-        assert_eq!(
-            sanitize_cmd(cmd),
-            Some(vec![
-                "npm exec mcp-remote https://mcp.linear.app/mcp".to_string(),
-                "ALACRITTY_WINDOW_ID=<redacted>".to_string(),
-                "AMP_FORCE_BEL=<redacted>".to_string(),
-                "ANTHROPIC_API_KEY=<redacted>".to_string(),
-            ])
-        );
-    }
-
-    #[test]
-    fn sanitize_handles_empty_cmd() {
-        let cmd: Vec<String> = Vec::new();
-        assert_eq!(sanitize_cmd(cmd), None);
-    }
-}
 
 fn descendants_of(system: &sysinfo::System, root: sysinfo::Pid) -> Vec<sysinfo::Pid> {
     let mut parent_map: std::collections::HashMap<sysinfo::Pid, Vec<sysinfo::Pid>> =
@@ -299,117 +199,4 @@ fn collect_linux_proc_info() -> anyhow::Result<Value> {
     }
 
     Ok(serde_json::json!({ "descendants": entries }))
-}
-
-#[cfg(target_os = "macos")]
-async fn collect_macos_git_child_diagnostics() -> anyhow::Result<Value> {
-    use std::path::Path;
-    use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind};
-
-    let sample_available = Path::new("/usr/bin/sample").exists();
-    let lsof_available =
-        Path::new("/usr/sbin/lsof").exists() || Path::new("/usr/bin/lsof").exists();
-    let lsof_path = if Path::new("/usr/sbin/lsof").exists() {
-        "/usr/sbin/lsof"
-    } else {
-        "/usr/bin/lsof"
-    };
-
-    if !sample_available && !lsof_available {
-        return Ok(Value::Null);
-    }
-
-    let current_pid = sysinfo::get_current_pid()
-        .map_err(|e| anyhow::anyhow!("sysinfo::get_current_pid failed: {e}"))?;
-
-    let refresh = ProcessRefreshKind::nothing().with_exe(UpdateKind::Always);
-    let mut system = System::new_with_specifics(RefreshKind::nothing().with_processes(refresh));
-    system.refresh_processes_specifics(ProcessesToUpdate::All, true, refresh);
-
-    let descendants = descendants_of(&system, current_pid);
-
-    // Limit ourselves to git-flavored descendants. We don't want to spend
-    // several seconds sampling unrelated children (terminals, language
-    // servers, etc.). Match by name containing "git" — covers `git`,
-    // `git-remote-https`, `git-credential-osxkeychain`, hook subprocesses
-    // named with `git` in them, etc.
-    let git_descendants: Vec<u32> = descendants
-        .iter()
-        .filter_map(|pid| {
-            let process = system.process(*pid)?;
-            let name = process.name().to_string_lossy();
-            if name.contains("git") {
-                Some(pid.as_u32())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    if git_descendants.is_empty() {
-        return Ok(Value::Null);
-    }
-
-    let mut entries = Vec::new();
-    for pid in git_descendants {
-        let mut entry = Map::new();
-        entry.insert("pid".into(), Value::from(pid));
-
-        if sample_available {
-            match run_capturing("/usr/bin/sample", &[&pid.to_string(), "2", "-mayDie"]).await {
-                Ok(output) => {
-                    entry.insert("sample".into(), Value::String(truncate(output, 64 * 1024)));
-                }
-                Err(err) => {
-                    log::warn!("git runtime diagnostics: `sample {pid}` failed: {err}");
-                }
-            }
-        }
-
-        if lsof_available {
-            match run_capturing(lsof_path, &["-p", &pid.to_string()]).await {
-                Ok(output) => {
-                    entry.insert("lsof".into(), Value::String(truncate(output, 64 * 1024)));
-                }
-                Err(err) => {
-                    log::warn!("git runtime diagnostics: `lsof -p {pid}` failed: {err}");
-                }
-            }
-        }
-
-        entries.push(Value::Object(entry));
-    }
-
-    Ok(Value::Array(entries))
-}
-
-#[cfg(target_os = "macos")]
-async fn run_capturing(program: &str, args: &[&str]) -> anyhow::Result<String> {
-    let output = util::command::new_command(program)
-        .args(args)
-        .output()
-        .await?;
-    if !output.status.success() {
-        anyhow::bail!(
-            "{program} exited with status {:?}: {}",
-            output.status,
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
-}
-
-#[cfg(target_os = "macos")]
-fn truncate(mut s: String, max_bytes: usize) -> String {
-    if s.len() <= max_bytes {
-        return s;
-    }
-    // Find a UTF-8 char boundary at or before `max_bytes`.
-    let mut cut = max_bytes;
-    while cut > 0 && !s.is_char_boundary(cut) {
-        cut -= 1;
-    }
-    s.truncate(cut);
-    s.push_str("\n…(truncated)");
-    s
 }

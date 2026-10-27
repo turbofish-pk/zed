@@ -1,5 +1,4 @@
 use collections::{HashMap, HashSet, VecDeque};
-use edit_prediction::EditPredictionStore;
 use editor::{Editor, EditorEvent, MultiBufferOffset, actions::MoveToEnd, scroll::Autoscroll};
 use gpui::{
     Anchor, App, Context, Entity, EventEmitter, FocusHandle, Focusable, IntoElement, ParentElement,
@@ -390,17 +389,10 @@ impl LspLogView {
         );
         (editor, vec![editor_subscription, search_subscription])
     }
-    pub(crate) fn sync_copilot_for_project(&self, cx: &mut App) {
-        let server = EditPredictionStore::try_global(cx)
-            .and_then(|store| store.read(cx).copilot_for_project(&self.project))
-            .and_then(|copilot| copilot.read(cx).language_server().cloned());
-        self.log_store.update(cx, |log_store, cx| {
-            log_store.sync_copilot_for_project(&self.project.downgrade(), server, cx);
-        });
-    }
+
 
     pub(crate) fn menu_items(&self, cx: &mut App) -> Option<Vec<LogMenuItem>> {
-        self.sync_copilot_for_project(cx);
+       
         let log_store = self.log_store.read(cx);
 
         let unknown_server = LanguageServerName::new_static("unknown server");
@@ -551,33 +543,6 @@ impl LspLogView {
                 self.set_stream_enabled(&key, log_kind, false, cx);
             }
         }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn show_entry_for_test(
-        &mut self,
-        key: LanguageServerLogKey,
-        log_kind: LogKind,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        match log_kind {
-            LogKind::Rpc => self.show_rpc_trace_for_server(key, window, cx),
-            LogKind::Trace => self.show_trace_for_server(key, window, cx),
-            LogKind::Logs => self.show_logs_for_server(key, window, cx),
-            LogKind::ServerInfo => self.show_server_info(key, window, cx),
-        }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn stream_enabled_for_test(
-        &self,
-        key: &LanguageServerLogKey,
-        log_kind: LogKind,
-    ) -> bool {
-        self.enabled_streams
-            .get(key)
-            .is_some_and(|streams| streams.log_kinds.contains(&log_kind))
     }
 
     fn show_logs_for_server(
@@ -841,10 +806,6 @@ impl Item for LspLogView {
 
     fn tab_content_text(&self, _detail: usize, _cx: &App) -> SharedString {
         "LSP Logs".into()
-    }
-
-    fn telemetry_event_text(&self) -> Option<&'static str> {
-        None
     }
 
     fn as_searchable(
@@ -1435,7 +1396,6 @@ fn initialize_new_editor(
         editor.set_show_bookmarks(false, cx);
         editor.set_show_breakpoints(false, cx);
         editor.set_read_only(true);
-        editor.set_show_edit_predictions(Some(false), window, cx);
         editor.set_soft_wrap_mode(SoftWrap::EditorWidth, cx);
         if move_to_end {
             editor.move_to_end(&MoveToEnd, window, cx);

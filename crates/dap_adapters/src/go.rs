@@ -44,18 +44,7 @@ impl GoDebugAdapter {
         )
         .await?;
 
-        let os = match consts::OS {
-            "macos" => "apple-darwin",
-            "linux" => "unknown-linux-gnu",
-            "windows" => "pc-windows-msvc",
-            other => bail!("Running on unsupported os: {other}"),
-        };
-        let suffix = if consts::OS == "windows" {
-            ".zip"
-        } else {
-            ".tar.gz"
-        };
-        let asset_name = format!("delve-shim-dap-{}-{os}{suffix}", consts::ARCH);
+        let asset_name = format!("delve-shim-dap-{}-unknown-linux-gnu.tar.gz", consts::ARCH);
         let asset = release
             .assets
             .iter()
@@ -76,15 +65,10 @@ impl GoDebugAdapter {
 
         match Self::fetch_latest_adapter_version(delegate).await {
             Ok(asset) => {
-                let ty = if consts::OS == "windows" {
-                    DownloadedFileType::Zip
-                } else {
-                    DownloadedFileType::GzipTar
-                };
                 download_adapter_from_github(
                     "delve-shim-dap".into(),
                     asset.clone(),
-                    ty,
+                    DownloadedFileType::GzipTar,
                     delegate.as_ref(),
                 )
                 .await?;

@@ -16,7 +16,7 @@ workspace = true
 doctest = false
 
 [features]
-test-support = ["load-grammars"]
+
 load-grammars = ["grammars/load-grammars", "tree-sitter", "tree-sitter-gitcommit"]
 
 [dependencies.anyhow]
@@ -178,61 +178,3 @@ version = "2.2"
 
 [dependencies.util]
 path = "../util"
-
-[dev-dependencies.fs]
-path = "../fs"
-features = ["test-support"]
-
-[dev-dependencies.language]
-path = "../language"
-features = ["test-support"]
-
-[dev-dependencies.pretty_assertions]
-version = "1.3.0"
-features = ["unstable"]
-
-[dev-dependencies.tempfile]
-version = "3.20.0"
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]
-
-[dev-dependencies.theme]
-path = "../theme"
-features = ["test-support"]
-
-[dev-dependencies.tree-sitter-bash]
-version = "0.25.1"
-
-[dev-dependencies.tree-sitter-c]
-version = "0.24.1"
-
-[dev-dependencies.tree-sitter-cpp]
-git = "https://github.com/tree-sitter/tree-sitter-cpp"
-rev = "5cb9b693cfd7bfacab1d9ff4acac1a4150700609"
-
-[dev-dependencies.tree-sitter-css]
-version = "0.23"
-
-[dev-dependencies.tree-sitter-go]
-git = "https://github.com/zed-industries/tree-sitter-go"
-rev = "6862a49e3c5a7567a6c576420e9a8f944e198a85"
-
-[dev-dependencies.tree-sitter-python]
-version = "0.25"
-
-[dev-dependencies.tree-sitter-rust]
-version = "0.24.2"
-
-[dev-dependencies.tree-sitter-typescript]
-git = "https://github.com/zed-industries/tree-sitter-typescript"
-rev = "e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899"
-
-[dev-dependencies.tree-sitter]
-git = "https://github.com/tree-sitter/tree-sitter"
-rev = "803c6ebaac27d69e1808b45058482e868d073ceb"
-features = ["wasm"]
-
-[dev-dependencies.unindent]
-version = "0.2.0"

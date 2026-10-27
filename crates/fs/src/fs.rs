@@ -166,8 +166,7 @@ pub trait Fs: Send + Sync {
     /// Whether `path` exists, without following a final symlink. Synchronous
     /// because watches are registered synchronously by the worktree scanner.
     fn path_exists(&self, path: &Path) -> bool;
-    /// Whether the volume holding `path` compares file names case-sensitively.
-    fn is_path_case_sensitive(&self, path: &Path) -> bool;
+
     /// Whether `path` sits on a filesystem where native file watching does not
     /// deliver events (network mounts, some FUSE and WSL mounts), so it must be polled.
     fn requires_poll_watcher(&self, path: &Path) -> bool;
@@ -725,17 +724,6 @@ fn read_dir_entries(path: PathBuf) -> Result<impl Send + Iterator<Item = Result<
     }))
 }
 
-#[cfg(not(unix))]
-fn read_dir_entries(path: PathBuf) -> Result<impl Send + Iterator<Item = Result<PathBuf>>> {
-    let entries =
-        std::fs::read_dir(&path).with_context(|| format!("failed to open directory {path:?}"))?;
-    Ok(entries.map(move |entry| {
-        entry
-            .map(|entry| entry.path())
-            .with_context(|| format!("failed to read directory entry in {path:?}"))
-    }))
-}
-
 #[async_trait::async_trait]
 impl Fs for RealFs {
     async fn create_dir(&self, path: &Path) -> Result<()> {
@@ -1200,11 +1188,7 @@ impl Fs for RealFs {
     fn path_exists(&self, path: &Path) -> bool {
         std::fs::symlink_metadata(path).is_ok()
     }
-
-    fn is_path_case_sensitive(&self, path: &Path) -> bool {
-        !fs_watcher::case_insensitive_path(path)
-    }
-
+  
     fn requires_poll_watcher(&self, path: &Path) -> bool {
         fs_watcher::requires_poll_watcher(path)
     }
@@ -3518,10 +3502,6 @@ impl Fs for FakeFs {
             .lock()
             .try_entry(&normalize_path(path), false)
             .is_some()
-    }
-
-    fn is_path_case_sensitive(&self, _path: &Path) -> bool {
-        self.state.lock().case_sensitive
     }
 
     fn requires_poll_watcher(&self, _path: &Path) -> bool {

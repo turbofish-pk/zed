@@ -17,7 +17,7 @@ path = "src/text.rs"
 doctest = false
 
 [features]
-test-support = ["rand", "dep:util", "util/test-support"]
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -72,7 +72,7 @@ optional = true
 [dev-dependencies.collections]
 path = "../collections"
 version = "0.1.0"
-features = ["test-support"]
+
 
 [dev-dependencies.ctor]
 version = "1.0.12"
@@ -80,7 +80,7 @@ version = "1.0.12"
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.rand]
 version = "0.9"
@@ -89,7 +89,7 @@ features = ["std", "std_rng", "os_rng"]
 
 [dev-dependencies.util]
 path = "../util"
-features = ["test-support"]
+
 
 [dev-dependencies.zlog]
 path = "../zlog"

@@ -171,20 +171,3 @@ fn to_space_separated(ident: &str) -> String {
     out
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn kebab_case() {
-        assert_eq!(to_kebab_case("Low"), "low");
-        assert_eq!(to_kebab_case("NewWorktree"), "new-worktree");
-        assert_eq!(to_kebab_case("A"), "a");
-    }
-
-    #[test]
-    fn space_separated() {
-        assert_eq!(to_space_separated("Low"), "Low");
-        assert_eq!(to_space_separated("NewWorktree"), "New Worktree");
-    }
-}

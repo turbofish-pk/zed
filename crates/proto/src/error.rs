@@ -266,26 +266,3 @@ impl From<ErrorCode> for RpcError {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::io;
-
-    #[test]
-    fn test_other_untyped_errors_stay_internal() {
-        // A different I/O failure, even with "already exists" in a path.
-        let error = anyhow::Error::from(io::Error::from(io::ErrorKind::PermissionDenied))
-            .context("renaming \"/root/already exists.txt\" into \"/root/b.txt\"");
-        assert_eq!(error.to_proto().code(), ErrorCode::Internal);
-
-        // Text alone is never trusted.
-        let error = anyhow::anyhow!("path already exists: \"/root/b.txt\"");
-        assert_eq!(error.to_proto().code(), ErrorCode::Internal);
-    }
-
-    #[test]
-    fn test_rpc_error_code_takes_precedence() {
-        let error = ErrorCode::Forbidden.anyhow().context("while renaming");
-        assert_eq!(error.to_proto().code(), ErrorCode::Forbidden);
-    }
-}

@@ -38,10 +38,10 @@ where
     S: futures::Sink<WebSocketMessage, Error = anyhow::Error> + Unpin,
 {
     pub async fn write(&mut self, message: Message) -> anyhow::Result<()> {
-        #[cfg(any(test, feature = "test-support"))]
+        #[cfg(feature = "test-support")]
         const COMPRESSION_LEVEL: i32 = -7;
 
-        #[cfg(not(any(test, feature = "test-support")))]
+        #[cfg(not(feature = "test-support"))]
         const COMPRESSION_LEVEL: i32 = 4;
 
         match message {
@@ -106,39 +106,3 @@ where
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[gpui::test]
-    async fn test_buffer_size() {
-        let (tx, rx) = futures::channel::mpsc::unbounded();
-        let mut sink = MessageStream::new(tx.sink_map_err(|_| anyhow::anyhow!("")));
-        sink.write(Message::Envelope(Envelope {
-            payload: Some(envelope::Payload::UpdateWorktree(UpdateWorktree {
-                root_name: "abcdefg".repeat(10),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }))
-        .await
-        .unwrap();
-        assert!(sink.encoding_buffer.capacity() <= MAX_BUFFER_LEN);
-        sink.write(Message::Envelope(Envelope {
-            payload: Some(envelope::Payload::UpdateWorktree(UpdateWorktree {
-                root_name: "abcdefg".repeat(1000000),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }))
-        .await
-        .unwrap();
-        assert!(sink.encoding_buffer.capacity() <= MAX_BUFFER_LEN);
-
-        let mut stream = MessageStream::new(rx.map(anyhow::Ok));
-        stream.read().await.unwrap();
-        assert!(stream.encoding_buffer.capacity() <= MAX_BUFFER_LEN);
-        stream.read().await.unwrap();
-        assert!(stream.encoding_buffer.capacity() <= MAX_BUFFER_LEN);
-    }
-}

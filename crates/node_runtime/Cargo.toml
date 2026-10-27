@@ -20,7 +20,7 @@ path = "src/node_runtime.rs"
 doctest = false
 
 [features]
-test-support = []
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -84,7 +84,3 @@ version = "8"
 
 [dev-dependencies.tempfile]
 version = "3.20.0"
-
-[target."cfg(windows)".dependencies.async-std]
-version = "1.12"
-features = ["unstable"]

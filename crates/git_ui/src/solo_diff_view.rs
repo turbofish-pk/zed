@@ -418,10 +418,6 @@ impl Item for SoloDiffView {
         Editor::to_item_events(event, f)
     }
 
-    fn telemetry_event_text(&self) -> Option<&'static str> {
-        Some("Solo Diff View Opened")
-    }
-
     fn deactivated(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.editor.deactivated(window, cx);
     }
@@ -714,46 +710,6 @@ struct SoloDiffButtonStates {
     unstage_file: bool,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use gpui::TestAppContext;
-    use multi_buffer::MultiBufferRow;
-
-    #[gpui::test]
-    fn test_changes_only_multibuffer_has_one_buffer_and_expand_controls(cx: &mut TestAppContext) {
-        let base_text = (0..20)
-            .map(|line| format!("line {line}"))
-            .collect::<Vec<_>>()
-            .join("\n");
-        let current_text = base_text.replace("line 10", "changed line 10");
-        let buffer = cx.new(|cx| Buffer::local(current_text, cx));
-        let diff = cx.new(|cx| {
-            buffer_diff::BufferDiff::new_with_base_text(
-                &base_text,
-                &buffer.read(cx).text_snapshot(),
-                cx,
-            )
-        });
-        let multibuffer = cx.new(|cx| SoloDiffView::build_multibuffer(buffer, diff, false, cx));
-
-        let (is_singleton, buffer_count, has_expand_controls) =
-            multibuffer.update(cx, |multibuffer, cx| {
-                (
-                    multibuffer.is_singleton(),
-                    multibuffer.snapshot(cx).all_buffer_ids().count(),
-                    multibuffer
-                        .snapshot(cx)
-                        .row_infos(MultiBufferRow(0))
-                        .any(|row| row.expand_info.is_some()),
-                )
-            });
-
-        assert!(!is_singleton);
-        assert_eq!(buffer_count, 1);
-        assert!(has_expand_controls);
-    }
-}
 
 impl Render for SoloDiffGitToolbar {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {

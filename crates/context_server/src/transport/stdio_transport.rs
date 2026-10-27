@@ -30,7 +30,7 @@ impl StdioTransport {
         working_directory: &Option<PathBuf>,
         cx: &AsyncApp,
     ) -> Result<Self> {
-        let builder = ShellBuilder::new(&Shell::System, cfg!(windows))
+        let builder = ShellBuilder::new(&Shell::System)
             .non_interactive()
             .literal_args();
         let mut command =

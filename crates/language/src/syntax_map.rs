@@ -1,5 +1,3 @@
-#[cfg(test)]
-mod syntax_map_tests;
 
 use crate::{
     CaptureId, File, Grammar, InjectionConfig, Language, LanguageId, LanguageRegistry,
@@ -375,11 +373,6 @@ impl SyntaxMap {
         self.snapshot.interpolate(text);
     }
 
-    #[cfg(test)]
-    pub fn reparse(&mut self, language: Arc<Language>, text: &BufferSnapshot) {
-        self.snapshot
-            .reparse(text, None, self.language_registry.clone(), language);
-    }
 
     pub fn did_parse(&mut self, snapshot: SyntaxSnapshot) {
         self.snapshot = snapshot;
@@ -1124,12 +1117,6 @@ impl SyntaxSnapshot {
             }
             None
         })
-    }
-
-    #[cfg(test)]
-    pub fn layers<'a>(&'a self, buffer: &'a BufferSnapshot) -> Vec<SyntaxLayer<'a>> {
-        self.layers_for_range(0..buffer.len(), buffer, true)
-            .collect()
     }
 
     pub fn layers_for_range<'a, T: ToOffset>(

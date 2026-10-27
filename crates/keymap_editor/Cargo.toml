@@ -78,8 +78,7 @@ features = ["preserve_order", "raw_value"]
 [dependencies.settings]
 path = "../settings"
 
-[dependencies.telemetry]
-path = "../telemetry"
+
 
 [dependencies.tempfile]
 version = "3.20.0"
@@ -110,24 +109,3 @@ path = "../workspace"
 
 [dependencies.zed_actions]
 path = "../zed_actions"
-
-[dev-dependencies.db]
-path = "../db"
-features = ["test-support"]
-
-[dev-dependencies.fs]
-path = "../fs"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.project]
-path = "../project"
-features = ["test-support"]
-
-[dev-dependencies.workspace]
-path = "../workspace"
-features = ["test-support"]

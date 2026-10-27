@@ -13,18 +13,18 @@ impl SystemClock for RealSystemClock {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub struct FakeSystemClockState {
     now: Instant,
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub struct FakeSystemClock {
     // Use an unfair lock to ensure tests are deterministic.
     state: parking_lot::Mutex<FakeSystemClockState>,
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl FakeSystemClock {
     pub fn new() -> Self {
         let state = FakeSystemClockState {
@@ -45,7 +45,7 @@ impl FakeSystemClock {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl SystemClock for FakeSystemClock {
     fn utc_now(&self) -> Instant {
         self.state.lock().now

@@ -66,7 +66,7 @@ version = "1.0.12"
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.serde_json]
 version = "1.0.144"
@@ -74,14 +74,14 @@ features = ["preserve_order", "raw_value"]
 
 [dev-dependencies.theme]
 path = "../theme"
-features = ["test-support"]
+
 
 [dev-dependencies.theme_settings]
 path = "../theme_settings"
 
 [dev-dependencies.workspace]
 path = "../workspace"
-features = ["test-support"]
+
 
 [dev-dependencies.zlog]
 path = "../zlog"

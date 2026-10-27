@@ -9,9 +9,6 @@ workspace = true
 [package.publish]
 workspace = true
 
-[package.metadata.cargo-shear]
-ignored = ["component", "documented"]
-
 [lints]
 workspace = true
 
@@ -29,21 +26,12 @@ version = "1.0.86"
 [dependencies.client]
 path = "../client"
 
-[dependencies.cloud_api_types]
-path = "../cloud_api_types"
-
 [dependencies.collections]
 path = "../collections"
 version = "0.1.0"
 
-[dependencies.component]
-path = "../component"
-
 [dependencies.db]
 path = "../db"
-
-[dependencies.documented]
-version = "0.10"
 
 [dependencies.fs]
 path = "../fs"
@@ -79,9 +67,6 @@ features = ["rc"]
 [dependencies.settings]
 path = "../settings"
 
-[dependencies.telemetry]
-path = "../telemetry"
-
 [dependencies.theme]
 path = "../theme"
 
@@ -108,4 +93,3 @@ path = "../zlog"
 
 [dev-dependencies.db]
 path = "../db"
-features = ["test-support"]

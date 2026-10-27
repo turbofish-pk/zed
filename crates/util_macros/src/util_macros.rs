@@ -168,18 +168,6 @@ impl PerfArgs {
 ///     // Test goes here.
 /// }
 /// ```
-///
-/// This also works with `#[gpui::test]`s, though in most cases it shouldn't
-/// be used with automatic iterations.
-/// ```rust,ignore
-/// use util_macros::perf;
-///
-/// #[perf(iterations = 1, critical)]
-/// #[gpui::test]
-/// fn oneshot_test(_cx: &mut gpui::TestAppContext) {
-///     // Test goes here.
-/// }
-/// ```
 #[proc_macro_attribute]
 #[warn(clippy::all, clippy::pedantic)]
 pub fn perf(our_attr: TokenStream, input: TokenStream) -> TokenStream {

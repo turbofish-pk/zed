@@ -13,13 +13,13 @@ use super::dap_store::DapStore;
 use crate::debugger::breakpoint_store::BreakpointSessionState;
 use crate::debugger::dap_command::{DataBreakpointContext, ReadMemory};
 use crate::debugger::memory::{self, Memory, MemoryIterator, MemoryPageBuilder, PageAddress};
-use anyhow::{Context as _, Result, anyhow, bail};
+use anyhow::{Context as _, Result, anyhow};
 use base64::Engine;
 use collections::{HashMap, HashSet, IndexMap, TypeIdHashMap};
 use dap::adapters::{DebugAdapterBinary, DebugAdapterName};
 use dap::messages::Response;
 use dap::requests::{Request, RunInTerminal, StartDebugging};
-use dap::transport::TcpTransport;
+
 use dap::{
     Capabilities, ContinueArguments, EvaluateArgumentsContext, Module, Source, StackFrameId,
     SteppingGranularity, StoppedEvent, VariableReference,
@@ -27,31 +27,31 @@ use dap::{
     messages::{Events, Message},
 };
 use dap::{
-    ExceptionBreakpointsFilter, ExceptionFilterOptions, OutputEvent, OutputEventCategory,
+    ExceptionBreakpointsFilter, ExceptionFilterOptions, OutputEvent,
     RunInTerminalRequestArguments, StackFramePresentationHint, StartDebuggingRequestArguments,
     StartDebuggingRequestArgumentsRequest, VariablePresentationHint, WriteMemoryArguments,
 };
 use futures::channel::mpsc::UnboundedSender;
 use futures::channel::{mpsc, oneshot};
-use futures::io::BufReader;
-use futures::{AsyncBufReadExt as _, SinkExt, StreamExt, TryStreamExt};
+
 use futures::{FutureExt, future::Shared};
+use futures::{SinkExt, StreamExt, TryStreamExt};
 use gpui::{
     App, AppContext, AsyncApp, BackgroundExecutor, Context, Entity, EventEmitter, SharedString,
     Task, TaskExt, WeakEntity,
 };
 use http_client::HttpClient;
 use node_runtime::NodeRuntime;
-use remote::RemoteClient;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use smol::net::{TcpListener, TcpStream};
+use smol::net::TcpListener;
 use std::any::TypeId;
 use std::collections::{BTreeMap, VecDeque};
-use std::net::{IpAddr, Ipv4Addr};
+
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
-use std::time::Duration;
+
 use std::{
     any::Any,
     collections::hash_map::Entry,
@@ -61,7 +61,7 @@ use std::{
 };
 use task::SharedTaskContext;
 use text::{PointUtf16, ToPointUtf16};
-use url::Url;
+
 use util::command::Stdio;
 use util::command::new_command;
 use util::{ResultExt, debug_panic, maybe};
@@ -713,7 +713,6 @@ pub struct Session {
     task_context: SharedTaskContext,
     memory: memory::Memory,
     quirks: SessionQuirks,
-    remote_client: Option<Entity<RemoteClient>>,
     node_runtime: Option<NodeRuntime>,
     http_client: Option<Arc<dyn HttpClient>>,
     companion_port: Option<u16>,
@@ -834,7 +833,6 @@ impl Session {
         adapter: DebugAdapterName,
         task_context: SharedTaskContext,
         quirks: SessionQuirks,
-        remote_client: Option<Entity<RemoteClient>>,
         node_runtime: Option<NodeRuntime>,
         http_client: Option<Arc<dyn HttpClient>>,
         cx: &mut App,
@@ -888,7 +886,6 @@ impl Session {
                 task_context,
                 memory: memory::Memory::new(),
                 quirks,
-                remote_client,
                 node_runtime,
                 http_client,
                 companion_port: None,
@@ -1186,7 +1183,6 @@ impl Session {
                             id: request.seq,
                             format: error.to_string(),
                             variables: None,
-                            send_telemetry: None,
                             show_user: None,
                             url: None,
                             url_label: None,
@@ -1243,7 +1239,6 @@ impl Session {
                             id: seq,
                             format: error.to_string(),
                             variables: None,
-                            send_telemetry: None,
                             show_user: None,
                             url: None,
                             url_label: None,
@@ -1516,148 +1511,6 @@ impl Session {
         cx.notify();
     }
 
-    pub(crate) fn handle_dap_event(&mut self, event: Box<Events>, cx: &mut Context<Self>) {
-        match *event {
-            Events::Initialized(_) => {
-                debug_assert!(
-                    false,
-                    "Initialized event should have been handled in LocalMode"
-                );
-            }
-            Events::Stopped(event) => self.handle_stopped_event(event, cx),
-            Events::Continued(event) => {
-                // DAP defines an omitted `allThreadsContinued` as `true`.
-                if event.all_threads_continued.unwrap_or(true) {
-                    self.active_snapshot.thread_states.continue_all_threads();
-                    self.breakpoint_store.update(cx, |store, cx| {
-                        store.remove_active_position(Some(self.session_id()), cx)
-                    });
-                } else {
-                    self.active_snapshot
-                        .thread_states
-                        .continue_thread(ThreadId(event.thread_id));
-                }
-                // todo(debugger): We should be able to get away with only invalidating generic if all threads were continued
-                self.invalidate_generic();
-            }
-            Events::Exited(_event) => {
-                self.clear_active_debug_line(cx);
-            }
-            Events::Terminated(_) => {
-                self.shutdown(cx).detach();
-            }
-            Events::Thread(event) => {
-                let thread_id = ThreadId(event.thread_id);
-
-                match event.reason {
-                    dap::ThreadEventReason::Started => {
-                        self.active_snapshot
-                            .thread_states
-                            .continue_thread(thread_id);
-                    }
-                    dap::ThreadEventReason::Exited => {
-                        self.active_snapshot.thread_states.exit_thread(thread_id);
-                    }
-                    reason => {
-                        log::error!("Unhandled thread event reason {:?}", reason);
-                    }
-                }
-                self.invalidate_state(&ThreadsCommand.into());
-                cx.notify();
-            }
-            Events::Output(event) => {
-                if event
-                    .category
-                    .as_ref()
-                    .is_some_and(|category| *category == OutputEventCategory::Telemetry)
-                {
-                    return;
-                }
-
-                self.push_output(event);
-                cx.notify();
-            }
-            Events::Breakpoint(event) => self.breakpoint_store.update(cx, |store, _| {
-                store.update_session_breakpoint(self.session_id(), event.reason, event.breakpoint);
-            }),
-            Events::Module(event) => {
-                match event.reason {
-                    dap::ModuleEventReason::New => {
-                        self.active_snapshot.modules.push(event.module);
-                    }
-                    dap::ModuleEventReason::Changed => {
-                        if let Some(module) = self
-                            .active_snapshot
-                            .modules
-                            .iter_mut()
-                            .find(|other| event.module.id == other.id)
-                        {
-                            *module = event.module;
-                        }
-                    }
-                    dap::ModuleEventReason::Removed => {
-                        self.active_snapshot
-                            .modules
-                            .retain(|other| event.module.id != other.id);
-                    }
-                }
-
-                // todo(debugger): We should only send the invalidate command to downstream clients.
-                // self.invalidate_state(&ModulesCommand.into());
-            }
-            Events::LoadedSource(_) => {
-                self.invalidate_state(&LoadedSourcesCommand.into());
-            }
-            Events::Capabilities(event) => {
-                self.capabilities = self.capabilities.merge(event.capabilities);
-
-                // The adapter might've enabled new exception breakpoints (or disabled existing ones).
-                let recent_filters = self
-                    .capabilities
-                    .exception_breakpoint_filters
-                    .iter()
-                    .flatten()
-                    .map(|filter| (filter.filter.clone(), filter.clone()))
-                    .collect::<BTreeMap<_, _>>();
-                for filter in recent_filters.values() {
-                    let default = filter.default.unwrap_or_default();
-                    self.exception_breakpoints
-                        .entry(filter.filter.clone())
-                        .or_insert_with(|| (filter.clone(), default));
-                }
-                self.exception_breakpoints
-                    .retain(|k, _| recent_filters.contains_key(k));
-                if self.is_started() {
-                    self.send_exception_breakpoints(cx);
-                }
-
-                // Remove the ones that no longer exist.
-                cx.notify();
-            }
-            Events::Memory(_) => {}
-            Events::Process(_) => {}
-            Events::ProgressEnd(_) => {}
-            Events::ProgressStart(_) => {}
-            Events::ProgressUpdate(_) => {}
-            Events::Invalidated(_) => {}
-            Events::Other(event) => {
-                if event.event == "launchBrowserInCompanion" {
-                    let Some(request) = serde_json::from_value(event.body).ok() else {
-                        log::error!("failed to deserialize launchBrowserInCompanion event");
-                        return;
-                    };
-                    self.launch_browser_for_remote_server(request, cx);
-                } else if event.event == "killCompanionBrowser" {
-                    let Some(request) = serde_json::from_value(event.body).ok() else {
-                        log::error!("failed to deserialize killCompanionBrowser event");
-                        return;
-                    };
-                    self.kill_browser(request, cx);
-                }
-            }
-        }
-    }
-
     /// Ensure that there's a request in flight for the given command, and if not, send it. Use this to run requests that are idempotent.
     fn fetch<T: LocalDapCommand + PartialEq + Eq + Hash>(
         &mut self,
@@ -1783,6 +1636,126 @@ impl Session {
             .and_modify(|request_map| {
                 request_map.remove(key);
             });
+    }
+
+    pub(crate) fn handle_dap_event(&mut self, event: Box<Events>, cx: &mut Context<Self>) {
+        match *event {
+            Events::Initialized(_) => {
+                debug_assert!(
+                    false,
+                    "Initialized event should have been handled in LocalMode"
+                );
+            }
+            Events::Stopped(event) => self.handle_stopped_event(event, cx),
+            Events::Continued(event) => {
+                // DAP defines an omitted `allThreadsContinued` as `true`.
+                if event.all_threads_continued.unwrap_or(true) {
+                    self.active_snapshot.thread_states.continue_all_threads();
+                    self.breakpoint_store.update(cx, |store, cx| {
+                        store.remove_active_position(Some(self.session_id()), cx)
+                    });
+                } else {
+                    self.active_snapshot
+                        .thread_states
+                        .continue_thread(ThreadId(event.thread_id));
+                }
+                // todo(debugger): We should be able to get away with only invalidating generic if all threads were continued
+                self.invalidate_generic();
+            }
+            Events::Exited(_event) => {
+                self.clear_active_debug_line(cx);
+            }
+            Events::Terminated(_) => {
+                self.shutdown(cx).detach();
+            }
+            Events::Thread(event) => {
+                let thread_id = ThreadId(event.thread_id);
+
+                match event.reason {
+                    dap::ThreadEventReason::Started => {
+                        self.active_snapshot
+                            .thread_states
+                            .continue_thread(thread_id);
+                    }
+                    dap::ThreadEventReason::Exited => {
+                        self.active_snapshot.thread_states.exit_thread(thread_id);
+                    }
+                    reason => {
+                        log::error!("Unhandled thread event reason {:?}", reason);
+                    }
+                }
+                self.invalidate_state(&ThreadsCommand.into());
+                cx.notify();
+            }
+            Events::Output(event) => {
+                self.push_output(event);
+                cx.notify();
+            }
+            Events::Breakpoint(event) => self.breakpoint_store.update(cx, |store, _| {
+                store.update_session_breakpoint(self.session_id(), event.reason, event.breakpoint);
+            }),
+            Events::Module(event) => {
+                match event.reason {
+                    dap::ModuleEventReason::New => {
+                        self.active_snapshot.modules.push(event.module);
+                    }
+                    dap::ModuleEventReason::Changed => {
+                        if let Some(module) = self
+                            .active_snapshot
+                            .modules
+                            .iter_mut()
+                            .find(|other| event.module.id == other.id)
+                        {
+                            *module = event.module;
+                        }
+                    }
+                    dap::ModuleEventReason::Removed => {
+                        self.active_snapshot
+                            .modules
+                            .retain(|other| event.module.id != other.id);
+                    }
+                }
+
+                // todo(debugger): We should only send the invalidate command to downstream clients.
+                // self.invalidate_state(&ModulesCommand.into());
+            }
+            Events::LoadedSource(_) => {
+                self.invalidate_state(&LoadedSourcesCommand.into());
+            }
+            Events::Capabilities(event) => {
+                self.capabilities = self.capabilities.merge(event.capabilities);
+
+                // The adapter might've enabled new exception breakpoints (or disabled existing ones).
+                let recent_filters = self
+                    .capabilities
+                    .exception_breakpoint_filters
+                    .iter()
+                    .flatten()
+                    .map(|filter| (filter.filter.clone(), filter.clone()))
+                    .collect::<BTreeMap<_, _>>();
+                for filter in recent_filters.values() {
+                    let default = filter.default.unwrap_or_default();
+                    self.exception_breakpoints
+                        .entry(filter.filter.clone())
+                        .or_insert_with(|| (filter.clone(), default));
+                }
+                self.exception_breakpoints
+                    .retain(|k, _| recent_filters.contains_key(k));
+                if self.is_started() {
+                    self.send_exception_breakpoints(cx);
+                }
+
+                // Remove the ones that no longer exist.
+                cx.notify();
+            }
+            Events::Memory(_) => {}
+            Events::Process(_) => {}
+            Events::ProgressEnd(_) => {}
+            Events::ProgressStart(_) => {}
+            Events::ProgressUpdate(_) => {}
+            Events::Invalidated(_) => {}
+            Events::Other(_) => {}
+        }
     }
 
     fn push_output(&mut self, event: OutputEvent) {
@@ -3041,193 +3014,6 @@ impl Session {
 
     pub fn quirks(&self) -> SessionQuirks {
         self.quirks
-    }
-
-    fn launch_browser_for_remote_server(
-        &mut self,
-        mut request: LaunchBrowserInCompanionParams,
-        cx: &mut Context<Self>,
-    ) {
-        let Some(remote_client) = self.remote_client.clone() else {
-            log::error!("can't launch browser in companion for non-remote project");
-            return;
-        };
-        let Some(http_client) = self.http_client.clone() else {
-            return;
-        };
-        let Some(node_runtime) = self.node_runtime.clone() else {
-            return;
-        };
-
-        let mut console_output = self.console_output(cx);
-        let task = cx.spawn(async move |this, cx| {
-            let forward_ports_process = if remote_client
-                .read_with(cx, |client, _| client.shares_network_interface())
-            {
-                request.other.insert(
-                    "proxyUri".into(),
-                    format!("127.0.0.1:{}", request.server_port).into(),
-                );
-                None
-            } else {
-                let port = TcpTransport::unused_port(IpAddr::V4(Ipv4Addr::LOCALHOST))
-                    .await
-                    .context("getting port for DAP")?;
-                request
-                    .other
-                    .insert("proxyUri".into(), format!("127.0.0.1:{port}").into());
-                let mut port_forwards = vec![(port, "localhost".to_owned(), request.server_port)];
-
-                if let Some(value) = request.params.get("url")
-                    && let Some(url) = value.as_str()
-                    && let Some(url) = Url::parse(url).ok()
-                    && let Some(frontend_port) = url.port()
-                {
-                    port_forwards.push((frontend_port, "localhost".to_owned(), frontend_port));
-                }
-
-                let child = remote_client.update(cx, |client, _| {
-                    let command = client.build_forward_ports_command(port_forwards)?;
-                    let child = new_command(command.program)
-                        .args(command.args)
-                        .envs(command.env)
-                        .spawn()
-                        .context("spawning port forwarding process")?;
-                    anyhow::Ok(child)
-                })?;
-                Some(child)
-            };
-
-            let mut companion_process = None;
-            let companion_port =
-                if let Some(companion_port) = this.read_with(cx, |this, _| this.companion_port)? {
-                    companion_port
-                } else {
-                    let task = cx.spawn(async move |cx| spawn_companion(node_runtime, cx).await);
-                    match task.await {
-                        Ok((port, child)) => {
-                            companion_process = Some(child);
-                            port
-                        }
-                        Err(e) => {
-                            console_output
-                                .send(format!("Failed to launch browser companion process: {e}"))
-                                .await
-                                .ok();
-                            return Err(e);
-                        }
-                    }
-                };
-
-            let mut background_tasks = Vec::new();
-            if let Some(mut forward_ports_process) = forward_ports_process {
-                background_tasks.push(cx.spawn(async move |_| {
-                    forward_ports_process.status().await.log_err();
-                }));
-            };
-            if let Some(mut companion_process) = companion_process {
-                if let Some(stderr) = companion_process.stderr.take() {
-                    let mut console_output = console_output.clone();
-                    background_tasks.push(cx.spawn(async move |_| {
-                        let mut stderr = BufReader::new(stderr);
-                        let mut line = String::new();
-                        while let Ok(n) = stderr.read_line(&mut line).await
-                            && n > 0
-                        {
-                            console_output
-                                .send(format!("companion stderr: {line}"))
-                                .await
-                                .ok();
-                            line.clear();
-                        }
-                    }));
-                }
-                background_tasks.push(cx.spawn({
-                    let mut console_output = console_output.clone();
-                    async move |_| match companion_process.status().await {
-                        Ok(status) => {
-                            if status.success() {
-                                console_output
-                                    .send("Companion process exited normally".into())
-                                    .await
-                                    .ok();
-                            } else {
-                                console_output
-                                    .send(format!(
-                                        "Companion process exited abnormally with {status:?}"
-                                    ))
-                                    .await
-                                    .ok();
-                            }
-                        }
-                        Err(e) => {
-                            console_output
-                                .send(format!("Failed to join companion process: {e}"))
-                                .await
-                                .ok();
-                        }
-                    }
-                }));
-            }
-
-            // TODO pass wslInfo as needed
-
-            let companion_address = format!("127.0.0.1:{companion_port}");
-            let mut companion_started = false;
-            for _ in 0..10 {
-                if TcpStream::connect(&companion_address).await.is_ok() {
-                    companion_started = true;
-                    break;
-                }
-                cx.background_executor()
-                    .timer(Duration::from_millis(100))
-                    .await;
-            }
-            if !companion_started {
-                console_output
-                    .send("Browser companion failed to start".into())
-                    .await
-                    .ok();
-                bail!("Browser companion failed to start");
-            }
-
-            let response = http_client
-                .post_json(
-                    &format!("http://{companion_address}/launch-and-attach"),
-                    serde_json::to_string(&request)
-                        .context("serializing request")?
-                        .into(),
-                )
-                .await;
-            match response {
-                Ok(response) => {
-                    if !response.status().is_success() {
-                        console_output
-                            .send("Launch request to companion failed".into())
-                            .await
-                            .ok();
-                        return Err(anyhow!("launch request failed"));
-                    }
-                }
-                Err(e) => {
-                    console_output
-                        .send("Failed to read response from companion".into())
-                        .await
-                        .ok();
-                    return Err(e);
-                }
-            }
-
-            this.update(cx, |this, _| {
-                this.background_tasks.extend(background_tasks);
-                this.companion_port = Some(companion_port);
-            })?;
-
-            anyhow::Ok(())
-        });
-        self.background_tasks.push(cx.spawn(async move |_, _| {
-            task.await.log_err();
-        }));
     }
 
     fn kill_browser(&self, request: KillCompanionBrowserParams, cx: &mut App) {

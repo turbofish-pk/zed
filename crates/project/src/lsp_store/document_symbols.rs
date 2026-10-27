@@ -5,23 +5,20 @@ use std::time::Duration;
 use anyhow::Context as _;
 use collections::{HashMap, HashSet};
 use futures::FutureExt as _;
-use futures::future::{Shared, join_all};
-use gpui::{AppContext as _, AsyncApp, Context, Entity, Task};
+use futures::future::Shared;
+use gpui::{AppContext as _, Context, Entity, Task};
 use itertools::Itertools;
 use language::{Buffer, BufferSnapshot, OutlineItem};
 use lsp::LanguageServerId;
-use rpc::{TypedEnvelope, proto};
-use settings::Settings as _;
+use rpc::proto;
 use text::{Anchor, Bias, PointUtf16};
 use util::ResultExt;
 
 use crate::DocumentSymbol;
-use crate::lsp_command::{GetDocumentSymbols, LspCommand as _};
+use crate::lsp_command::GetDocumentSymbols;
 use crate::lsp_store::{
     LspStore, LspStoreEvent, RunningFetch, missing_servers_to_query, next_lsp_fetch_id,
-    upstream_lsp_query_server_filter,
 };
-use crate::project_settings::ProjectSettings;
 
 pub(super) type DocumentSymbolsTask =
     Shared<Task<std::result::Result<Vec<OutlineItem<Anchor>>, Arc<anyhow::Error>>>>;
@@ -76,18 +73,6 @@ impl LspStore {
                 .context("sending refresh document symbols downstream")
                 .log_err();
         }
-    }
-
-    pub(super) async fn handle_refresh_document_symbols(
-        lsp_store: Entity<Self>,
-        envelope: TypedEnvelope<proto::RefreshDocumentSymbols>,
-        mut cx: AsyncApp,
-    ) -> anyhow::Result<proto::Ack> {
-        lsp_store.update(&mut cx, |lsp_store, cx| {
-            let server_id = envelope.payload.server_id.map(LanguageServerId::from_proto);
-            lsp_store.refresh_document_symbols(server_id, cx);
-        });
-        Ok(proto::Ack {})
     }
 
     /// Returns a task that resolves to the document symbol outline items for
@@ -257,74 +242,14 @@ impl LspStore {
         for_servers: Option<HashSet<LanguageServerId>>,
         cx: &mut Context<Self>,
     ) -> Task<anyhow::Result<Option<HashMap<LanguageServerId, Vec<DocumentSymbol>>>>> {
-        if let Some((client, project_id)) = self.upstream_client() {
-            let request = GetDocumentSymbols;
-            if !self.is_capable_for_proto_request(buffer, &request, cx) {
-                return Task::ready(Ok(None));
-            }
-
-            let request_timeout = ProjectSettings::get_global(cx)
-                .global_lsp_settings
-                .get_request_timeout();
-            let request_task = client.request_lsp(
-                project_id,
-                upstream_lsp_query_server_filter(for_servers.as_ref()),
-                request_timeout,
-                cx.background_executor().clone(),
-                request.to_proto(project_id, buffer.read(cx)),
-            );
-            let buffer = buffer.clone();
-            cx.spawn(async move |weak_lsp_store, cx| {
-                let Some(lsp_store) = weak_lsp_store.upgrade() else {
-                    return Ok(None);
-                };
-                let Some(responses) = request_task.await? else {
-                    return Ok(None);
-                };
-
-                let document_symbols = join_all(responses.payload.into_iter().map(|response| {
-                    let lsp_store = lsp_store.clone();
-                    let buffer = buffer.clone();
-                    let cx = cx.clone();
-                    async move {
-                        (
-                            LanguageServerId::from_proto(response.server_id),
-                            GetDocumentSymbols
-                                .response_from_proto(response.response, lsp_store, buffer, cx)
-                                .await,
-                        )
-                    }
-                }))
-                .await;
-
-                let mut has_errors = false;
-                let result = document_symbols
-                    .into_iter()
-                    .filter_map(|(server_id, symbols)| match symbols {
-                        Ok(symbols) => Some((server_id, symbols)),
-                        Err(e) => {
-                            has_errors = true;
-                            log::error!("Failed to fetch document symbols: {e:#}");
-                            None
-                        }
-                    })
-                    .collect::<HashMap<_, _>>();
-                anyhow::ensure!(
-                    !has_errors || !result.is_empty(),
-                    "Failed to fetch document symbols"
-                );
-                Ok(Some(result))
-            })
-        } else {
-            let symbols_task = self.request_filtered_lsp_locally(
-                buffer,
-                None::<usize>,
-                GetDocumentSymbols,
-                for_servers.as_ref(),
-                cx,
-            );
-            cx.background_spawn(async move { Ok(Some(symbols_task.await.into_iter().collect())) })
-        }
+        let symbols_task = self.request_filtered_lsp_locally(
+            buffer,
+            None::<usize>,
+            GetDocumentSymbols,
+            for_servers.as_ref(),
+            cx,
+        );
+        cx.background_spawn(async move { Ok(Some(symbols_task.await.into_iter().collect())) })
     }
 }
 
@@ -410,198 +335,3 @@ fn enriched_symbol_text(
     ))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use gpui::TestAppContext;
-    use language::lsp_to_symbol_kind;
-    use text::{OffsetRangeExt, Point, Unclipped};
-
-    fn make_symbol(
-        name: &str,
-        kind: lsp::SymbolKind,
-        range: std::ops::Range<(u32, u32)>,
-        selection_range: std::ops::Range<(u32, u32)>,
-        children: Vec<DocumentSymbol>,
-    ) -> DocumentSymbol {
-        use text::PointUtf16;
-        DocumentSymbol {
-            name: name.to_string(),
-            kind: lsp_to_symbol_kind(kind),
-            range: Unclipped(PointUtf16::new(range.start.0, range.start.1))
-                ..Unclipped(PointUtf16::new(range.end.0, range.end.1)),
-            selection_range: Unclipped(PointUtf16::new(
-                selection_range.start.0,
-                selection_range.start.1,
-            ))
-                ..Unclipped(PointUtf16::new(
-                    selection_range.end.0,
-                    selection_range.end.1,
-                )),
-            children,
-        }
-    }
-
-    #[gpui::test]
-    async fn test_flatten_document_symbols(cx: &mut TestAppContext) {
-        let buffer = cx.new(|cx| {
-            Buffer::local(
-                concat!(
-                    "struct Foo {\n",
-                    "    bar: u32,\n",
-                    "    baz: String,\n",
-                    "}\n",
-                    "\n",
-                    "impl Foo {\n",
-                    "    fn new() -> Self {\n",
-                    "        Foo { bar: 0, baz: String::new() }\n",
-                    "    }\n",
-                    "}\n",
-                ),
-                cx,
-            )
-        });
-
-        let symbols = vec![
-            make_symbol(
-                "Foo",
-                lsp::SymbolKind::STRUCT,
-                (0, 0)..(3, 1),
-                (0, 7)..(0, 10),
-                vec![
-                    make_symbol(
-                        "bar",
-                        lsp::SymbolKind::FIELD,
-                        (1, 4)..(1, 13),
-                        (1, 4)..(1, 7),
-                        vec![],
-                    ),
-                    make_symbol(
-                        "baz",
-                        lsp::SymbolKind::FIELD,
-                        (2, 4)..(2, 15),
-                        (2, 4)..(2, 7),
-                        vec![],
-                    ),
-                ],
-            ),
-            make_symbol(
-                "Foo",
-                lsp::SymbolKind::STRUCT,
-                (5, 0)..(9, 1),
-                (5, 5)..(5, 8),
-                vec![make_symbol(
-                    "new",
-                    lsp::SymbolKind::FUNCTION,
-                    (6, 4)..(8, 5),
-                    (6, 7)..(6, 10),
-                    vec![],
-                )],
-            ),
-        ];
-
-        let snapshot = buffer.read_with(cx, |buffer, _| buffer.snapshot());
-
-        let mut items = Vec::new();
-        flatten_document_symbols(&symbols, &snapshot, 0, &mut items);
-
-        assert_eq!(items.len(), 5);
-
-        assert_eq!(items[0].depth, 0);
-        assert_eq!(items[0].text, "struct Foo");
-        assert_eq!(items[0].name_ranges, vec![7..10]);
-        assert_eq!(
-            items[0].selection_range.to_point(&snapshot),
-            Point::new(0, 7)..Point::new(0, 10)
-        );
-
-        assert_eq!(items[1].depth, 1);
-        assert_eq!(items[1].text, "bar");
-        assert_eq!(items[1].name_ranges, vec![0..3]);
-        assert_eq!(
-            items[1].selection_range.to_point(&snapshot),
-            Point::new(1, 4)..Point::new(1, 7)
-        );
-
-        assert_eq!(items[2].depth, 1);
-        assert_eq!(items[2].text, "baz");
-        assert_eq!(items[2].name_ranges, vec![0..3]);
-        assert_eq!(
-            items[2].selection_range.to_point(&snapshot),
-            Point::new(2, 4)..Point::new(2, 7)
-        );
-
-        assert_eq!(items[3].depth, 0);
-        assert_eq!(items[3].text, "impl Foo");
-        assert_eq!(items[3].name_ranges, vec![5..8]);
-        assert_eq!(
-            items[3].selection_range.to_point(&snapshot),
-            Point::new(5, 5)..Point::new(5, 8)
-        );
-
-        assert_eq!(items[4].depth, 1);
-        assert_eq!(items[4].text, "fn new");
-        assert_eq!(items[4].name_ranges, vec![3..6]);
-        assert_eq!(
-            items[4].selection_range.to_point(&snapshot),
-            Point::new(6, 7)..Point::new(6, 10)
-        );
-    }
-
-    #[gpui::test]
-    async fn test_empty_symbols(cx: &mut TestAppContext) {
-        let buffer = cx.new(|cx| Buffer::local("", cx));
-        let snapshot = buffer.read_with(cx, |buffer, _| buffer.snapshot());
-
-        let symbols: Vec<DocumentSymbol> = Vec::new();
-        let mut items = Vec::new();
-        flatten_document_symbols(&symbols, &snapshot, 0, &mut items);
-        assert!(items.is_empty());
-    }
-
-    #[gpui::test]
-    async fn test_newlines_collapsed_in_name(cx: &mut TestAppContext) {
-        let buffer = cx.new(|cx| Buffer::local("x = 1\ny = 2\n", cx));
-
-        let symbols = vec![
-            make_symbol(
-                "line1\nline2",
-                lsp::SymbolKind::VARIABLE,
-                (0, 0)..(0, 5),
-                (0, 0)..(0, 1),
-                vec![],
-            ),
-            make_symbol(
-                "  a  \n  b  ",
-                lsp::SymbolKind::VARIABLE,
-                (1, 0)..(1, 5),
-                (1, 0)..(1, 1),
-                vec![],
-            ),
-            make_symbol(
-                "a\r\nb",
-                lsp::SymbolKind::VARIABLE,
-                (0, 0)..(1, 5),
-                (0, 0)..(0, 1),
-                vec![],
-            ),
-            make_symbol(
-                "a\n\nb",
-                lsp::SymbolKind::VARIABLE,
-                (0, 0)..(1, 5),
-                (0, 0)..(0, 1),
-                vec![],
-            ),
-        ];
-
-        let snapshot = buffer.read_with(cx, |buffer, _| buffer.snapshot());
-        let mut items = Vec::new();
-        flatten_document_symbols(&symbols, &snapshot, 0, &mut items);
-
-        assert_eq!(items.len(), 4);
-        assert_eq!(items[0].text, "line1 line2");
-        assert_eq!(items[1].text, "a b");
-        assert_eq!(items[2].text, "a b");
-        assert_eq!(items[3].text, "a b");
-    }
-}

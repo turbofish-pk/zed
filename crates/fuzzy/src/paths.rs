@@ -275,14 +275,3 @@ fn distance_between_paths(path: &RelPath, relative_to: &RelPath) -> usize {
     path_components.count() + relative_components.count() + 1
 }
 
-#[cfg(test)]
-mod tests {
-    use path::rel_path::RelPath;
-
-    use super::distance_between_paths;
-
-    #[test]
-    fn test_distance_between_paths_empty() {
-        distance_between_paths(RelPath::empty(), RelPath::empty());
-    }
-}

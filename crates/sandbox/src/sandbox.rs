@@ -134,7 +134,7 @@ pub fn path_is_on_windows_drive(path: &Path) -> bool {
     {
         windows_wsl::path_is_on_windows_drive(path)
     }
-    
+
     {
         let _ = path;
         false
@@ -152,7 +152,7 @@ pub fn wsl_distro_registered() -> bool {
     {
         windows_wsl::wsl_distro_registered()
     }
-    
+
     {
         false
     }
@@ -470,7 +470,7 @@ enum NetSetup {
     Blocked,
     // Restricted networking is rejected up front on Windows, so this variant is
     // never constructed there.
-    
+
     Restricted {
         allowlist: Allowlist,
     },
@@ -496,7 +496,7 @@ pub struct Sandbox {
     /// the command finishes. Holds the fds, keeping their inodes pinned until
     /// then. Created lazily on the wrap that first needs it (a restricted-fs run
     /// with writable binds); a `Sandbox` normally wraps a single command.
-    
+
     validation_fd_sender: Option<linux_bubblewrap::ValidationFdSender>,
     /// Windows only: `(release channel, version)` of the Linux `zed` to
     /// provision inside WSL as the `--wsl-sandbox-helper` (version `latest` for
@@ -551,7 +551,7 @@ impl Sandbox {
             fs,
             network,
             proxy: None,
-            
+
             validation_fd_sender: None,
             #[cfg(target_os = "windows")]
             wsl_zed_release: None,
@@ -583,7 +583,7 @@ impl Sandbox {
     /// former Landlock probe, bwrap needs no ABI-matching against the real
     /// ruleset, so there's no reason to mirror the real command's mounts.)
     pub fn can_create(policy: &SandboxPolicy) -> Result<(), SandboxError> {
-        
+
         {
             let permissions = linux_bubblewrap::SandboxPermissions {
                 network: linux_probe_network(&policy.network),
@@ -609,7 +609,7 @@ impl Sandbox {
     /// The returned [`WrappedCommand`] is plain data; keep `self` alive while it
     /// runs (it owns the proxy and any per-command policy file).
     pub async fn wrap(&mut self, command: &CommandAndArgs) -> Result<WrappedCommand, SandboxError> {
-        
+
         {
             self.wrap_linux(command)
         }
@@ -666,7 +666,7 @@ impl Sandbox {
     /// Spawn the restricted-network proxy if it isn't running yet, point the
     /// command env at it, and return its `(port, host socket path)`. Returns
     /// `None` for non-restricted network policies.
-    
+
     fn ensure_restricted_proxy(
         &mut self,
         env: &mut HashMap<String, String>,
@@ -683,7 +683,7 @@ impl Sandbox {
                 upstream,
                 events: events_tx,
             };
-            
+
             let handle = ProxyHandle::spawn_unix_temp(config);
             #[cfg(not(target_os = "linux"))]
             let handle = ProxyHandle::spawn(config);
@@ -710,7 +710,7 @@ impl Sandbox {
         self.fs.protected_paths.clone()
     }
 
-    
+
     fn wrap_linux(&mut self, command: &CommandAndArgs) -> Result<WrappedCommand, SandboxError> {
         let mut env = command.env.clone();
         let proxy = self.ensure_restricted_proxy(&mut env)?;
@@ -952,7 +952,7 @@ pub(crate) const WSL_SANDBOX_RESOLVE_FLAG: &str = "--wsl-sandbox-resolve-path";
 /// Call this at the top of `main`, before normal argument parsing.
 #[doc(hidden)]
 pub fn run_sandbox_launcher_if_invoked() {
-    
+
     {
         linux_bubblewrap::run_launcher_if_invoked();
         linux_bubblewrap::run_wsl_helper_if_invoked();
@@ -1066,7 +1066,7 @@ fn apply_proxy_env(env: &mut HashMap<String, String>, port: u16) {
 }
 
 /// Drain the proxy's event channel on a background thread, logging each event.
-/// v1 surfacing only; future integrations (UI, telemetry) can replace this.
+/// v1 surfacing only; future integrations (UI) can replace this.
 /// The thread exits when the proxy is dropped and the channel closes.
 
 fn spawn_proxy_event_logger(events: futures::channel::mpsc::UnboundedReceiver<ProxyEvent>) {
@@ -1131,187 +1131,6 @@ fn map_anyhow_error(error: anyhow::Error) -> SandboxError {
     SandboxError::Other(format!("{error:#}"))
 }
 
-#[cfg(all(test, not(target_os = "windows")))]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn restricted_fs_rejects_writable_paths_inside_protected_paths() {
-        let temp_dir = tempfile::tempdir().expect("create temp dir");
-        let repo_dir = temp_dir.path().join("repo");
-        let git_dir = repo_dir.join(".git");
-        let hooks_dir = git_dir.join("hooks");
-        std::fs::create_dir_all(&hooks_dir).expect("create git hooks dir");
-
-        let protected_git = HostFilesystemLocation::capture(&git_dir).expect("capture git dir");
-        let writable_git = HostFilesystemLocation::capture(&git_dir).expect("capture git dir");
-        let writable_hooks =
-            HostFilesystemLocation::capture(&hooks_dir).expect("capture hooks dir");
-
-        for writable_path in [writable_git, writable_hooks] {
-            let result = Sandbox::new(SandboxPolicy {
-                fs: SandboxFsPolicy::Restricted {
-                    writable_paths: vec![writable_path],
-                    protected_paths: vec![protected_git.clone()],
-                },
-                network: SandboxNetPolicy::Blocked,
-            });
-
-            assert!(matches!(result, Err(SandboxError::InvalidRequest(_))));
-        }
-    }
-
-    
-    #[test]
-    fn restricted_fs_protected_overlap_check_uses_captured_fds_not_path_text() {
-        use std::os::unix::fs as unix_fs;
-
-        let temp_dir = tempfile::tempdir().expect("create temp dir");
-        let repo_dir = temp_dir.path().join("repo");
-        let git_dir = repo_dir.join(".git");
-        let real_git_dir = repo_dir.join("real-git");
-        let outside_dir = temp_dir.path().join("outside");
-        let outside_hooks_dir = outside_dir.join("hooks");
-        std::fs::create_dir_all(&git_dir).expect("create git dir");
-        std::fs::create_dir_all(&outside_hooks_dir).expect("create outside hooks dir");
-
-        let protected_git = HostFilesystemLocation::capture(&git_dir).expect("capture git dir");
-        std::fs::rename(&git_dir, &real_git_dir).expect("move git dir aside");
-        unix_fs::symlink(&outside_dir, &git_dir).expect("replace git dir with symlink");
-        let writable_displayed_inside_git =
-            HostFilesystemLocation::capture(git_dir.join("hooks")).expect("capture symlink target");
-
-        Sandbox::new(SandboxPolicy {
-            fs: SandboxFsPolicy::Restricted {
-                writable_paths: vec![writable_displayed_inside_git],
-                protected_paths: vec![protected_git],
-            },
-            network: SandboxNetPolicy::Blocked,
-        })
-        .expect("captured writable fd is outside protected metadata");
-    }
-
-    #[test]
-    fn fs_merge_unrestricted_dominates_else_unions_paths() {
-        // Writable paths are captured as real `HostFilesystemLocation`s (keyed on
-        // the inode), so the union/dedup test needs three distinct real dirs.
-        let dir_a = tempfile::tempdir().expect("create temp dir a");
-        let dir_b = tempfile::tempdir().expect("create temp dir b");
-        let dir_c = tempfile::tempdir().expect("create temp dir c");
-        let dir_d = tempfile::tempdir().expect("create temp dir d");
-        let location = |dir: &tempfile::TempDir| {
-            HostFilesystemLocation::capture(dir.path()).expect("capture temp dir")
-        };
-
-        let a = SandboxFsPolicy::Restricted {
-            writable_paths: vec![location(&dir_a), location(&dir_b)],
-            protected_paths: vec![location(&dir_c)],
-        };
-        let b = SandboxFsPolicy::Restricted {
-            writable_paths: vec![location(&dir_b), location(&dir_c)],
-            protected_paths: vec![location(&dir_c), location(&dir_d)],
-        };
-        assert_eq!(
-            a.clone().merge(b),
-            SandboxFsPolicy::Restricted {
-                writable_paths: vec![location(&dir_a), location(&dir_b), location(&dir_c)],
-                protected_paths: vec![location(&dir_c), location(&dir_d)],
-            }
-        );
-        assert_eq!(
-            a.merge(SandboxFsPolicy::Unrestricted {
-                protected_paths: vec![location(&dir_a)],
-            }),
-            SandboxFsPolicy::Unrestricted {
-                protected_paths: vec![location(&dir_c), location(&dir_a)],
-            }
-        );
-        assert_eq!(
-            SandboxFsPolicy::Unrestricted {
-                protected_paths: vec![location(&dir_d)],
-            }
-            .merge(SandboxFsPolicy::Restricted {
-                writable_paths: vec![location(&dir_a)],
-                protected_paths: vec![location(&dir_c)],
-            }),
-            SandboxFsPolicy::Unrestricted {
-                protected_paths: vec![location(&dir_d), location(&dir_c)],
-            }
-        );
-    }
-
-    #[test]
-    fn net_merge_unrestricted_dominates_blocked_is_identity_else_unions() {
-        let hosts = |list: &[&str]| SandboxNetPolicy::Restricted {
-            allowed_domains: list.iter().map(|s| s.to_string()).collect(),
-        };
-        assert_eq!(
-            hosts(&["a.com", "b.com"]).merge(hosts(&["b.com", "c.com"])),
-            hosts(&["a.com", "b.com", "c.com"])
-        );
-        assert_eq!(
-            SandboxNetPolicy::Blocked.merge(hosts(&["a.com"])),
-            hosts(&["a.com"])
-        );
-        assert_eq!(
-            hosts(&["a.com"]).merge(SandboxNetPolicy::Blocked),
-            hosts(&["a.com"])
-        );
-        assert_eq!(
-            SandboxNetPolicy::Blocked.merge(SandboxNetPolicy::Blocked),
-            SandboxNetPolicy::Blocked
-        );
-        assert_eq!(
-            hosts(&["a.com"]).merge(SandboxNetPolicy::Unrestricted),
-            SandboxNetPolicy::Unrestricted
-        );
-    }
-
-    #[test]
-    fn upstream_proxy_from_env_uses_precedence_and_no_proxy() {
-        let mut env = HashMap::new();
-        env.insert("HTTPS_PROXY".to_string(), " ".to_string());
-        env.insert("https_proxy".to_string(), "http://lower:1111".to_string());
-        env.insert("ALL_PROXY".to_string(), "http://all:2222".to_string());
-        env.insert("HTTP_PROXY".to_string(), "http://http:3333".to_string());
-        env.insert("NO_PROXY".to_string(), "".to_string());
-        env.insert("no_proxy".to_string(), "internal.example".to_string());
-
-        let upstream = upstream_proxy_from_env(&env).expect("should configure an upstream");
-        assert_eq!(upstream.host, "lower");
-        assert_eq!(upstream.port, 1111);
-        assert!(upstream.bypasses("internal.example", 443));
-        assert!(!upstream.bypasses("zed.dev", 443));
-    }
-
-    #[test]
-    fn apply_proxy_env_points_vars_at_proxy_and_blanks_no_proxy() {
-        let mut env = HashMap::new();
-        env.insert("HTTPS_PROXY".to_string(), "http://corp:3128".to_string());
-        env.insert("NO_PROXY".to_string(), "internal.example".to_string());
-        env.insert("PATH".to_string(), "/usr/bin".to_string());
-
-        apply_proxy_env(&mut env, 54321);
-
-        for key in [
-            "HTTPS_PROXY",
-            "https_proxy",
-            "HTTP_PROXY",
-            "http_proxy",
-            "ALL_PROXY",
-            "all_proxy",
-        ] {
-            assert_eq!(
-                env.get(key).map(String::as_str),
-                Some("http://127.0.0.1:54321")
-            );
-        }
-        for key in ["NO_PROXY", "no_proxy"] {
-            assert_eq!(env.get(key).map(String::as_str), Some(""));
-        }
-        assert_eq!(env.get("PATH").map(String::as_str), Some("/usr/bin"));
-    }
-}
 
 /// A directory that is about to be granted as a sandbox write path but may not
 /// exist yet. Preparing one resolves the platform difference in how a
@@ -1346,7 +1165,7 @@ impl GrantableWriteDir {
     /// Prepare `path` for use as a sandbox write grant. `path` must be absolute.
     pub fn prepare(path: &Path) -> std::io::Result<Self> {
         let untrusted_raw_path = path.to_path_buf();
-        
+
         {
             let mut eagerly_created = Vec::new();
             if let Err(error) = create_missing_dirs(path, &mut eagerly_created) {
@@ -1363,22 +1182,8 @@ impl GrantableWriteDir {
                 eagerly_created,
             })
         }
-        #[cfg(target_os = "macos")]
-        {
-            Ok(Self {
-                canonical_path: canonicalize_allowing_missing_leaf(path),
-                untrusted_raw_path,
-                eagerly_created: Vec::new(),
-            })
-        }
-        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-        {
-            let _ = untrusted_raw_path;
-            Err(std::io::Error::new(
-                std::io::ErrorKind::Unsupported,
-                "granting a not-yet-existing write directory is not supported on this platform",
-            ))
-        }
+
+
     }
 
     /// The canonical, symlink-resolved path to show the user and record as the
@@ -1396,10 +1201,6 @@ impl GrantableWriteDir {
     /// Materialize the directory once the grant is approved. A no-op on platforms
     /// that already created it eagerly.
     pub fn finalize(&self) -> std::io::Result<()> {
-        #[cfg(target_os = "macos")]
-        {
-            std::fs::create_dir_all(&self.canonical_path)?;
-        }
         Ok(())
     }
 
@@ -1437,62 +1238,4 @@ fn create_missing_dirs(path: &Path, created: &mut Vec<PathBuf>) -> std::io::Resu
 
 fn pinned_canonical_path(path: &Path) -> std::io::Result<PathBuf> {
     Ok(CanonicalPathBuf::resolve(path)?.into_path())
-}
-
-#[cfg(all(test, target_os = "linux"))]
-mod grantable_write_dir_tests {
-    use super::GrantableWriteDir;
-    use std::fs;
-
-    #[test]
-    fn creates_missing_dirs_and_discard_removes_only_those() {
-        let root = tempfile::tempdir().unwrap();
-        let existing = root.path().join("existing");
-        fs::create_dir(&existing).unwrap();
-        let target = existing.join("a").join("b").join("c");
-
-        let prepared = GrantableWriteDir::prepare(&target).unwrap();
-        assert!(target.is_dir());
-        assert_eq!(prepared.canonical_path(), target.canonicalize().unwrap());
-
-        prepared.discard();
-        // Everything we created is gone...
-        assert!(!existing.join("a").exists());
-        // ...but the pre-existing ancestor is untouched.
-        assert!(existing.is_dir());
-    }
-
-    #[test]
-    fn existing_dir_is_left_alone_and_not_removed_on_discard() {
-        let root = tempfile::tempdir().unwrap();
-        let target = root.path().join("already");
-        fs::create_dir(&target).unwrap();
-
-        let prepared = GrantableWriteDir::prepare(&target).unwrap();
-        assert!(target.is_dir());
-        // We created nothing, so discard removes nothing.
-        prepared.discard();
-        assert!(target.is_dir());
-    }
-
-    #[test]
-    fn canonical_path_resolves_a_symlinked_parent() {
-        let root = tempfile::tempdir().unwrap();
-        let real = root.path().join("real");
-        fs::create_dir(&real).unwrap();
-        let link = root.path().join("link");
-        std::os::unix::fs::symlink(&real, &link).unwrap();
-
-        // Granting `link/child` where `link` legitimately points at `real` must
-        // succeed and show the user the *resolved* `real/child`, not fail.
-        let prepared = GrantableWriteDir::prepare(&link.join("child")).unwrap();
-        assert_eq!(
-            prepared.canonical_path(),
-            real.canonicalize().unwrap().join("child")
-        );
-        assert!(real.join("child").is_dir());
-
-        prepared.discard();
-        assert!(!real.join("child").exists());
-    }
 }

@@ -19,7 +19,7 @@ doctest = false
 
 [features]
 default = []
-test-support = ["db/test-support"]
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -63,49 +63,3 @@ path = "../ui_input"
 
 [dependencies.workspace]
 path = "../workspace"
-
-[dev-dependencies.assets]
-path = "../assets"
-
-[dev-dependencies.editor]
-path = "../editor"
-
-[dev-dependencies.env_logger]
-version = "0.11"
-
-[dev-dependencies.fs]
-path = "../fs"
-
-[dev-dependencies.gpui_platform]
-path = "../gpui_platform"
-default-features = false
-features = ["screen-capture", "font-kit", "wayland", "x11"]
-
-[dev-dependencies.node_runtime]
-path = "../node_runtime"
-
-[dev-dependencies.release_channel]
-path = "../release_channel"
-
-[dev-dependencies.reqwest_client]
-path = "../reqwest_client"
-
-[dev-dependencies.session]
-path = "../session"
-
-[dev-dependencies.settings]
-path = "../settings"
-
-[dev-dependencies.theme]
-path = "../theme"
-
-[dev-dependencies.theme_settings]
-path = "../theme_settings"
-
-[dev-dependencies.uuid]
-version = "1.1"
-features = ["serde"]
-
-[[example]]
-name = "component_preview"
-path = "examples/component_preview.rs"

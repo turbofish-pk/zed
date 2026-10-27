@@ -1,6 +1,5 @@
 use std::{collections::BTreeSet, sync::Arc};
-
-use cloud_api_types::{ExtensionApiManifest, ExtensionMetadata, ExtensionProvides};
+use extension::{ExtensionApiManifest, ExtensionMetadata, ExtensionProvides};
 use extension::{ExtensionManifest, SchemaVersion};
 use extension_host::{ExtensionOperation, ExtensionStatus, ExtensionStore};
 use gpui::{Anchor, ElementId, Entity, Point, SharedString, prelude::*};
@@ -94,7 +93,7 @@ impl ExtensionCardSource {
     }
 }
 
-#[derive(IntoElement, RegisterComponent)]
+#[derive(IntoElement)]
 pub struct ExtensionCard {
     details: ExtensionCardDetails,
     actions: ExtensionCardActions,
@@ -197,9 +196,6 @@ impl ExtensionCard {
         .on_click({
             let extension_id = extension_id.clone();
             move |_, _, cx| {
-                if !is_dev {
-                    telemetry::event!("Extension Uninstalled", extension_id);
-                }
                 ExtensionStore::global(cx).update(cx, |store, cx| {
                     store
                         .uninstall_extension(extension_id.clone(), cx)
@@ -297,7 +293,6 @@ impl ExtensionCard {
         .on_click({
             let extension_id = extension_id.clone();
             move |_, _, cx| {
-                telemetry::event!("Extension Installed");
                 ExtensionStore::global(cx).update(cx, |store, cx| {
                     store.install_latest_extension(extension_id.clone(), cx)
                 });
@@ -381,7 +376,6 @@ impl ExtensionCard {
                         let extension_id = extension.id.clone();
                         let version = extension.manifest.version.clone();
                         move |_, _, cx| {
-                            telemetry::event!("Extension Installed", extension_id, version);
                             ExtensionStore::global(cx).update(cx, |store, cx| {
                                 store
                                     .upgrade_extension(extension_id.clone(), version.clone(), cx)
@@ -419,7 +413,6 @@ fn provided_feature_labels(
 ) -> Vec<&'static str> {
     provides
         .into_iter()
-        .filter(|provides| !provides.is_deprecated())
         .map(extension_provides_label)
         .collect()
 }
@@ -431,8 +424,6 @@ pub(crate) fn extension_provides_label(provides: ExtensionProvides) -> &'static 
         ExtensionProvides::Languages => "Languages",
         ExtensionProvides::Grammars => "Grammars",
         ExtensionProvides::LanguageServers => "Language Servers",
-        ExtensionProvides::ContextServers => "MCP Servers",
-        ExtensionProvides::AgentServers => "Agent Servers",
         ExtensionProvides::SlashCommands => "Slash Commands",
         ExtensionProvides::IndexedDocsProviders => "Indexed Docs Providers",
         ExtensionProvides::Snippets => "Snippets",

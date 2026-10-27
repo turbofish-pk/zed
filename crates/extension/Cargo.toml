@@ -25,12 +25,14 @@ version = "1.0.86"
 [dependencies.async-trait]
 version = "0.1"
 
-[dependencies.cloud_api_types]
-path = "../cloud_api_types"
-
 [dependencies.collections]
 path = "../collections"
 version = "0.1.0"
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["std", "serde"]
 
 [dependencies.dap]
 path = "../dap"
@@ -79,7 +81,9 @@ features = ["rc"]
 [dependencies.serde_json]
 version = "1.0.144"
 features = ["preserve_order", "raw_value"]
-
+[dependencies.strum]
+version = "0.28"
+features = ["derive"]
 [dependencies.task]
 path = "../task"
 
@@ -87,9 +91,6 @@ path = "../task"
 version = "0.9"
 default-features = false
 features = ["std", "serde", "parse", "display"]
-
-[dependencies.tracing]
-version = "0.1.40"
 
 [dependencies.url]
 version = "2.2"
@@ -108,22 +109,3 @@ version = "8"
 
 [dependencies.ztracing]
 path = "../ztracing"
-
-[dev-dependencies.fs]
-path = "../fs"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.indoc]
-version = "2"
-
-[dev-dependencies.pretty_assertions]
-version = "1.3.0"
-features = ["unstable"]
-
-[dev-dependencies.tempfile]
-version = "3.20.0"

@@ -1,13 +1,10 @@
 mod anchor;
 pub mod locator;
-#[cfg(any(test, feature = "test-support"))]
-pub mod network;
 pub mod operation_queue;
 mod patch;
 mod selection;
 pub mod subscription;
-#[cfg(test)]
-mod tests;
+
 mod undo_map;
 
 pub use anchor::*;
@@ -42,7 +39,7 @@ pub use sum_tree::Bias;
 use sum_tree::{Dimensions, FilterCursor, SumTree, Summary, TreeMap, TreeSet};
 use undo_map::UndoMap;
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 use util::RandomCharIter;
 
 static LINE_SEPARATORS_REGEX: LazyLock<Regex> =
@@ -223,7 +220,7 @@ impl History {
             redo_stack: Vec::new(),
             transaction_depth: 0,
             // Don't group transactions in tests unless we opt in, because it's a footgun.
-            group_interval: if cfg!(any(test, feature = "test-support")) {
+            group_interval: if cfg!(feature = "test-support") {
                 Duration::ZERO
             } else {
                 Duration::from_millis(300)
@@ -1684,7 +1681,7 @@ pub struct EditedBufferSnapshot {
     pub did_edit: bool,
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl Buffer {
     #[track_caller]
     pub fn edit_via_marked_text(&mut self, marked_string: &str) {

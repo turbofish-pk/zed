@@ -32,9 +32,6 @@ pub async fn capture(
     args: &[String],
     directory: impl AsRef<Path>,
 ) -> Result<collections::HashMap<String, String>> {
-    #[cfg(windows)]
-    return capture_windows(shell_path.as_ref(), args, directory.as_ref()).await;
-    
     return capture_unix(shell_path.as_ref(), args, directory.as_ref()).await;
 }
 
@@ -71,29 +68,23 @@ fn parse_env_output(
     }
 }
 
-
 async fn capture_unix(
     shell_path: &Path,
     args: &[String],
     directory: &Path,
 ) -> Result<collections::HashMap<String, String>> {
-    use std::os::unix::process::CommandExt;
+
 
     use crate::command::new_std_command;
 
-    let shell_kind = ShellKind::new(shell_path, false);
+    let shell_kind = ShellKind::new(shell_path);
     let quoted_zed_path = super::get_shell_safe_zed_path(shell_kind)?;
 
     let mut command_string = String::new();
     let mut command = new_std_command(shell_path);
     command.args(args);
-    let (fd_num, redir) = capture_output_redirection(shell_kind);
 
     match shell_kind {
-        ShellKind::Csh | ShellKind::Tcsh => {
-            // For csh/tcsh, login shell requires passing `-` as 0th argument (instead of `-l`)
-            command.arg0("-");
-        }
         ShellKind::Fish => {
             // in fish, asdf, direnv attach to the `fish_prompt` event
             command_string.push_str("emit fish_prompt;");
@@ -104,13 +95,7 @@ async fn capture_unix(
         }
     }
 
-    match shell_kind {
-        // Nushell does not allow non-interactive login shells.
-        // Instead of doing "-l -i -c '<command>'"
-        // use "-l -e '<command>; exit'" instead
-        ShellKind::Nushell => command.arg("-e"),
-        _ => command.args(["-i", "-c"]),
-    };
+    command.args(["-i", "-c"]);
 
     // Prefix with "./" if the path starts with "-" to prevent cd from interpreting it as a flag
     let dir_str = directory.to_string_lossy();
@@ -125,20 +110,14 @@ async fn capture_unix(
 
     // cd into the directory, triggering directory specific side-effects (asdf, direnv, etc)
     command_string.push_str(&format!("cd {};", quoted_dir));
-    if let Some(prefix) = shell_kind.command_prefix() {
-        command_string.push(prefix);
-    }
-    command_string.push_str(&format!("{} --printenv {}", quoted_zed_path, redir));
 
-    if let ShellKind::Nushell = shell_kind {
-        command_string.push_str("; exit");
-    }
+    command_string.push_str(&format!("{} --printenv {}", quoted_zed_path, format!(">&0")));
 
     command.arg(&command_string);
 
     super::set_pre_exec_to_start_new_session(&mut command);
 
-    let (env_output, process_output) = spawn_and_read_fd(command, fd_num).await?;
+    let (env_output, process_output) = spawn_and_read_fd(command, 0).await?;
     let env_output = String::from_utf8_lossy(&env_output);
 
     parse_env_output(
@@ -161,27 +140,6 @@ async fn capture_unix(
         },
     )
 }
-
-
-fn capture_output_redirection(shell_kind: ShellKind) -> (std::os::fd::RawFd, String) {
-    // In some shells, file descriptors greater than 2 cannot be used in interactive mode,
-    // so file descriptor 0 (stdin) is used instead. This impacts zsh, old bash; perhaps others.
-    // See: https://github.com/zed-industries/zed/pull/32136#issuecomment-2999645482
-    const FD_STDIN: std::os::fd::RawFd = 0;
-    const FD_STDOUT: std::os::fd::RawFd = 1;
-    const FD_STDERR: std::os::fd::RawFd = 2;
-
-    match shell_kind {
-        ShellKind::Rc => (FD_STDIN, format!(">[1={FD_STDIN}]")), // `[1=0]`
-        ShellKind::Nushell | ShellKind::Tcsh => (FD_STDOUT, "".to_string()),
-        // xonsh doesn't support redirecting to stdin, and control sequences are printed to
-        // stdout on startup
-        ShellKind::Xonsh => (FD_STDERR, "o>e".to_string()),
-        ShellKind::PowerShell | ShellKind::Pwsh => (FD_STDIN, format!("> /dev/fd/{FD_STDIN}")),
-        _ => (FD_STDIN, format!(">&{FD_STDIN}")), // `>&0`
-    }
-}
-
 
 async fn spawn_and_read_fd(
     mut command: std::process::Command,
@@ -207,176 +165,4 @@ async fn spawn_and_read_fd(
     reader.read_to_end(&mut buffer)?;
 
     Ok((buffer, process.output().await?))
-}
-
-#[cfg(windows)]
-async fn capture_windows(
-    shell_path: &Path,
-    args: &[String],
-    directory: &Path,
-) -> Result<collections::HashMap<String, String>> {
-    use std::process::Stdio;
-
-    let zed_path =
-        std::env::current_exe().context("Failed to determine current zed executable path.")?;
-
-    let shell_kind = ShellKind::new(shell_path, true);
-    // Prefix with "./" if the path starts with "-" to prevent cd from interpreting it as a flag
-    let directory_string = directory.display().to_string();
-    let directory_string = if directory_string.starts_with('-') {
-        format!("./{directory_string}")
-    } else {
-        directory_string
-    };
-    let zed_path_string = zed_path.display().to_string();
-    let quote_for_shell = |value: &str| {
-        shell_kind
-            .try_quote(value)
-            .map(|quoted| quoted.into_owned())
-            .context("unexpected null in directory name")
-    };
-    let mut cmd = crate::command::new_command(shell_path);
-    cmd.args(args);
-    let quoted_directory = quote_for_shell(&directory_string)?;
-    let quoted_zed_path = quote_for_shell(&zed_path_string)?;
-    let cmd = match shell_kind {
-        ShellKind::Csh
-        | ShellKind::Tcsh
-        | ShellKind::Rc
-        | ShellKind::Fish
-        | ShellKind::Xonsh
-        | ShellKind::Posix => cmd.args([
-            "-l",
-            "-i",
-            "-c",
-            &format!("cd {}; {} --printenv", quoted_directory, quoted_zed_path),
-        ]),
-        ShellKind::PowerShell | ShellKind::Pwsh => cmd.args([
-            "-NonInteractive",
-            "-NoProfile",
-            "-Command",
-            &format!(
-                "Set-Location {}; & {} --printenv",
-                quoted_directory, quoted_zed_path
-            ),
-        ]),
-        ShellKind::Elvish => cmd.args([
-            "-c",
-            &format!("cd {}; {} --printenv", quoted_directory, quoted_zed_path),
-        ]),
-        ShellKind::Nushell => {
-            let zed_command = shell_kind
-                .prepend_command_prefix(&quoted_zed_path)
-                .into_owned();
-            cmd.args([
-                "-c",
-                &format!("cd {}; {} --printenv", quoted_directory, zed_command),
-            ])
-        }
-        ShellKind::Cmd => {
-            let dir = directory_string.trim_end_matches('\\');
-            cmd.args(["/d", "/c", "cd", dir, "&&", &zed_path_string, "--printenv"])
-        }
-    }
-    .stdin(Stdio::null())
-    .stdout(Stdio::piped())
-    .stderr(Stdio::piped());
-    let output = cmd
-        .output()
-        .await
-        .with_context(|| format!("command {cmd:?}"))?;
-    let env_output = String::from_utf8_lossy(&output.stdout);
-
-    parse_env_output(
-        &env_output,
-        &output.status,
-        || {
-            format!(
-                "Command {cmd:?} exited with {} but environment was captured successfully. stderr: {:?}",
-                output.status,
-                String::from_utf8_lossy(&output.stderr),
-            )
-        },
-        || {
-            format!(
-                "Command {cmd:?} failed with {}. stdout: {:?}, stderr: {:?}",
-                output.status,
-                String::from_utf8_lossy(&output.stdout),
-                String::from_utf8_lossy(&output.stderr),
-            )
-        },
-    )
-}
-
-#[cfg(test)]
-mod tests {
-    use std::process::ExitStatus;
-
-    use super::*;
-    use crate::path;
-
-    
-    fn exit_status(code: i32) -> ExitStatus {
-        use std::os::unix::process::ExitStatusExt;
-
-        ExitStatus::from_raw(code << 8)
-    }
-
-    #[cfg(windows)]
-    fn exit_status(code: u32) -> ExitStatus {
-        use std::os::windows::process::ExitStatusExt;
-
-        ExitStatus::from_raw(code)
-    }
-
-    
-    #[test]
-    fn capture_powershell_environment_without_startup_output() -> Result<()> {
-        for shell in ["pwsh", "powershell"] {
-            let (descriptor, redirection) =
-                capture_output_redirection(ShellKind::new(shell, false));
-            if let Ok(shell_path) = which::which(shell) {
-                let directory = tempfile::tempdir()?;
-                let script =
-                    format!("Write-Output '{{}}'; /bin/echo '{{\"PROBE\":\"ok\"}}' {redirection}");
-                let mut command = crate::command::new_std_command(shell_path);
-                command
-                    .args(["-NoProfile", "-l", "-i", "-c", &script])
-                    .current_dir(directory.path());
-                let (output, process_output) =
-                    smol::block_on(spawn_and_read_fd(command, descriptor))?;
-                assert!(process_output.status.success(), "{process_output:?}");
-                assert_eq!(output, b"{\"PROBE\":\"ok\"}\n");
-                assert_eq!(process_output.stdout, b"{}\n");
-                assert!(!directory.path().join("0").exists());
-            }
-            assert_eq!((descriptor, redirection), (0, String::from("> /dev/fd/0")));
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn parse_env_output_accepts_valid_env_when_shell_exits_nonzero() {
-        let env_json = serde_json::json!({
-            "PATH": path!("/usr/bin"),
-            "SHELL": path!("/bin/zsh"),
-        });
-        let env_output = format!("shell startup noise\n{env_json}\nshell shutdown noise");
-
-        let env_map = parse_env_output(
-            &env_output,
-            &exit_status(1),
-            || "shell exited with 1 but environment was captured successfully".to_string(),
-            || panic!("failed capture error should not be evaluated for valid environment output"),
-        )
-        .expect("valid environment output should be returned despite non-zero shell exit");
-        assert_eq!(
-            env_map.get("PATH").map(String::as_str),
-            Some(path!("/usr/bin"))
-        );
-        assert_eq!(
-            env_map.get("SHELL").map(String::as_str),
-            Some(path!("/bin/zsh"))
-        );
-    }
 }

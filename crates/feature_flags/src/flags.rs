@@ -77,28 +77,6 @@ impl FeatureFlag for RenameToolFeatureFlag {
     }
 }
 register_feature_flag!(RenameToolFeatureFlag);
-
-/// Controls how agent thread worktree chips are labeled in the sidebar.
-#[derive(Clone, Copy, PartialEq, Eq, Debug, EnumFeatureFlag)]
-pub enum AgentThreadWorktreeLabel {
-    #[default]
-    Both,
-    Worktree,
-    Branch,
-}
-
-pub struct AgentThreadWorktreeLabelFlag;
-
-impl FeatureFlag for AgentThreadWorktreeLabelFlag {
-    const NAME: &'static str = "agent-thread-worktree-label";
-    type Value = AgentThreadWorktreeLabel;
-
-    fn enabled_for_staff() -> bool {
-        false
-    }
-}
-register_feature_flag!(AgentThreadWorktreeLabelFlag);
-
 /// Wraps agent-run terminal commands in an OS-level sandbox where supported,
 /// and applies the shared per-host network grants to the `fetch` tool and the
 /// out-of-project write grants to the `create_directory` tool. When off,

@@ -70,13 +70,7 @@ version = "3.20.0"
 [target.'cfg(target_os = "linux")'.dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [target.'cfg(target_os = "macos")'.dependencies.tempfile]
 version = "3.20.0"
-
-[target.'cfg(target_os = "windows")'.dependencies.smol]
-version = "2.0"
-
-[target.'cfg(target_os = "windows")'.dependencies.windows-registry]
-version = "0.6.0"

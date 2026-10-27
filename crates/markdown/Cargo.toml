@@ -17,7 +17,7 @@ path = "src/markdown.rs"
 doctest = false
 
 [features]
-test-support = ["gpui/test-support", "util/test-support"]
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -90,17 +90,17 @@ version = "0.11"
 
 [dev-dependencies.fs]
 path = "../fs"
-features = ["test-support"]
+
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.gpui_platform]
 path = "../gpui_platform"
 default-features = false
-features = ["wayland", "x11"]
+features = ["wayland"]
 
 [dev-dependencies.image]
 version = "0.25.1"
@@ -112,7 +112,7 @@ version = "2"
 
 [dev-dependencies.language]
 path = "../language"
-features = ["test-support"]
+
 
 [dev-dependencies.languages]
 path = "../languages"
@@ -123,8 +123,7 @@ path = "../node_runtime"
 
 [dev-dependencies.settings]
 path = "../settings"
-features = ["test-support"]
+
 
 [dev-dependencies.util]
 path = "../util"
-features = ["test-support"]

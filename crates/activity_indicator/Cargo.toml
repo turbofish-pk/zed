@@ -18,13 +18,11 @@ doctest = false
 test = false
 
 [features]
-test-support = []
 
 [dependencies.anyhow]
 version = "1.0.86"
 
-[dependencies.auto_update]
-path = "../auto_update"
+
 
 [dependencies.editor]
 path = "../editor"
@@ -64,6 +62,3 @@ path = "../util"
 [dependencies.workspace]
 path = "../workspace"
 
-[dev-dependencies.editor]
-path = "../editor"
-features = ["test-support"]

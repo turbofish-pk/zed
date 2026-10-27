@@ -17,13 +17,10 @@ path = "src/workspace.rs"
 doctest = false
 
 [features]
-test-support = ["client/test-support", "http_client/test-support", "db/test-support", "project/test-support", "remote/test-support", "session/test-support", "settings/test-support", "gpui/test-support", "fs/test-support"]
+
 
 [dependencies.any_vec]
 version = "0.14"
-
-[dependencies.agent_settings]
-path = "../agent_settings"
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -107,9 +104,6 @@ path = "../project"
 [dependencies.release_channel]
 path = "../release_channel"
 
-[dependencies.remote]
-path = "../remote"
-
 [dependencies.schemars]
 version = "1.0"
 default-features = false
@@ -143,8 +137,6 @@ features = ["derive"]
 [dependencies.task]
 path = "../task"
 
-[dependencies.telemetry]
-path = "../telemetry"
 
 [dependencies.theme]
 path = "../theme"
@@ -173,40 +165,35 @@ path = "../zed_actions"
 
 [dev-dependencies.client]
 path = "../client"
-features = ["test-support"]
+
 
 [dev-dependencies.db]
 path = "../db"
-features = ["test-support"]
+
 
 [dev-dependencies.fs]
 path = "../fs"
-features = ["test-support"]
+
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.project]
 path = "../project"
-features = ["test-support"]
-
-[dev-dependencies.remote]
-path = "../remote"
-features = ["test-support"]
 
 [dev-dependencies.session]
 path = "../session"
-features = ["test-support"]
+
 
 [dev-dependencies.settings]
 path = "../settings"
-features = ["test-support"]
+
 
 [dev-dependencies.http_client]
 path = "../http_client"
-features = ["test-support"]
+
 
 [dev-dependencies.pretty_assertions]
 version = "1.3.0"

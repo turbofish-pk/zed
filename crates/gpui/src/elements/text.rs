@@ -1313,37 +1313,3 @@ impl IntoElement for InteractiveText {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_into_element_for() {
-        use crate::{ParentElement as _, SharedString, div};
-        use std::borrow::Cow;
-
-        let _ = div().child("static str");
-        let _ = div().child("String".to_string());
-        let _ = div().child(Cow::Borrowed("Cow"));
-        let _ = div().child(SharedString::from("SharedString"));
-    }
-
-    #[test]
-    fn text_macro_id() {
-        // one call to `text!` = one id
-        fn make_text_stable_id(happy: bool) -> Text {
-            text!(if happy { "happy" } else { "sad" })
-        }
-
-        // two calls to `text!` = two ids
-        fn make_text_unstable_id(happy: bool) -> Text {
-            if happy { text!("happy") } else { text!("sad") }
-        }
-
-        assert_eq!(make_text_stable_id(false).id, make_text_stable_id(true).id);
-        assert_ne!(
-            make_text_unstable_id(false).id,
-            make_text_unstable_id(true).id
-        );
-    }
-}

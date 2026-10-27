@@ -50,17 +50,8 @@ mod split;
 pub mod split_editor_view;
 
 mod bookmarks;
-#[cfg(test)]
-mod code_completion_tests;
-#[cfg(test)]
-mod edit_prediction_tests;
-#[cfg(test)]
-mod editor_block_comment_tests;
-#[cfg(test)]
-mod editor_tests;
+
 mod signature_help;
-#[cfg(any(test, feature = "test-support"))]
-pub mod test;
 
 mod clipboard;
 mod code_actions;
@@ -69,7 +60,7 @@ mod completions;
 mod config;
 mod cursor_animation;
 mod diagnostics;
-mod edit_prediction;
+
 mod input;
 mod markdown_actions;
 mod navigation;
@@ -81,8 +72,7 @@ pub use clipboard::ClipboardSelection;
 pub use code_actions::CodeActionProvider;
 use collections::TypeIdHashMap;
 pub use completions::CompletionProvider;
-#[cfg(test)]
-pub(crate) use completions::snippet_candidate_suffixes;
+
 pub(crate) use completions::split_words;
 use diagnostics::{ActiveDiagnostic, GlobalDiagnosticRenderer, InlineDiagnostic};
 pub use diagnostics::{DiagnosticRenderer, set_diagnostic_renderer};
@@ -90,17 +80,7 @@ pub use display_map::{
     ChunkRenderer, ChunkRendererContext, DisplayPoint, FoldPlaceholder, HighlightKey,
     NavigationOverlayKey, SemanticTokenHighlight,
 };
-pub use edit_prediction::make_suggestion_styles;
-pub(crate) use edit_prediction::{
-    EditDisplayMode, EditPrediction, EditPredictionPreview, EditPredictionSettings,
-    EditPredictionState, MenuEditPredictionsPolicy, RegisteredEditPredictionDelegate,
-};
-#[cfg(test)]
-pub(crate) use edit_prediction::{
-    EditPredictionKeybindAction, EditPredictionKeybindSurface, edit_prediction_edit_text,
-};
-pub use edit_prediction_types::Direction;
-pub use edit_prediction_types::EditPredictionRequestTrigger;
+
 pub use editor_settings::{
     CompletionDetailAlignment, CompletionMenuItemKind, CurrentLineHighlight, DiffViewStyle,
     DocumentColorsRenderMode, EditorSettings, EditorSettingsScrollbarProxy, OpenResultsIn,
@@ -140,8 +120,6 @@ use ::git::{Blame, status::FileStatus};
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder, BuildError};
 use anyhow::{Context as _, Result, anyhow, bail};
 use blink_manager::BlinkManager;
-use client::{Collaborator, ParticipantIndex, parse_zed_link};
-use clock::ReplicaId;
 use code_context_menus::{
     AvailableCodeAction, CodeActionContents, CodeActionsItem, CodeActionsMenu, CodeContextMenu,
     CompletionsMenu, ContextMenuOrigin,
@@ -150,16 +128,13 @@ use code_lens::CodeLensState;
 use collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use convert_case::{Case, Casing};
 use cursor_animation::CursorAnimationStates;
-use dap::TelemetrySpawnLocation;
+
 use display_map::*;
 use document_colors::LspColorData;
 use document_links::LspDocumentLinks;
-use edit_prediction_types::{
-    EditPredictionDelegate, EditPredictionDelegateHandle, EditPredictionDiscardReason,
-    EditPredictionGranularity, SuggestionDisplayType,
-};
+
 use editor_settings::{GoToDefinitionFallback, Minimap as MinimapSettings};
-use element::{LineWithInvisibles, PositionMap, layout_line};
+use element::{LineWithInvisibles, PositionMap};
 use futures::{
     FutureExt,
     future::{self, Shared},
@@ -167,15 +142,13 @@ use futures::{
 use fuzzy::{StringMatch, StringMatchCandidate};
 use git::blame::GlobalBlameRenderer;
 use gpui::{
-    Action, Animation, AnimationExt, AnyElement, App, AppContext, AsyncWindowContext,
-    AvailableSpace, Background, Bounds, ClickEvent, ClipboardEntry, ClipboardItem, Context,
-    DispatchPhase, Edges, Entity, EntityId, EntityInputHandler, EventEmitter, FocusHandle,
+    Action, AnyElement, App, AppContext, AsyncWindowContext, Background, Bounds, ClickEvent, ClipboardEntry, ClipboardItem, Context,
+    DispatchPhase, Entity, EntityId, EntityInputHandler, EventEmitter, FocusHandle,
     FocusOutEvent, Focusable, FontId, FontStyle, FontWeight, Global, HighlightStyle, Hsla, IsZero,
     KeyContext, Modifiers, MouseButton, MouseDownEvent, MouseMoveEvent, PaintQuad, ParentElement,
-    Pixels, PressureStage, Render, ScrollHandle, SharedString, SharedUri, Size, Stateful, Styled,
+    Pixels, PressureStage, Render, ScrollHandle, SharedString, SharedUri, Size, Styled,
     Subscription, Task, TextRun, TextStyle, TextStyleRefinement, UTF16Selection, UnderlineStyle,
-    UniformListScrollHandle, WeakEntity, WeakFocusHandle, Window, div, point, prelude::*,
-    pulsating_between, px, relative, size,
+    UniformListScrollHandle, WeakEntity, WeakFocusHandle, Window, div, point, prelude::*, px, relative, size,
 };
 use hover_links::{HoverLink, HoveredLinkState, find_file};
 use hover_popover::{HoverState, hide_hover};
@@ -185,13 +158,13 @@ use itertools::{Either, Itertools};
 use language::{
     AutoindentMode, BlockCommentConfig, BracketMatch, BracketPair, Buffer, BufferRow,
     BufferSnapshot, Capability, CharClassifier, CharKind, CharScopeContext, CodeLabel, CursorShape,
-    DiagnosticEntryRef, DiffOptions, EditPredictionsMode, EditPreview, HighlightedText, IndentKind,
-    IndentSize, Language, LanguageAwareStyling, LanguageName, LanguageRegistry, LanguageScope,
-    LocalFile, OffsetRangeExt, OutlineItem, Point, Selection, SelectionGoal, TextObject,
-    TransactionId, TreeSitterOptions, WordsQuery,
+    DiagnosticEntryRef, DiffOptions, HighlightedText, IndentKind, IndentSize,
+    Language, LanguageAwareStyling, LanguageName, LanguageRegistry, LanguageScope, LocalFile,
+    OffsetRangeExt, OutlineItem, Point, Selection, SelectionGoal, TextObject, TransactionId,
+    TreeSitterOptions, WordsQuery,
     language_settings::{
         self, AllLanguageSettings, LanguageSettings, LspInsertMode, RewrapBehavior, SoftWrapIndent,
-        WordsCompletionMode, all_language_settings,
+        WordsCompletionMode,
     },
     point_to_lsp, text_diff_with_options,
 };
@@ -212,7 +185,7 @@ use parking_lot::Mutex;
 use persistence::EditorDb;
 use project::{
     BreakpointWithPosition, CodeAction, Completion, CompletionDisplayOptions, CompletionIntent,
-    CompletionResponse, CompletionSource, DisableAiSettings, DocumentHighlight, InlayHint, InlayId,
+    CompletionResponse, CompletionSource, DocumentHighlight, InlayHint,
     InvalidationStrategy, Location, LocationLink, LspAction, PrepareRenameResponse, Project,
     ProjectItem, ProjectPath, ProjectTransaction,
     bookmark_store::BookmarkStore,
@@ -232,7 +205,7 @@ use project::{
 };
 use rand::seq::SliceRandom;
 use regex::Regex;
-use rpc::{ErrorCode, ErrorExt, proto::PeerId};
+use rpc::{ErrorCode, ErrorExt};
 use scroll::{Autoscroll, ScrollAnchor, ScrollManager, SharedScrollAnchor};
 use selections_collection::{MutableSelectionsCollection, SelectionsCollection};
 use serde::{Deserialize, Serialize};
@@ -251,7 +224,7 @@ use std::{
     iter::{self, Peekable},
     mem,
     num::NonZeroU32,
-    ops::{ControlFlow, Deref, DerefMut, Not, Range, RangeInclusive},
+    ops::{Deref, DerefMut, Not, Range, RangeInclusive},
     path::{Path, PathBuf},
     rc::Rc,
     sync::Arc,
@@ -264,7 +237,7 @@ use theme::{
 };
 use theme_settings::{ThemeSettings, observe_buffer_font_size_adjustment};
 use ui::{
-    Avatar, ContextMenu, Disclosure, IconButtonShape, Indicator, Key, KeyBinding, Tooltip,
+ ContextMenu, Disclosure, IconButtonShape, Indicator, KeyBinding, Tooltip,
     prelude::*,
     scrollbars::ScrollbarAutoHide,
     tooltip_container,
@@ -273,12 +246,12 @@ use ui::{
 use ui_input::ErasedEditor;
 use util::{RangeExt, ResultExt, TryFutureExt, maybe, post_inc};
 use workspace::{
-    CollaboratorId, Item as WorkspaceItem, ItemId, ItemNavHistory, NavigationEntry, OpenInTerminal,
-    OpenTerminal, Pane, RestoreOnStartupBehavior, SERIALIZATION_THROTTLE_TIME, SplitDirection,
-    TabBarSettings, Toast, ViewId, Workspace, WorkspaceId, WorkspaceSettings,
+    Item as WorkspaceItem, ItemId, ItemNavHistory, NavigationEntry, OpenInTerminal, OpenTerminal,
+    Pane, RestoreOnStartupBehavior, SERIALIZATION_THROTTLE_TIME, SplitDirection, TabBarSettings,
+    Toast, Workspace, WorkspaceId, WorkspaceSettings,
     item::{ItemBufferKind, ItemHandle, PreviewTabsSettings, SaveOptions},
     notifications::{DetachAndPromptErr, NotificationId, NotifyResultExt, NotifyTaskExt},
-    searchable::{SearchEvent, SelectSearchOptions},
+    searchable::{Direction, SearchEvent, SelectSearchOptions},
 };
 pub use zed_actions::editor::RevealInFileManager;
 use zed_actions::editor::{MoveDown, MoveUp};
@@ -293,7 +266,7 @@ use crate::{
         inlay_hints::{LspInlayHintData, inlay_hint_settings},
     },
     runnables::{ResolvedTasks, RunnableData, RunnableTaskStatus, RunnableTasks},
-    scroll::{ScrollOffset, ScrollPixelOffset},
+    scroll::ScrollOffset,
     selections_collection::resolve_selections_wrapping_blocks,
     semantic_tokens::SemanticTokenState,
     signature_help::{SignatureHelpHiddenBy, SignatureHelpState},
@@ -318,24 +291,7 @@ pub(crate) const FORMAT_TIMEOUT: Duration = Duration::from_secs(5);
 pub(crate) const SCROLL_CENTER_TOP_BOTTOM_DEBOUNCE_TIMEOUT: Duration = Duration::from_secs(1);
 pub const LSP_REQUEST_DEBOUNCE_TIMEOUT: Duration = Duration::from_millis(50);
 
-pub(crate) const EDIT_PREDICTION_KEY_CONTEXT: &str = "edit_prediction";
 pub(crate) const MINIMAP_FONT_SIZE: AbsoluteLength = AbsoluteLength::Pixels(px(2.));
-
-enum ReportEditorEvent {
-    Saved { auto_saved: bool },
-    EditorOpened,
-    Closed,
-}
-
-impl ReportEditorEvent {
-    pub fn event_type(&self) -> &'static str {
-        match self {
-            Self::Saved { .. } => "Editor Saved",
-            Self::EditorOpened => "Editor Opened",
-            Self::Closed => "Editor Closed",
-        }
-    }
-}
 
 pub enum ActiveDebugLine {}
 pub enum DebugStackFrameLine {}
@@ -366,7 +322,6 @@ pub fn init(cx: &mut App) {
     cx.set_global(breadcrumbs::RenderBreadcrumbText(render_breadcrumb_text));
 
     workspace::register_project_item::<Editor>(cx);
-    workspace::FollowableViewRegistry::register::<Editor>(cx);
     workspace::register_serializable_item::<Editor>(cx);
 
     cx.observe_new(
@@ -554,7 +509,6 @@ pub struct EditorStyle {
     pub syntax: Arc<SyntaxTheme>,
     pub status: StatusColors,
     pub inlay_hints_style: HighlightStyle,
-    pub edit_prediction_styles: EditPredictionStyles,
     pub unnecessary_code_fade: f32,
     pub show_underlines: bool,
 }
@@ -575,10 +529,6 @@ impl Default for EditorStyle {
             // style and retrieve them directly from the theme.
             status: StatusColors::dark(),
             inlay_hints_style: HighlightStyle::default(),
-            edit_prediction_styles: EditPredictionStyles {
-                insertion: HighlightStyle::default(),
-                whitespace: HighlightStyle::default(),
-            },
             unnecessary_code_fade: Default::default(),
             show_underlines: true,
         }
@@ -1009,11 +959,9 @@ pub struct Editor {
     project: Option<Entity<Project>>,
     semantics_provider: Option<Rc<dyn SemanticsProvider>>,
     completion_provider: Option<Rc<dyn CompletionProvider>>,
-    collaboration_hub: Option<Box<dyn CollaborationHub>>,
     blink_manager: Entity<BlinkManager>,
     cursor_animations: CursorAnimationStates,
     show_cursor_names: bool,
-    hovered_cursors: HashMap<HoveredCursor, Task<()>>,
     pub show_local_selections: bool,
     mode: EditorMode,
     breadcrumbs_visibility: BreadcrumbsVisibility,
@@ -1087,24 +1035,15 @@ pub struct Editor {
     expects_character_input: bool,
     use_modal_editing: bool,
     read_only: bool,
-    leader_id: Option<CollaboratorId>,
-    remote_id: Option<ViewId>,
     pub hover_state: HoverState,
     pending_mouse_down: Option<Rc<RefCell<Option<MouseDownEvent>>>>,
     prev_pressure_stage: Option<PressureStage>,
     gutter_hovered: bool,
     hovered_link_state: Option<HoveredLinkState>,
-    edit_prediction_provider: Option<RegisteredEditPredictionDelegate>,
+
     code_action_providers: Vec<Rc<dyn CodeActionProvider>>,
-    active_edit_prediction: Option<EditPredictionState>,
-    /// Used to prevent flickering as the user types while the menu is open
-    stale_edit_prediction_in_menu: Option<EditPredictionState>,
-    edit_prediction_settings: EditPredictionSettings,
-    edit_predictions_hidden_for_vim_mode: bool,
-    show_edit_predictions_override: Option<bool>,
+
     show_completions_on_input_override: Option<bool>,
-    menu_edit_predictions_policy: MenuEditPredictionsPolicy,
-    edit_prediction_preview: EditPredictionPreview,
     in_leading_whitespace: bool,
     next_inlay_id: usize,
     next_color_inlay_id: usize,
@@ -1327,17 +1266,6 @@ struct CharacterDimensions {
     line_height: Pixels,
 }
 
-#[derive(Debug)]
-pub struct RemoteSelection {
-    pub replica_id: ReplicaId,
-    pub selection: Selection<Anchor>,
-    pub cursor_shape: CursorShape,
-    pub collaborator_id: CollaboratorId,
-    pub line_mode: bool,
-    pub user_name: Option<SharedString>,
-    pub color: PlayerColor,
-}
-
 #[derive(Clone, Debug)]
 struct SelectionHistoryEntry {
     selections: Arc<[Selection<Anchor>]>,
@@ -1353,12 +1281,6 @@ enum SelectionHistoryMode {
     Undoing,
     Redoing,
     Skipping,
-}
-
-#[derive(Clone, PartialEq, Eq, Hash)]
-struct HoveredCursor {
-    replica_id: ReplicaId,
-    selection_id: usize,
 }
 
 #[derive(Debug)]
@@ -1751,8 +1673,6 @@ struct GutterButtonTooltip {
     primary: GutterButtonIntent,
     secondary: GutterButtonIntent,
     focus_handle: FocusHandle,
-    #[cfg(test)]
-    on_render: Option<Rc<RefCell<Vec<(String, String)>>>>,
 }
 
 impl GutterButtonTooltip {
@@ -1790,13 +1710,6 @@ impl Render for GutterButtonTooltip {
         let intent = self.active_intent(window.modifiers(), cx);
         let key_binding = KeyBinding::for_action_in(intent.action(), &self.focus_handle, cx);
         let meta_text = self.meta_text(cx);
-
-        #[cfg(test)]
-        if let Some(on_render) = &self.on_render {
-            on_render
-                .borrow_mut()
-                .push((intent.as_str().to_owned(), meta_text.clone()));
-        }
 
         tooltip_container(cx, move |this, _| {
             this.child(
@@ -2098,14 +2011,6 @@ impl Editor {
                 project,
                 window,
                 |editor, _, event, window, cx| match event {
-                    project::Event::RemoteIdChanged(Some(_))
-                    | project::Event::Reshared
-                    | project::Event::HostReshared => {
-                        // The per-change selection broadcast is skipped while the
-                        // project is unshared, so re-publish current selections
-                        // once it becomes (re)shared.
-                        editor.republish_active_selections(window, cx);
-                    }
                     project::Event::RefreshCodeLens { .. } => {
                         editor.refresh_code_lenses(None, window, cx);
                     }
@@ -2401,7 +2306,6 @@ impl Editor {
             semantics_provider: project
                 .as_ref()
                 .map(|project| Rc::new(project.downgrade()) as _),
-            collaboration_hub: project.clone().map(|project| Box::new(project) as _),
             project,
             blink_manager: blink_manager.clone(),
             cursor_animations: CursorAnimationStates::default(),
@@ -2483,18 +2387,11 @@ impl Editor {
             use_selection_highlight: true,
             auto_replace_emoji_shortcode: false,
             jsx_tag_auto_close_enabled_in_any_buffer: false,
-            leader_id: None,
-            remote_id: None,
             hover_state: HoverState::default(),
             pending_mouse_down: None,
             prev_pressure_stage: None,
             hovered_link_state: None,
-            edit_prediction_provider: None,
-            active_edit_prediction: None,
-            stale_edit_prediction_in_menu: None,
-            edit_prediction_preview: EditPredictionPreview::Inactive {
-                released_too_fast: false,
-            },
+
             inline_diagnostics_enabled: full_mode,
             diagnostics_enabled: full_mode,
             word_completions_enabled: full_mode,
@@ -2509,14 +2406,11 @@ impl Editor {
             gutter_dimensions: GutterDimensions::default(),
             style: None,
             show_cursor_names: false,
-            hovered_cursors: HashMap::default(),
             next_editor_action_id: EditorActionId::default(),
             editor_actions: Rc::default(),
-            edit_predictions_hidden_for_vim_mode: false,
-            show_edit_predictions_override: None,
+
             show_completions_on_input_override: None,
-            menu_edit_predictions_policy: MenuEditPredictionsPolicy::ByProvider,
-            edit_prediction_settings: EditPredictionSettings::Disabled,
+
             in_leading_whitespace: false,
             custom_context_menu: None,
             show_git_blame_gutter: false,
@@ -2755,7 +2649,6 @@ impl Editor {
             if let Some(buffer) = multi_buffer.read(cx).as_singleton() {
                 editor.register_buffer(buffer.read(cx).remote_id(), cx);
             }
-            editor.report_editor_event(ReportEditorEvent::EditorOpened, None, cx);
         }
 
         editor
@@ -2788,15 +2681,10 @@ impl Editor {
     }
 
     pub fn key_context(&self, window: &mut Window, cx: &mut App) -> KeyContext {
-        self.key_context_internal(self.has_active_edit_prediction(), window, cx)
+        self.key_context_internal(window, cx)
     }
 
-    fn key_context_internal(
-        &self,
-        has_active_edit_prediction: bool,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> KeyContext {
+    fn key_context_internal(&self, window: &mut Window, cx: &mut App) -> KeyContext {
         let mut key_context = KeyContext::new_with_defaults(cx.platform_info().os);
         key_context.add("Editor");
         let mode = match self.mode {
@@ -2878,18 +2766,8 @@ impl Editor {
             key_context.add("multibuffer");
         }
 
-        if has_active_edit_prediction {
-            key_context.add(EDIT_PREDICTION_KEY_CONTEXT);
-            key_context.add("copilot_suggestion");
-        }
-
         if self.in_leading_whitespace {
             key_context.add("in_leading_whitespace");
-        }
-        if self.edit_prediction_requires_modifier() {
-            key_context.set("edit_prediction_mode", "subtle")
-        } else {
-            key_context.set("edit_prediction_mode", "eager");
         }
 
         if self.selection_mark_mode {
@@ -3097,10 +2975,6 @@ impl Editor {
         });
     }
 
-    pub fn leader_id(&self) -> Option<CollaboratorId> {
-        self.leader_id
-    }
-
     pub fn buffer(&self) -> &Entity<MultiBuffer> {
         &self.buffer
     }
@@ -3213,14 +3087,6 @@ impl Editor {
         self.mode = mode;
     }
 
-    pub fn collaboration_hub(&self) -> Option<&dyn CollaborationHub> {
-        self.collaboration_hub.as_deref()
-    }
-
-    pub fn set_collaboration_hub(&mut self, hub: Box<dyn CollaborationHub>) {
-        self.collaboration_hub = Some(hub);
-    }
-
     pub fn set_in_project_search(&mut self, in_project_search: bool) {
         self.in_project_search = in_project_search;
     }
@@ -3266,7 +3132,7 @@ impl Editor {
         }
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn search_results_hold(&self) -> Option<SearchResultsHold> {
         self.search_results_hold
     }
@@ -3581,7 +3447,7 @@ impl Editor {
 
     pub fn dismiss_menus_and_popups(
         &mut self,
-        is_user_requested: bool,
+        _is_user_requested: bool,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> bool {
@@ -3594,8 +3460,6 @@ impl Editor {
         dismissed |= self.hide_signature_help(cx, SignatureHelpHiddenBy::Escape);
         dismissed |= self.hide_context_menu(window, cx).is_some();
         dismissed |= self.mouse_context_menu.take().is_some();
-        dismissed |= is_user_requested
-            && self.discard_edit_prediction(EditPredictionDiscardReason::Rejected, cx);
         dismissed |= self.snippet_stack.pop().is_some();
         if self.diff_review_drag_state.is_some() {
             self.cancel_diff_review_drag(cx);
@@ -4164,20 +4028,6 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        self.update_edit_prediction_settings(cx);
-
-        // Ensure that the edit prediction preview is updated, even when not
-        // enabled, if there's an active edit prediction preview.
-        if self.show_edit_predictions_in_menu()
-            || self.edit_prediction_requires_modifier()
-            || matches!(
-                self.edit_prediction_preview,
-                EditPredictionPreview::Active { .. }
-            )
-        {
-            self.update_edit_prediction_preview(&modifiers, window, cx);
-        }
-
         self.update_selection_mode(&modifiers, position_map, window, cx);
 
         let mouse_position = window.mouse_position();
@@ -4871,8 +4721,6 @@ impl Editor {
                         primary,
                         secondary,
                         focus_handle: focus_handle.clone(),
-                        #[cfg(test)]
-                        on_render: None,
                     })
                     .into()
                 })
@@ -4908,12 +4756,10 @@ impl Editor {
     }
 
     pub fn context_menu_visible(&self) -> bool {
-        !self.edit_prediction_preview_is_active()
-            && self
-                .context_menu
-                .borrow()
-                .as_ref()
-                .is_some_and(|menu| menu.visible())
+        self.context_menu
+            .borrow()
+            .as_ref()
+            .is_some_and(|menu| menu.visible())
     }
 
     pub fn context_menu_origin(&self) -> Option<ContextMenuOrigin> {
@@ -4974,8 +4820,6 @@ impl Editor {
         cx.notify();
         self.completion_tasks.clear();
         let context_menu = self.context_menu.borrow_mut().take();
-        self.stale_edit_prediction_in_menu.take();
-        self.update_visible_edit_prediction(window, cx);
         if let Some(CodeContextMenu::Completions(_)) = &context_menu
             && let Some(completion_provider) = &self.completion_provider
         {
@@ -5308,13 +5152,7 @@ impl Editor {
             this.change_selections(Default::default(), window, cx, |s| s.select(selections));
             this.insert("", window, cx);
             linked_edits.apply_with_left_expansion(cx);
-            this.refresh_edit_prediction(
-                true,
-                false,
-                EditPredictionRequestTrigger::BufferEdit,
-                window,
-                cx,
-            );
+
             refresh_linked_ranges(this, window, cx);
         });
     }
@@ -5337,13 +5175,7 @@ impl Editor {
             let linked_edits = this.linked_edits_for_selections(Arc::from(""), cx);
             this.insert("", window, cx);
             linked_edits.apply(cx);
-            this.refresh_edit_prediction(
-                true,
-                false,
-                EditPredictionRequestTrigger::BufferEdit,
-                window,
-                cx,
-            );
+
             refresh_linked_ranges(this, window, cx);
         });
     }
@@ -5528,13 +5360,6 @@ impl Editor {
         self.transact(window, cx, |this, window, cx| {
             this.buffer.update(cx, |b, cx| b.edit(edits, None, cx));
             this.change_selections(Default::default(), window, cx, |s| s.select(selections));
-            this.refresh_edit_prediction(
-                true,
-                false,
-                EditPredictionRequestTrigger::BufferEdit,
-                window,
-                cx,
-            );
         });
     }
 
@@ -6749,7 +6574,7 @@ impl Editor {
         cx.notify();
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn breakpoint_store(&self) -> Option<Entity<BreakpointStore>> {
         self.breakpoint_store.clone()
     }
@@ -8024,13 +7849,6 @@ impl Editor {
             self.restore_selections(selections, window, cx);
             self.request_autoscroll(Autoscroll::fit(), cx);
             self.unmark_text(window, cx);
-            self.refresh_edit_prediction(
-                true,
-                false,
-                EditPredictionRequestTrigger::BufferEdit,
-                window,
-                cx,
-            );
             cx.emit(EditorEvent::Edited { transaction_id });
             cx.emit(EditorEvent::TransactionUndone { transaction_id });
         }
@@ -8053,13 +7871,6 @@ impl Editor {
             self.restore_selections(selections, window, cx);
             self.request_autoscroll(Autoscroll::fit(), cx);
             self.unmark_text(window, cx);
-            self.refresh_edit_prediction(
-                true,
-                false,
-                EditPredictionRequestTrigger::BufferEdit,
-                window,
-                cx,
-            );
             cx.emit(EditorEvent::Edited { transaction_id });
         }
     }
@@ -8325,9 +8136,6 @@ impl Editor {
                                                     font_weight: Some(FontWeight::BOLD),
                                                     ..make_inlay_hints_style(cx.app)
                                                 },
-                                                edit_prediction_styles: make_suggestion_styles(
-                                                    cx.app,
-                                                ),
                                                 ..EditorStyle::default()
                                             },
                                         ))
@@ -9219,7 +9027,7 @@ impl Editor {
         if self.read_only(cx) {
             return;
         }
-        self.transact(window, cx, |this, window, cx| {
+        self.transact(window, cx, |this, _window, cx| {
             let edits = this
                 .selections
                 .all::<Point>(&this.display_snapshot(cx))
@@ -9233,13 +9041,6 @@ impl Editor {
                     (selection.range(), uuid.to_string())
                 });
             this.edit(edits, cx);
-            this.refresh_edit_prediction(
-                true,
-                false,
-                EditPredictionRequestTrigger::BufferEdit,
-                window,
-                cx,
-            );
         });
     }
 
@@ -9682,7 +9483,7 @@ impl Editor {
             .insert(TypeId::of::<T>(), (color_fetcher, gutter_highlights));
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn all_text_highlights(
         &self,
         window: &mut Window,
@@ -9706,7 +9507,7 @@ impl Editor {
         })
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn all_text_background_highlights(
         &self,
         window: &mut Window,
@@ -9719,7 +9520,7 @@ impl Editor {
         self.sorted_background_highlights_in_range(start..end, &snapshot, cx.theme())
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn sorted_background_highlights_in_range(
         &self,
         search_range: Range<Anchor>,
@@ -9736,7 +9537,7 @@ impl Editor {
         res
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn search_background_highlights(&mut self, cx: &mut Context<Self>) -> Vec<Range<Point>> {
         let snapshot = self.buffer().read(cx).snapshot(cx);
 
@@ -10103,10 +9904,7 @@ impl Editor {
         cx: &mut Context<Self>,
     ) {
         match event {
-            multi_buffer::Event::Edited {
-                edited_buffer,
-                source,
-            } => {
+            multi_buffer::Event::Edited { edited_buffer, .. } => {
                 self.scrollbar_marker_state.dirty = true;
                 self.active_indent_guides_state.dirty = true;
                 self.fit_gutter_line_number_width(false, cx);
@@ -10117,10 +9915,6 @@ impl Editor {
                 self.refresh_matching_bracket_highlights(&snapshot, cx);
                 self.refresh_outline_symbols_at_cursor(cx);
                 self.refresh_sticky_headers(&snapshot, cx);
-                if source.is_local() && self.has_active_edit_prediction() {
-                    self.update_visible_edit_prediction(window, cx);
-                }
-
                 // Clean up orphaned review comments after edits
                 self.cleanup_orphaned_review_comments(cx);
 
@@ -10146,15 +9940,6 @@ impl Editor {
                 self.inlay_hint_visibility_changed(cx);
                 cx.emit(EditorEvent::BufferEdited);
                 cx.emit(SearchEvent::MatchesInvalidated);
-
-                let Some(project) = &self.project else { return };
-                let (telemetry, is_via_ssh) = {
-                    let project = project.read(cx);
-                    let telemetry = project.client().telemetry().clone();
-                    let is_via_ssh = project.is_via_remote_server();
-                    (telemetry, is_via_ssh)
-                };
-                telemetry.log_edit_event("editor", is_via_ssh);
             }
             multi_buffer::Event::BufferRangesUpdated {
                 buffer,
@@ -10256,7 +10041,6 @@ impl Editor {
                 }
                 jsx_tag_auto_close::refresh_enabled_in_any_buffer(self, multibuffer, cx);
                 cx.emit(EditorEvent::Reparsed(*buffer_id));
-                self.update_edit_prediction_settings(cx);
                 cx.notify();
             }
             multi_buffer::Event::SettingsChanged => {
@@ -10373,14 +10157,6 @@ impl Editor {
             self.set_max_diagnostics_severity(new_severity, cx);
         }
         self.refresh_runnables(None, window, cx);
-        self.update_edit_prediction_settings(cx);
-        self.refresh_edit_prediction(
-            true,
-            false,
-            EditPredictionRequestTrigger::SettingsChanged,
-            window,
-            cx,
-        );
         self.refresh_inline_values(cx);
 
         let old_cursor_shape = self.cursor_shape;
@@ -10815,70 +10591,6 @@ impl Editor {
             .collect()
     }
 
-    fn report_editor_event(
-        &self,
-        reported_event: ReportEditorEvent,
-        file_extension: Option<String>,
-        cx: &App,
-    ) {
-        if cfg!(any(test, feature = "test-support")) {
-            return;
-        }
-
-        let Some(project) = &self.project else { return };
-
-        // If None, we are in a file without an extension
-        let file = self
-            .buffer
-            .read(cx)
-            .as_singleton()
-            .and_then(|b| b.read(cx).file());
-        let file_extension = file_extension.or(file
-            .as_ref()
-            .and_then(|file| Path::new(file.file_name(cx)).extension())
-            .and_then(|e| e.to_str())
-            .map(|a| a.to_string()));
-
-        let vim_mode = vim_mode_setting::VimModeSetting::try_get(cx)
-            .map(|vim_mode| vim_mode.0)
-            .unwrap_or(false);
-
-        let edit_predictions_provider = all_language_settings(file, cx).edit_predictions.provider;
-        let copilot_enabled = edit_predictions_provider
-            == language::language_settings::EditPredictionProvider::Copilot;
-        let copilot_enabled_for_language = self
-            .buffer
-            .read(cx)
-            .language_settings(cx)
-            .show_edit_predictions;
-
-        let project = project.read(cx);
-        let event_type = reported_event.event_type();
-
-        if let ReportEditorEvent::Saved { auto_saved } = reported_event {
-            telemetry::event!(
-                event_type,
-                type = if auto_saved {"autosave"} else {"manual"},
-                file_extension,
-                vim_mode,
-                copilot_enabled,
-                copilot_enabled_for_language,
-                edit_predictions_provider,
-                is_via_ssh = project.is_via_remote_server(),
-            );
-        } else {
-            telemetry::event!(
-                event_type,
-                file_extension,
-                vim_mode,
-                copilot_enabled,
-                copilot_enabled_for_language,
-                edit_predictions_provider,
-                is_via_ssh = project.is_via_remote_server(),
-            );
-        };
-    }
-
     /// Copy the highlighted chunks to the clipboard as JSON. The format is an array of lines,
     /// with each line being an array of {text, highlight} objects.
     fn copy_highlight_json(
@@ -11004,14 +10716,14 @@ impl Editor {
             self.show_cursor_names(window, cx);
             self.buffer.update(cx, |buffer, cx| {
                 buffer.finalize_last_transaction(cx);
-                if self.leader_id.is_none() {
-                    buffer.set_active_selections(
-                        &self.selections.disjoint_anchors_arc(),
-                        self.selections.line_mode(),
-                        self.cursor_shape,
-                        cx,
-                    );
-                }
+                // Stores the selections in the buffer so that `show_cursor_when_unfocused`
+                // can draw them after this editor loses focus.
+                buffer.set_active_selections(
+                    &self.selections.disjoint_anchors_arc(),
+                    self.selections.line_mode(),
+                    self.cursor_shape,
+                    cx,
+                );
             });
 
             if cx.is_cursor_visible()
@@ -11070,7 +10782,6 @@ impl Editor {
         {
             self.hide_context_menu(window, cx);
         }
-        self.take_active_edit_prediction(true, cx);
         cx.emit(EditorEvent::Blurred);
         cx.notify();
     }
@@ -11564,7 +11275,6 @@ impl Editor {
             syntax: cx.theme().syntax().clone(),
             status: cx.theme().status().clone(),
             inlay_hints_style: make_inlay_hints_style(cx),
-            edit_prediction_styles: make_suggestion_styles(cx),
             unnecessary_code_fade: settings.unnecessary_code_fade,
             show_underlines: !self.mode.is_minimap(),
         }
@@ -11831,45 +11541,6 @@ struct CompletionEdit {
     new_text: String,
     replace_range: Range<text::Anchor>,
     snippet: Option<Snippet>,
-}
-
-pub trait CollaborationHub {
-    fn collaborators<'a>(&self, cx: &'a App) -> &'a HashMap<PeerId, Collaborator>;
-    fn user_participant_indices<'a>(&self, cx: &'a App) -> &'a HashMap<u64, ParticipantIndex>;
-    fn user_names(&self, cx: &App) -> HashMap<u64, SharedString>;
-
-    /// Whether local selection changes need to be broadcast to other
-    /// participants. Defaults to `true`; hubs that can be certain there is no
-    /// audience (e.g. an unshared local project) override this so the editor can
-    /// skip the per-keystroke `set_active_selections` work, which is
-    /// `O(selections)` and pure overhead when nobody is observing.
-    fn should_broadcast_selections(&self, _: &App) -> bool {
-        true
-    }
-}
-
-impl CollaborationHub for Entity<Project> {
-    fn collaborators<'a>(&self, cx: &'a App) -> &'a HashMap<PeerId, Collaborator> {
-        self.read(cx).collaborators()
-    }
-
-    fn should_broadcast_selections(&self, cx: &App) -> bool {
-        // `is_shared()` is true for a host that has shared the project and for a
-        // collab guest, and stays correct even before peer-join notifications
-        // have propagated locally (unlike a live collaborator count). A purely
-        // local project has no audience, so selections need not be broadcast.
-        self.read(cx).is_shared()
-    }
-
-    fn user_participant_indices<'a>(&self, cx: &'a App) -> &'a HashMap<u64, ParticipantIndex> {
-        self.read(cx).user_store().read(cx).participant_indices()
-    }
-
-    fn user_names(&self, cx: &App) -> HashMap<u64, SharedString> {
-        let this = self.read(cx);
-        let user_ids = this.collaborators().values().map(|c| c.user_id);
-        this.user_store().read(cx).participant_names(user_ids, cx)
-    }
 }
 
 pub trait SemanticsProvider {
@@ -12194,53 +11865,6 @@ fn ending_row(next_selection: &Selection<Point>, display_map: &DisplaySnapshot) 
 }
 
 impl EditorSnapshot {
-    pub fn remote_selections_in_range<'a>(
-        &'a self,
-        range: &'a Range<Anchor>,
-        collaboration_hub: &dyn CollaborationHub,
-        cx: &'a App,
-    ) -> impl 'a + Iterator<Item = RemoteSelection> {
-        let participant_names = collaboration_hub.user_names(cx);
-        let participant_indices = collaboration_hub.user_participant_indices(cx);
-        let collaborators_by_peer_id = collaboration_hub.collaborators(cx);
-        let collaborators_by_replica_id = collaborators_by_peer_id
-            .values()
-            .map(|collaborator| (collaborator.replica_id, collaborator))
-            .collect::<HashMap<_, _>>();
-        self.buffer_snapshot()
-            .selections_in_range(range, false)
-            .filter_map(move |(replica_id, line_mode, cursor_shape, selection)| {
-                if replica_id == ReplicaId::AGENT {
-                    Some(RemoteSelection {
-                        replica_id,
-                        selection,
-                        cursor_shape,
-                        line_mode,
-                        collaborator_id: CollaboratorId::Agent,
-                        user_name: Some("Agent".into()),
-                        color: cx.theme().players().agent(),
-                    })
-                } else {
-                    let collaborator = collaborators_by_replica_id.get(&replica_id)?;
-                    let participant_index = participant_indices.get(&collaborator.user_id).copied();
-                    let user_name = participant_names.get(&collaborator.user_id).cloned();
-                    Some(RemoteSelection {
-                        replica_id,
-                        selection,
-                        cursor_shape,
-                        line_mode,
-                        collaborator_id: CollaboratorId::PeerId(collaborator.peer_id),
-                        user_name,
-                        color: if let Some(index) = participant_index {
-                            cx.theme().players().color_for_participant(index.0)
-                        } else {
-                            cx.theme().players().absent()
-                        },
-                    })
-                }
-            })
-    }
-
     pub fn language_at<T: ToOffset>(&self, position: T) -> Option<&Arc<Language>> {
         self.display_snapshot
             .buffer_snapshot()

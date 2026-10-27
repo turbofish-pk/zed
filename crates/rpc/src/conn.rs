@@ -28,7 +28,7 @@ impl Connection {
         self.tx.send(message).await
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn in_memory(
         executor: gpui::BackgroundExecutor,
     ) -> (Self, Self, std::sync::Arc<std::sync::atomic::AtomicBool>) {

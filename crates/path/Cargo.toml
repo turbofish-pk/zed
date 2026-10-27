@@ -14,7 +14,7 @@ path = "src/path.rs"
 doctest = false
 
 [features]
-test-support = []
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -26,9 +26,6 @@ version = "1.0"
 version = "1.0"
 features = ["rc", "derive"]
 optional = true
-
-[target."cfg(windows)".dependencies.tendril]
-version = "0.5"
 
 [dev-dependencies.tempfile]
 version = "3.20.0"

@@ -12,7 +12,7 @@ workspace = true
 workspace = true
 
 [features]
-test-support = ["dep:log"]
+
 github-download = ["dep:async-compression", "dep:async-fs", "dep:async-tar", "dep:sha2", "dep:tempfile", "dep:util"]
 
 [lib]

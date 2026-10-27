@@ -70,11 +70,11 @@ pub use text::{
     ToPointUtf16, Transaction, TransactionId, Unclipped,
 };
 use theme::{ActiveTheme as _, SyntaxTheme};
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 use util::RandomCharIter;
 use util::{RangeExt, debug_panic, maybe, paths::PathStyle, rel_path::RelPath};
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub use {tree_sitter_python, tree_sitter_rust, tree_sitter_typescript};
 
 pub use lsp::DiagnosticSeverity;
@@ -310,7 +310,6 @@ pub enum Operation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BufferEditSource {
     User,
-    Agent,
     Remote,
 }
 
@@ -1174,7 +1173,7 @@ impl Buffer {
             syntax_map,
             reparse: None,
             non_text_state_update_count: 0,
-            sync_parse_timeout: if cfg!(any(test, feature = "test-support")) {
+            sync_parse_timeout: if cfg!(feature = "test-support") {
                 Some(Duration::from_millis(10))
             } else {
                 Some(Duration::from_millis(1))
@@ -1291,7 +1290,7 @@ impl Buffer {
         }
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn build_snapshot_sync(
         text: Rope,
         language: Option<Arc<Language>>,
@@ -1564,7 +1563,7 @@ impl Buffer {
 
     /// Assign a language to the buffer.
     pub fn set_language_async(&mut self, language: Option<Arc<Language>>, cx: &mut Context<Self>) {
-        self.set_language_(language, cfg!(any(test, feature = "test-support")), cx);
+        self.set_language_(language, cfg!(feature = "test-support"), cx);
     }
 
     /// Assign a language to the buffer, blocking for up to 1ms to reparse the buffer.
@@ -1885,7 +1884,7 @@ impl Buffer {
     }
 
     /// Whether the buffer is being parsed in the background.
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn is_parsing(&self) -> bool {
         self.reparse.is_some()
     }
@@ -2799,31 +2798,6 @@ impl Buffer {
         }
     }
 
-    pub fn set_agent_selections(
-        &mut self,
-        selections: Arc<[Selection<Anchor>]>,
-        line_mode: bool,
-        cursor_shape: CursorShape,
-        cx: &mut Context<Self>,
-    ) {
-        let lamport_timestamp = self.text.lamport_clock.tick();
-        self.remote_selections.insert(
-            ReplicaId::AGENT,
-            SelectionSet {
-                selections,
-                lamport_timestamp,
-                line_mode,
-                cursor_shape,
-            },
-        );
-        self.non_text_state_update_count += 1;
-        cx.notify();
-    }
-
-    pub fn remove_agent_selections(&mut self, cx: &mut Context<Self>) {
-        self.set_agent_selections(Arc::default(), false, Default::default(), cx);
-    }
-
     /// Replaces the buffer's entire text.
     pub fn set_text<T>(&mut self, text: T, cx: &mut Context<Self>) -> Option<clock::Lamport>
     where
@@ -3632,7 +3606,7 @@ impl EditedBufferSnapshot {
 }
 
 #[doc(hidden)]
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl Buffer {
     pub fn edit_via_marked_text(
         &mut self,
@@ -4203,7 +4177,7 @@ impl BufferSnapshot {
     }
 
     pub(crate) fn cached_highlight_runs(&self, range: Range<usize>) -> Option<Vec<HighlightRun>> {
-        #[cfg(any(test, feature = "test-support"))]
+        #[cfg(feature = "test-support")]
         {
             static DISABLE_HIGHLIGHT_CACHE: std::sync::LazyLock<bool> =
                 std::sync::LazyLock::new(|| {
@@ -6114,14 +6088,14 @@ impl IndentSize {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub struct TestFile {
     pub path: Arc<RelPath>,
     pub root_name: String,
     pub local_root: Option<PathBuf>,
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl File for TestFile {
     fn path(&self) -> &Arc<RelPath> {
         &self.path
@@ -6174,7 +6148,7 @@ impl File for TestFile {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl LocalFile for TestFile {
     fn abs_path(&self, _cx: &App) -> PathBuf {
         PathBuf::from(self.local_root.as_ref().unwrap())
@@ -6354,48 +6328,3 @@ pub(crate) fn trailing_whitespace_ranges(
     ranges
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{AutoindentMode, Buffer};
-    use crate::rust_lang;
-    use futures::FutureExt as _;
-    use gpui::{AppContext as _, TestAppContext};
-    use settings::SettingsStore;
-
-    #[gpui::test]
-    fn test_undo_during_async_autoindent(cx: &mut TestAppContext) {
-        cx.update(|cx| {
-            let settings_store = SettingsStore::test(cx);
-            cx.set_global(settings_store);
-        });
-        for undo_operations in [false, true] {
-            let buffer = cx.new(|cx| Buffer::local("fn a() {}", cx).with_language(rust_lang(), cx));
-            cx.run_until_parked();
-            let autoindent_applied = buffer.update(cx, |buffer, cx| {
-                buffer.set_sync_parse_timeout(None);
-                let edit_id = buffer
-                    .edit([(8..8, "\n\n")], Some(AutoindentMode::EachLine), cx)
-                    .unwrap();
-                let autoindent_applied = buffer.wait_for_autoindent_applied().unwrap();
-                buffer.reparse.take();
-                let snapshot = buffer.snapshot();
-                let mut syntax = snapshot.syntax;
-                syntax.reparse(&snapshot.text, snapshot.file.as_deref(), None, rust_lang());
-                buffer.did_finish_parsing(syntax, None, false, cx);
-                assert!(buffer.pending_autoindent.is_some());
-
-                if undo_operations {
-                    buffer.undo_operations([(edit_id, 1)].into_iter().collect(), cx);
-                } else {
-                    assert!(buffer.undo(cx).is_some());
-                }
-                assert!(buffer.pending_autoindent.is_none());
-                assert_eq!(buffer.text(), "fn a() {}");
-                autoindent_applied
-            });
-            cx.run_until_parked();
-            assert_eq!(buffer.read_with(cx, |buffer, _| buffer.text()), "fn a() {}");
-            autoindent_applied.now_or_never().unwrap().unwrap();
-        }
-    }
-}

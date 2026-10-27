@@ -26,10 +26,6 @@ path = "../fuzzy"
 package = "nucleo-matcher"
 version = "0.3"
 
-[dependencies.parking_lot]
-version = "0.12.1"
-features = ["arc_lock", "send_guard"]
-
 [dependencies.gpui]
 path = "../gpui"
 default-features = false
@@ -39,16 +35,3 @@ path = "../gpui_util"
 
 [dependencies.path]
 path = "../path"
-
-[dev-dependencies.criterion]
-version = "0.8.2"
-features = ["html_reports"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[[bench]]
-name = "match_benchmark"
-harness = false

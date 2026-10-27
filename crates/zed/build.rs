@@ -23,20 +23,6 @@ fn main() {
         }
     }
 
-    if cfg!(target_os = "macos") {
-        println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=12.0");
-
-        println!("cargo:rustc-link-arg=-Wl,-weak_framework,ReplayKit");
-
-        // Seems to be required to enable Swift concurrency
-        println!("cargo:rustc-link-arg=-Wl,-rpath,/usr/lib/swift");
-
-        // Register exported Objective-C selectors, protocols, etc
-        println!("cargo:rustc-link-arg=-Wl,-ObjC");
-
-        println!("cargo:rustc-link-arg=-Wl,-weak_framework,ScreenCaptureKit");
-    }
-
     // Populate git sha environment variable if git is available
     println!("cargo:rerun-if-changed=../../.git/logs/HEAD");
     println!(
@@ -79,139 +65,6 @@ fn main() {
             println!("cargo::warning=Info: using '{git_sha}' hash for ZED_COMMIT_SHA env var");
         }
     }
-
-    if cfg!(windows) {
-        if cfg!(target_env = "msvc") {
-            // todo(windows): This is to avoid stack overflow. Remove it when solved.
-            println!("cargo:rustc-link-arg=/stack:{}", 8 * 1024 * 1024);
-            println!("cargo:rustc-link-arg=/DELAYLOAD:windowsperformancerecordercontrol");
-            println!("cargo:rustc-link-lib=delayimp");
-        }
-
-        if cfg!(target_arch = "x86_64") || cfg!(target_arch = "aarch64") {
-            let out_dir = std::env::var("OUT_DIR").unwrap();
-            let out_dir: &std::path::Path = out_dir.as_ref();
-            let target_dir = std::path::Path::new(&out_dir)
-                .parent()
-                .and_then(|p| p.parent())
-                .and_then(|p| p.parent())
-                .expect("Failed to find target directory");
-
-            let conpty_dll_target = target_dir.join("conpty.dll");
-            let open_console_target = target_dir.join("OpenConsole.exe");
-
-            // TODO: Switch back to the stable channel once Microsoft finally decides to publish v1.26
-            let conpty_url = "https://github.com/microsoft/terminal/releases/download/v1.25.1912.0/Microsoft.Windows.Console.ConPTY.1.25.260710002-preview.nupkg";
-            let nupkg_path = out_dir.join("conpty.nupkg.zip");
-            let extract_dir = out_dir.join("conpty");
-
-            let download_script = format!(
-                "$ProgressPreference = 'SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}'",
-                conpty_url,
-                nupkg_path.display()
-            );
-
-            let download_result = Command::new("powershell")
-                .args([
-                    "-NoProfile",
-                    "-NonInteractive",
-                    "-Command",
-                    &download_script,
-                ])
-                .output();
-
-            match download_result {
-                Ok(output) if output.status.success() => {
-                    println!("Downloaded conpty nupkg successfully");
-
-                    let extract_script = format!(
-                        "$ProgressPreference = 'SilentlyContinue'; Expand-Archive -Path '{}' -DestinationPath '{}' -Force",
-                        nupkg_path.display(),
-                        extract_dir.display()
-                    );
-
-                    let extract_result = Command::new("powershell")
-                        .args(["-NoProfile", "-NonInteractive", "-Command", &extract_script])
-                        .output();
-
-                    match extract_result {
-                        Ok(output) if output.status.success() => {
-                            let (conpty_dll_source, open_console_source) =
-                                if cfg!(target_arch = "x86_64") {
-                                    (
-                                        extract_dir.join("runtimes/win-x64/native/conpty.dll"),
-                                        extract_dir
-                                            .join("build/native/runtimes/x64/OpenConsole.exe"),
-                                    )
-                                } else {
-                                    (
-                                        extract_dir.join("runtimes/win-arm64/native/conpty.dll"),
-                                        extract_dir
-                                            .join("build/native/runtimes/arm64/OpenConsole.exe"),
-                                    )
-                                };
-
-                            match std::fs::copy(&conpty_dll_source, &conpty_dll_target) {
-                                Ok(_) => {
-                                    println!("Copied conpty.dll to {}", conpty_dll_target.display())
-                                }
-                                Err(e) => println!(
-                                    "cargo::warning=Failed to copy conpty.dll from {}: {}",
-                                    conpty_dll_source.display(),
-                                    e
-                                ),
-                            }
-
-                            match std::fs::copy(&open_console_source, &open_console_target) {
-                                Ok(_) => println!(
-                                    "Copied OpenConsole.exe to {}",
-                                    open_console_target.display()
-                                ),
-                                Err(e) => println!(
-                                    "cargo::warning=Failed to copy OpenConsole.exe from {}: {}",
-                                    open_console_source.display(),
-                                    e
-                                ),
-                            }
-                        }
-                        Ok(output) => {
-                            println!(
-                                "cargo::warning=Failed to extract conpty nupkg: {}",
-                                String::from_utf8_lossy(&output.stderr)
-                            );
-                        }
-                        Err(e) => {
-                            println!(
-                                "cargo::warning=Failed to run PowerShell for extraction: {}",
-                                e
-                            );
-                        }
-                    }
-                }
-                Ok(output) => {
-                    println!(
-                        "cargo::warning=Failed to download conpty nupkg: {}",
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
-                Err(e) => {
-                    println!(
-                        "cargo::warning=Failed to run PowerShell for download: {}",
-                        e
-                    );
-                }
-            }
-        }
-
-        println!("cargo:rerun-if-env-changed=RELEASE_CHANNEL");
-        println!("cargo:rerun-if-env-changed=GITHUB_RUN_NUMBER");
-
-        #[cfg(windows)]
-        {
-            windows_resources::compile(false).expect("failed to compile Windows resources");
-        }
-    }
-
     
     prepare_app_icon_x11();
 }
@@ -229,9 +82,6 @@ fn icon_path() -> std::path::PathBuf {
         _ => "-dev",
     };
 
-    #[cfg(windows)]
-    let icon = format!("resources/windows/app-icon{}.ico", channel);
-    #[cfg(not(windows))]
     let icon = format!("resources/app-icon{}.png", channel);
 
     std::path::PathBuf::from_str(&icon).unwrap()

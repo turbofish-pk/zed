@@ -1,6 +1,6 @@
 use crate::{
-    CollaboratorId, DelayedDebouncedEditAction, FollowableViewRegistry, ItemNavHistory,
-    SerializableItemRegistry, ToolbarItemLocation, ViewId, Workspace, WorkspaceId,
+   DelayedDebouncedEditAction, ItemNavHistory,
+    SerializableItemRegistry, ToolbarItemLocation, Workspace, WorkspaceId,
     invalid_item_view::InvalidItemView,
     pane::{self, Pane},
     persistence::model::ItemId,
@@ -8,8 +8,6 @@ use crate::{
     workspace_settings::{AutosaveSetting, WorkspaceSettings},
 };
 use anyhow::Result;
-use client::{Client, proto};
-use futures::channel::mpsc;
 use gpui::{
     Action, AnyElement, AnyEntity, AnyView, App, AppContext, Context, Entity, EntityId,
     EventEmitter, FocusHandle, Focusable, Font, Pixels, Point, Render, SharedString, Task, TaskExt,
@@ -25,16 +23,12 @@ pub use settings::{
 use smallvec::SmallVec;
 use std::{
     any::{Any, TypeId},
-    cell::RefCell,
     path::Path,
-    rc::Rc,
     sync::Arc,
     time::Duration,
 };
 use ui::{Color, Icon, IntoElement, Label, LabelCommon};
 use util::ResultExt;
-
-pub const LEADER_UPDATE_THROTTLE: Duration = Duration::from_millis(200);
 
 #[derive(Clone, Copy, Debug)]
 pub struct SaveOptions {
@@ -225,10 +219,6 @@ pub trait Item: Focusable + EventEmitter<Self::Event> + Render + Sized {
         _: &mut Context<Self>,
     ) -> bool {
         false
-    }
-
-    fn telemetry_event_text(&self) -> Option<&'static str> {
-        None
     }
 
     /// (model id, Item)
@@ -487,7 +477,6 @@ pub trait ItemHandle: 'static + Send {
     fn tab_icon(&self, window: &Window, cx: &App) -> Option<Icon>;
     fn tab_tooltip_text(&self, cx: &App) -> Option<SharedString>;
     fn tab_tooltip_content(&self, cx: &App) -> Option<TabTooltipContent>;
-    fn telemetry_event_text(&self, cx: &App) -> Option<&'static str>;
     fn dragged_tab_content(
         &self,
         params: TabContentParams,
@@ -553,7 +542,7 @@ pub trait ItemHandle: 'static + Send {
         cx: &mut App,
     ) -> Task<Result<()>>;
     fn act_as_type(&self, type_id: TypeId, cx: &App) -> Option<AnyEntity>;
-    fn to_followable_item_handle(&self, cx: &App) -> Option<Box<dyn FollowableItemHandle>>;
+    
     fn to_serializable_item_handle(&self, cx: &App) -> Option<Box<dyn SerializableItemHandle>>;
     fn on_release(
         &self,
@@ -620,10 +609,6 @@ impl<T: Item> ItemHandle for Entity<T> {
 
     fn item_focus_handle(&self, cx: &App) -> FocusHandle {
         self.read(cx).focus_handle(cx)
-    }
-
-    fn telemetry_event_text(&self, cx: &App) -> Option<&'static str> {
-        self.read(cx).telemetry_event_text()
     }
 
     fn tab_content(&self, params: TabContentParams, window: &Window, cx: &App) -> AnyElement {
@@ -781,45 +766,6 @@ impl<T: Item> ItemHandle for Entity<T> {
 
         if old_item_pane.is_none() {
             let mut pending_autosave = DelayedDebouncedEditAction::new();
-            let (pending_update_tx, mut pending_update_rx) = mpsc::unbounded();
-            let pending_update = Rc::new(RefCell::new(None));
-
-            let mut send_follower_updates = None;
-            if let Some(item) = self.to_followable_item_handle(cx) {
-                let is_project_item = item.is_project_item(window, cx);
-                let item = item.downgrade();
-
-                send_follower_updates = Some(cx.spawn_in(window, {
-                    let pending_update = pending_update.clone();
-                    async move |workspace, cx| {
-                        while let Ok(mut leader_id) = pending_update_rx.recv().await {
-                            while let Ok(id) = pending_update_rx.try_recv() {
-                                leader_id = id;
-                            }
-
-                            workspace.update_in(cx, |workspace, window, cx| {
-                                let Some(item) = item.upgrade() else { return };
-                                workspace.update_followers(
-                                    is_project_item,
-                                    proto::update_followers::Variant::UpdateView(
-                                        proto::UpdateView {
-                                            id: item
-                                                .remote_id(workspace.client(), window, cx)
-                                                .and_then(|id| id.to_proto()),
-                                            variant: pending_update.borrow_mut().take(),
-                                            leader_id,
-                                        },
-                                    ),
-                                    window,
-                                    cx,
-                                );
-                            })?;
-                            cx.background_executor().timer(LEADER_UPDATE_THROTTLE).await;
-                        }
-                        anyhow::Ok(())
-                    }
-                }));
-            }
 
             let mut event_subscription = Some(cx.subscribe_in(
                 self,
@@ -834,40 +780,6 @@ impl<T: Item> ItemHandle for Entity<T> {
                     } else {
                         return;
                     };
-
-                    if let Some(item) = item.to_followable_item_handle(cx) {
-                        let leader_id = workspace.leader_for_pane(&pane);
-
-                        if let Some(leader_id) = leader_id
-                            && let Some(FollowEvent::Unfollow) = item.to_follow_event(event)
-                        {
-                            workspace.unfollow(leader_id, window, cx);
-                        }
-
-                        if item.item_focus_handle(cx).contains_focused(window, cx) {
-                            match leader_id {
-                                Some(CollaboratorId::Agent) => {}
-                                Some(CollaboratorId::PeerId(leader_peer_id)) => {
-                                    item.add_event_to_update_proto(
-                                        event,
-                                        &mut pending_update.borrow_mut(),
-                                        window,
-                                        cx,
-                                    );
-                                    pending_update_tx.unbounded_send(Some(leader_peer_id)).ok();
-                                }
-                                None => {
-                                    item.add_event_to_update_proto(
-                                        event,
-                                        &mut pending_update.borrow_mut(),
-                                        window,
-                                        cx,
-                                    );
-                                    pending_update_tx.unbounded_send(None).ok();
-                                }
-                            }
-                        }
-                    }
 
                     if let Some(item) = item.to_serializable_item_handle(cx)
                         && item.should_serialize(event, cx)
@@ -1001,7 +913,6 @@ impl<T: Item> ItemHandle for Entity<T> {
             cx.observe_release_in(self, window, move |workspace, _, _, _| {
                 workspace.panes_by_item.remove(&item_id);
                 event_subscription.take();
-                send_follower_updates.take();
             })
             .detach();
         }
@@ -1098,9 +1009,7 @@ impl<T: Item> ItemHandle for Entity<T> {
         self.read(cx).act_as_type(type_id, self, cx)
     }
 
-    fn to_followable_item_handle(&self, cx: &App) -> Option<Box<dyn FollowableItemHandle>> {
-        FollowableViewRegistry::to_followable_view(self.clone(), cx)
-    }
+
 
     fn on_release(
         &self,
@@ -1251,641 +1160,8 @@ pub trait ProjectItem: Item {
     }
 }
 
-#[derive(Debug)]
-pub enum FollowEvent {
-    Unfollow,
-}
 
 pub enum Dedup {
     KeepExisting,
     ReplaceExisting,
-}
-
-pub trait FollowableItem: Item {
-    fn remote_id(&self) -> Option<ViewId>;
-    fn to_state_proto(&self, window: &mut Window, cx: &mut App) -> Option<proto::view::Variant>;
-    fn from_state_proto(
-        project: Entity<Workspace>,
-        id: ViewId,
-        state: &mut Option<proto::view::Variant>,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> Option<Task<Result<Entity<Self>>>>;
-    fn to_follow_event(event: &Self::Event) -> Option<FollowEvent>;
-    fn add_event_to_update_proto(
-        &self,
-        event: &Self::Event,
-        update: &mut Option<proto::update_view::Variant>,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> bool;
-    fn apply_update_proto(
-        &mut self,
-        project: &Entity<Project>,
-        message: proto::update_view::Variant,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> Task<Result<()>>;
-    fn is_project_item(&self, window: &Window, cx: &App) -> bool;
-    fn set_leader_id(
-        &mut self,
-        leader_peer_id: Option<CollaboratorId>,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    );
-    fn dedup(&self, existing: &Self, window: &Window, cx: &App) -> Option<Dedup>;
-    fn update_agent_location(
-        &mut self,
-        _location: language::Anchor,
-        _window: &mut Window,
-        _cx: &mut Context<Self>,
-    ) {
-    }
-}
-
-pub trait FollowableItemHandle: ItemHandle {
-    fn remote_id(&self, client: &Arc<Client>, window: &mut Window, cx: &mut App) -> Option<ViewId>;
-    fn downgrade(&self) -> Box<dyn WeakFollowableItemHandle>;
-    fn set_leader_id(
-        &self,
-        leader_peer_id: Option<CollaboratorId>,
-        window: &mut Window,
-        cx: &mut App,
-    );
-    fn to_state_proto(&self, window: &mut Window, cx: &mut App) -> Option<proto::view::Variant>;
-    fn add_event_to_update_proto(
-        &self,
-        event: &dyn Any,
-        update: &mut Option<proto::update_view::Variant>,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> bool;
-    fn to_follow_event(&self, event: &dyn Any) -> Option<FollowEvent>;
-    fn apply_update_proto(
-        &self,
-        project: &Entity<Project>,
-        message: proto::update_view::Variant,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> Task<Result<()>>;
-    fn is_project_item(&self, window: &mut Window, cx: &mut App) -> bool;
-    fn dedup(
-        &self,
-        existing: &dyn FollowableItemHandle,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> Option<Dedup>;
-    fn update_agent_location(&self, location: language::Anchor, window: &mut Window, cx: &mut App);
-}
-
-impl<T: FollowableItem> FollowableItemHandle for Entity<T> {
-    fn remote_id(&self, client: &Arc<Client>, _: &mut Window, cx: &mut App) -> Option<ViewId> {
-        self.read(cx).remote_id().or_else(|| {
-            client.peer_id().map(|creator| ViewId {
-                creator: CollaboratorId::PeerId(creator),
-                id: self.item_id().as_u64(),
-            })
-        })
-    }
-
-    fn downgrade(&self) -> Box<dyn WeakFollowableItemHandle> {
-        Box::new(self.downgrade())
-    }
-
-    fn set_leader_id(&self, leader_id: Option<CollaboratorId>, window: &mut Window, cx: &mut App) {
-        self.update(cx, |this, cx| this.set_leader_id(leader_id, window, cx))
-    }
-
-    fn to_state_proto(&self, window: &mut Window, cx: &mut App) -> Option<proto::view::Variant> {
-        self.update(cx, |this, cx| this.to_state_proto(window, cx))
-    }
-
-    fn add_event_to_update_proto(
-        &self,
-        event: &dyn Any,
-        update: &mut Option<proto::update_view::Variant>,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> bool {
-        if let Some(event) = event.downcast_ref() {
-            self.update(cx, |this, cx| {
-                this.add_event_to_update_proto(event, update, window, cx)
-            })
-        } else {
-            false
-        }
-    }
-
-    fn to_follow_event(&self, event: &dyn Any) -> Option<FollowEvent> {
-        T::to_follow_event(event.downcast_ref()?)
-    }
-
-    fn apply_update_proto(
-        &self,
-        project: &Entity<Project>,
-        message: proto::update_view::Variant,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> Task<Result<()>> {
-        self.update(cx, |this, cx| {
-            this.apply_update_proto(project, message, window, cx)
-        })
-    }
-
-    fn is_project_item(&self, window: &mut Window, cx: &mut App) -> bool {
-        self.read(cx).is_project_item(window, cx)
-    }
-
-    fn dedup(
-        &self,
-        existing: &dyn FollowableItemHandle,
-        window: &mut Window,
-        cx: &mut App,
-    ) -> Option<Dedup> {
-        let existing = existing.to_any_view().downcast::<T>().ok()?;
-        self.read(cx).dedup(existing.read(cx), window, cx)
-    }
-
-    fn update_agent_location(&self, location: language::Anchor, window: &mut Window, cx: &mut App) {
-        self.update(cx, |this, cx| {
-            this.update_agent_location(location, window, cx)
-        })
-    }
-}
-
-pub trait WeakFollowableItemHandle: Send + Sync {
-    fn upgrade(&self) -> Option<Box<dyn FollowableItemHandle>>;
-}
-
-impl<T: FollowableItem> WeakFollowableItemHandle for WeakEntity<T> {
-    fn upgrade(&self) -> Option<Box<dyn FollowableItemHandle>> {
-        Some(Box::new(self.upgrade()?))
-    }
-}
-
-#[cfg(any(test, feature = "test-support"))]
-pub mod test {
-    use super::{Item, ItemEvent, SerializableItem, TabContentParams};
-    use crate::{
-        ItemId, ItemNavHistory, Workspace, WorkspaceId,
-        item::{ItemBufferKind, SaveOptions},
-    };
-    use gpui::{
-        AnyElement, App, AppContext as _, Context, Entity, EntityId, EventEmitter, Focusable,
-        InteractiveElement, IntoElement, ParentElement, Render, SharedString, Task, WeakEntity,
-        Window,
-    };
-    use language::Capability;
-    use project::{Project, ProjectEntryId, ProjectPath, WorktreeId};
-    use std::{any::Any, cell::Cell, sync::Arc};
-    use util::rel_path::rel_path;
-
-    pub struct TestProjectItem {
-        pub entry_id: Option<ProjectEntryId>,
-        pub project_path: Option<ProjectPath>,
-        pub is_dirty: bool,
-    }
-
-    pub struct TestItem {
-        pub workspace_id: Option<WorkspaceId>,
-        pub state: String,
-        pub label: String,
-        pub save_count: usize,
-        pub save_as_count: usize,
-        pub reload_count: usize,
-        pub is_dirty: bool,
-        pub save_error: Option<String>,
-        pub buffer_kind: ItemBufferKind,
-        pub has_conflict: bool,
-        pub has_deleted_file: bool,
-        pub capability: Capability,
-        pub project_items: Vec<Entity<TestProjectItem>>,
-        pub nav_history: Option<ItemNavHistory>,
-        pub tab_descriptions: Option<Vec<&'static str>>,
-        pub tab_detail: Cell<Option<usize>>,
-        serialize: Option<Box<dyn Fn() -> Option<Task<anyhow::Result<()>>>>>,
-        focus_handle: gpui::FocusHandle,
-        pub child_focus_handles: Vec<gpui::FocusHandle>,
-    }
-
-    impl project::ProjectItem for TestProjectItem {
-        fn try_open(
-            _project: &Entity<Project>,
-            _path: &ProjectPath,
-            _cx: &mut App,
-        ) -> Option<Task<anyhow::Result<Entity<Self>>>> {
-            None
-        }
-        fn entry_id(&self, _: &App) -> Option<ProjectEntryId> {
-            self.entry_id
-        }
-
-        fn project_path(&self, _: &App) -> Option<ProjectPath> {
-            self.project_path.clone()
-        }
-
-        fn is_dirty(&self) -> bool {
-            self.is_dirty
-        }
-    }
-
-    pub enum TestItemEvent {
-        Edit,
-    }
-
-    impl TestProjectItem {
-        pub fn new(id: u64, path: &str, cx: &mut App) -> Entity<Self> {
-            Self::new_in_worktree(id, path, WorktreeId::from_usize(0), cx)
-        }
-
-        pub fn new_in_worktree(
-            id: u64,
-            path: &str,
-            worktree_id: WorktreeId,
-            cx: &mut App,
-        ) -> Entity<Self> {
-            let entry_id = Some(ProjectEntryId::from_proto(id));
-            let project_path = Some(ProjectPath {
-                worktree_id,
-                path: rel_path(path).into(),
-            });
-            cx.new(|_| Self {
-                entry_id,
-                project_path,
-                is_dirty: false,
-            })
-        }
-
-        pub fn new_untitled(cx: &mut App) -> Entity<Self> {
-            cx.new(|_| Self {
-                project_path: None,
-                entry_id: None,
-                is_dirty: false,
-            })
-        }
-
-        pub fn new_dirty(id: u64, path: &str, cx: &mut App) -> Entity<Self> {
-            let entry_id = Some(ProjectEntryId::from_proto(id));
-            let project_path = Some(ProjectPath {
-                worktree_id: WorktreeId::from_usize(0),
-                path: rel_path(path).into(),
-            });
-            cx.new(|_| Self {
-                entry_id,
-                project_path,
-                is_dirty: true,
-            })
-        }
-    }
-
-    impl TestItem {
-        pub fn new(cx: &mut Context<Self>) -> Self {
-            Self {
-                state: String::new(),
-                label: String::new(),
-                save_count: 0,
-                save_as_count: 0,
-                reload_count: 0,
-                is_dirty: false,
-                save_error: None,
-                has_conflict: false,
-                has_deleted_file: false,
-                capability: Capability::ReadWrite,
-                project_items: Vec::new(),
-                buffer_kind: ItemBufferKind::Singleton,
-                nav_history: None,
-                tab_descriptions: None,
-                tab_detail: Default::default(),
-                workspace_id: Default::default(),
-                focus_handle: cx.focus_handle(),
-                serialize: None,
-                child_focus_handles: Vec::new(),
-            }
-        }
-
-        pub fn new_deserialized(id: WorkspaceId, cx: &mut Context<Self>) -> Self {
-            let mut this = Self::new(cx);
-            this.workspace_id = Some(id);
-            this
-        }
-
-        pub fn with_label(mut self, state: &str) -> Self {
-            self.label = state.to_string();
-            self
-        }
-
-        pub fn with_buffer_kind(mut self, buffer_kind: ItemBufferKind) -> Self {
-            self.buffer_kind = buffer_kind;
-            self
-        }
-
-        pub fn set_has_deleted_file(&mut self, deleted: bool) {
-            self.has_deleted_file = deleted;
-        }
-
-        pub fn with_dirty(mut self, dirty: bool) -> Self {
-            self.is_dirty = dirty;
-            self
-        }
-
-        pub fn with_save_error(mut self, message: impl Into<String>) -> Self {
-            self.save_error = Some(message.into());
-            self
-        }
-
-        pub fn with_conflict(mut self, has_conflict: bool) -> Self {
-            self.has_conflict = has_conflict;
-            self
-        }
-
-        pub fn with_capability(mut self, capability: Capability) -> Self {
-            self.capability = capability;
-            self
-        }
-
-        pub fn with_project_items(mut self, items: &[Entity<TestProjectItem>]) -> Self {
-            self.project_items.clear();
-            self.project_items.extend(items.iter().cloned());
-            self
-        }
-
-        pub fn with_serialize(
-            mut self,
-            serialize: impl Fn() -> Option<Task<anyhow::Result<()>>> + 'static,
-        ) -> Self {
-            self.serialize = Some(Box::new(serialize));
-            self
-        }
-
-        pub fn with_child_focus_handles(mut self, count: usize, cx: &mut Context<Self>) -> Self {
-            self.child_focus_handles = (0..count).map(|_| cx.focus_handle()).collect();
-            self
-        }
-
-        pub fn set_state(&mut self, state: String, cx: &mut Context<Self>) {
-            self.push_to_nav_history(cx);
-            self.state = state;
-        }
-
-        fn push_to_nav_history(&mut self, cx: &mut Context<Self>) {
-            if let Some(history) = &mut self.nav_history {
-                history.push(Some(Box::new(self.state.clone())), None, cx);
-            }
-        }
-    }
-
-    impl Render for TestItem {
-        fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-            let parent = gpui::div().track_focus(&self.focus_handle(cx));
-            self.child_focus_handles
-                .iter()
-                .fold(parent, |parent, child_handle| {
-                    parent.child(gpui::div().track_focus(child_handle))
-                })
-        }
-    }
-
-    impl EventEmitter<ItemEvent> for TestItem {}
-
-    impl Focusable for TestItem {
-        fn focus_handle(&self, _: &App) -> gpui::FocusHandle {
-            self.focus_handle.clone()
-        }
-    }
-
-    impl Item for TestItem {
-        type Event = ItemEvent;
-
-        fn to_item_events(event: &Self::Event, f: &mut dyn FnMut(ItemEvent)) {
-            f(*event)
-        }
-
-        fn tab_content_text(&self, detail: usize, _cx: &App) -> SharedString {
-            self.tab_descriptions
-                .as_ref()
-                .and_then(|descriptions| {
-                    let description = *descriptions.get(detail).or_else(|| descriptions.last())?;
-                    description.into()
-                })
-                .unwrap_or_default()
-                .into()
-        }
-
-        fn telemetry_event_text(&self) -> Option<&'static str> {
-            None
-        }
-
-        fn tab_content(&self, params: TabContentParams, _window: &Window, _cx: &App) -> AnyElement {
-            self.tab_detail.set(params.detail);
-            gpui::div().into_any_element()
-        }
-
-        fn for_each_project_item(
-            &self,
-            cx: &App,
-            f: &mut dyn FnMut(EntityId, &dyn project::ProjectItem),
-        ) {
-            self.project_items
-                .iter()
-                .for_each(|item| f(item.entity_id(), item.read(cx)))
-        }
-
-        fn buffer_kind(&self, _: &App) -> ItemBufferKind {
-            self.buffer_kind
-        }
-
-        fn set_nav_history(
-            &mut self,
-            history: ItemNavHistory,
-            _window: &mut Window,
-            _: &mut Context<Self>,
-        ) {
-            self.nav_history = Some(history);
-        }
-
-        fn navigate(
-            &mut self,
-            state: Arc<dyn Any + Send>,
-            _window: &mut Window,
-            _: &mut Context<Self>,
-        ) -> bool {
-            if let Some(state) = state.downcast_ref::<Box<String>>() {
-                let state = *state.clone();
-                if state != self.state {
-                    false
-                } else {
-                    self.state = state;
-                    true
-                }
-            } else {
-                false
-            }
-        }
-
-        fn deactivated(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
-            self.push_to_nav_history(cx);
-        }
-
-        fn can_split(&self) -> bool {
-            true
-        }
-
-        fn clone_on_split(
-            &self,
-            _workspace_id: Option<WorkspaceId>,
-            _: &mut Window,
-            cx: &mut Context<Self>,
-        ) -> Task<Option<Entity<Self>>>
-        where
-            Self: Sized,
-        {
-            Task::ready(Some(cx.new(|cx| {
-                Self {
-                    state: self.state.clone(),
-                    label: self.label.clone(),
-                    save_count: self.save_count,
-                    save_as_count: self.save_as_count,
-                    reload_count: self.reload_count,
-                    is_dirty: self.is_dirty,
-                    save_error: self.save_error.clone(),
-                    buffer_kind: self.buffer_kind,
-                    has_conflict: self.has_conflict,
-                    has_deleted_file: self.has_deleted_file,
-                    capability: self.capability,
-                    project_items: self.project_items.clone(),
-                    nav_history: None,
-                    tab_descriptions: None,
-                    tab_detail: Default::default(),
-                    workspace_id: self.workspace_id,
-                    focus_handle: cx.focus_handle(),
-                    serialize: None,
-                    child_focus_handles: self
-                        .child_focus_handles
-                        .iter()
-                        .map(|_| cx.focus_handle())
-                        .collect(),
-                }
-            })))
-        }
-
-        fn is_dirty(&self, _: &App) -> bool {
-            self.is_dirty
-        }
-
-        fn has_conflict(&self, _: &App) -> bool {
-            self.has_conflict
-        }
-
-        fn has_deleted_file(&self, _: &App) -> bool {
-            self.has_deleted_file
-        }
-
-        fn can_save(&self, cx: &App) -> bool {
-            !self.project_items.is_empty()
-                && self
-                    .project_items
-                    .iter()
-                    .all(|item| item.read(cx).entry_id.is_some())
-        }
-
-        fn can_save_as(&self, _cx: &App) -> bool {
-            self.buffer_kind == ItemBufferKind::Singleton
-        }
-
-        fn capability(&self, _: &App) -> Capability {
-            self.capability
-        }
-
-        fn save(
-            &mut self,
-            _: SaveOptions,
-            _: Entity<Project>,
-            _window: &mut Window,
-            cx: &mut Context<Self>,
-        ) -> Task<anyhow::Result<()>> {
-            if let Some(error) = &self.save_error {
-                return Task::ready(Err(anyhow::anyhow!("{error}")));
-            }
-            self.save_count += 1;
-            self.is_dirty = false;
-            for item in &self.project_items {
-                item.update(cx, |item, _| {
-                    if item.is_dirty {
-                        item.is_dirty = false;
-                    }
-                })
-            }
-            Task::ready(Ok(()))
-        }
-
-        fn save_as(
-            &mut self,
-            _: Entity<Project>,
-            _: ProjectPath,
-            _window: &mut Window,
-            _: &mut Context<Self>,
-        ) -> Task<anyhow::Result<()>> {
-            self.save_as_count += 1;
-            self.is_dirty = false;
-            Task::ready(Ok(()))
-        }
-
-        fn reload(
-            &mut self,
-            _: Entity<Project>,
-            _window: &mut Window,
-            _: &mut Context<Self>,
-        ) -> Task<anyhow::Result<()>> {
-            self.reload_count += 1;
-            self.is_dirty = false;
-            Task::ready(Ok(()))
-        }
-    }
-
-    impl SerializableItem for TestItem {
-        fn serialized_item_kind() -> &'static str {
-            "TestItem"
-        }
-
-        fn deserialize(
-            _project: Entity<Project>,
-            _workspace: WeakEntity<Workspace>,
-            workspace_id: WorkspaceId,
-            _item_id: ItemId,
-            _window: &mut Window,
-            cx: &mut App,
-        ) -> Task<anyhow::Result<Entity<Self>>> {
-            let entity = cx.new(|cx| Self::new_deserialized(workspace_id, cx));
-            Task::ready(Ok(entity))
-        }
-
-        fn cleanup(
-            _workspace_id: WorkspaceId,
-            _alive_items: Vec<ItemId>,
-            _window: &mut Window,
-            _cx: &mut App,
-        ) -> Task<anyhow::Result<()>> {
-            Task::ready(Ok(()))
-        }
-
-        fn serialize(
-            &mut self,
-            _workspace: &mut Workspace,
-            _item_id: ItemId,
-            _closing: bool,
-            _cx: &mut Context<Self>,
-        ) -> Option<Task<anyhow::Result<()>>> {
-            if let Some(serialize) = self.serialize.take() {
-                let result = serialize();
-                self.serialize = Some(serialize);
-                result
-            } else {
-                None
-            }
-        }
-
-        fn should_serialize(&self, _event: &Self::Event) -> bool {
-            false
-        }
-    }
 }

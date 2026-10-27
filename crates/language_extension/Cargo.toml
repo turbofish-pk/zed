@@ -61,9 +61,6 @@ features = ["rc"]
 version = "1.0.144"
 features = ["preserve_order", "raw_value"]
 
-[dependencies.tracing]
-version = "0.1.40"
-
 [dependencies.util]
 path = "../util"
 

@@ -2,29 +2,19 @@ use std::{sync::Arc, time::Duration};
 
 use anyhow::{Context as _, Result};
 use collections::{HashMap, HashSet};
-use futures::{
-    FutureExt as _,
-    future::{Shared, join_all},
-};
-use gpui::{AppContext as _, AsyncApp, Context, Entity, SharedString, Task};
-use language::{
-    Buffer, LocalFile as _, PointUtf16, point_to_lsp,
-    proto::{deserialize_lsp_edit, serialize_lsp_edit},
-};
+use futures::{FutureExt as _, future::Shared};
+use gpui::{AppContext as _, Context, Entity, SharedString, Task};
+use language::{Buffer, LocalFile as _, proto::deserialize_lsp_edit};
 use lsp::LanguageServerId;
-use rpc::{TypedEnvelope, proto};
+use rpc::proto;
 use settings::Settings as _;
-use text::BufferId;
 use util::ResultExt as _;
 use worktree::File;
 
 use crate::{
     ColorPresentation, DocumentColor, LspStore,
-    lsp_command::{GetDocumentColor, LspCommand as _, make_text_document_identifier},
-    lsp_store::{
-        LspStoreEvent, RunningFetch, missing_servers_to_query, next_lsp_fetch_id,
-        upstream_lsp_query_server_filter,
-    },
+    lsp_command::{GetDocumentColor, make_text_document_identifier},
+    lsp_store::{LspStoreEvent, RunningFetch, missing_servers_to_query, next_lsp_fetch_id},
     project_settings::ProjectSettings,
 };
 
@@ -86,18 +76,6 @@ impl LspStore {
                 .context("sending refresh document colors downstream")
                 .log_err();
         }
-    }
-
-    pub(super) async fn handle_refresh_document_colors(
-        lsp_store: Entity<Self>,
-        envelope: TypedEnvelope<proto::RefreshDocumentColors>,
-        mut cx: AsyncApp,
-    ) -> Result<proto::Ack> {
-        lsp_store.update(&mut cx, |lsp_store, cx| {
-            let server_id = envelope.payload.server_id.map(LanguageServerId::from_proto);
-            lsp_store.refresh_document_colors(server_id, cx);
-        });
-        Ok(proto::Ack {})
     }
 
     pub fn document_colors(
@@ -346,149 +324,27 @@ impl LspStore {
         for_servers: Option<HashSet<LanguageServerId>>,
         cx: &mut Context<Self>,
     ) -> Task<anyhow::Result<Option<HashMap<LanguageServerId, HashSet<DocumentColor>>>>> {
-        if let Some((client, project_id)) = self.upstream_client() {
-            let request = GetDocumentColor {};
-            if !self.is_capable_for_proto_request(buffer, &request, cx) {
-                return Task::ready(Ok(None));
-            }
-
-            let request_timeout = ProjectSettings::get_global(cx)
-                .global_lsp_settings
-                .get_request_timeout();
-            let request_task = client.request_lsp(
-                project_id,
-                upstream_lsp_query_server_filter(for_servers.as_ref()),
-                request_timeout,
-                cx.background_executor().clone(),
-                request.to_proto(project_id, buffer.read(cx)),
-            );
-            let buffer = buffer.clone();
-            cx.spawn(async move |lsp_store, cx| {
-                let Some(lsp_store) = lsp_store.upgrade() else {
-                    return Ok(None);
-                };
-                let colors: HashMap<LanguageServerId, HashSet<DocumentColor>> = join_all(
-                    request_task
-                        .await
-                        .log_err()
-                        .flatten()
-                        .map(|response| response.payload)
-                        .unwrap_or_default()
-                        .into_iter()
-                        .map(|color_response| {
-                            let response = request.response_from_proto(
-                                color_response.response,
-                                lsp_store.clone(),
-                                buffer.clone(),
-                                cx.clone(),
-                            );
-                            async move {
-                                let colors: Vec<DocumentColor> =
-                                    response.await.log_err().unwrap_or_default();
-                                (
-                                    LanguageServerId::from_proto(color_response.server_id),
-                                    colors,
-                                )
-                            }
-                        }),
-                )
-                .await
-                .into_iter()
-                .fold(HashMap::default(), |mut acc, (server_id, colors)| {
-                    acc.entry(server_id)
-                        .or_insert_with(HashSet::default)
-                        .extend(colors);
-                    acc
-                });
-                Ok(Some(colors))
-            })
-        } else {
-            let document_colors_task = self.request_filtered_lsp_locally(
-                buffer,
-                None::<usize>,
-                GetDocumentColor,
-                for_servers.as_ref(),
-                cx,
-            );
-            cx.background_spawn(async move {
-                Ok(Some(
-                    document_colors_task
-                        .await
-                        .into_iter()
-                        .fold(HashMap::default(), |mut acc, (server_id, colors)| {
-                            acc.entry(server_id)
-                                .or_insert_with(HashSet::default)
-                                .extend(colors);
-                            acc
-                        })
-                        .into_iter()
-                        .collect(),
-                ))
-            })
-        }
-    }
-
-    pub(super) async fn handle_get_color_presentation(
-        lsp_store: Entity<Self>,
-        envelope: TypedEnvelope<proto::GetColorPresentation>,
-        mut cx: AsyncApp,
-    ) -> Result<proto::GetColorPresentationResponse> {
-        let buffer_id = BufferId::new(envelope.payload.buffer_id)?;
-        let buffer = lsp_store.update(&mut cx, |lsp_store, cx| {
-            lsp_store.buffer_store.read(cx).get_existing(buffer_id)
-        })?;
-
-        let color = envelope
-            .payload
-            .color
-            .context("invalid color resolve request")?;
-        let start = color
-            .lsp_range_start
-            .context("invalid color resolve request")?;
-        let end = color
-            .lsp_range_end
-            .context("invalid color resolve request")?;
-
-        let color = DocumentColor {
-            lsp_range: lsp::Range {
-                start: point_to_lsp(PointUtf16::new(start.row, start.column)),
-                end: point_to_lsp(PointUtf16::new(end.row, end.column)),
-            },
-            color: lsp::Color {
-                red: color.red,
-                green: color.green,
-                blue: color.blue,
-                alpha: color.alpha,
-            },
-            resolved: false,
-            color_presentations: Vec::new(),
-        };
-        let resolved_color = lsp_store
-            .update(&mut cx, |lsp_store, cx| {
-                lsp_store.resolve_color_presentation(
-                    color,
-                    buffer.clone(),
-                    LanguageServerId(envelope.payload.server_id as usize),
-                    cx,
-                )
-            })
-            .await
-            .context("resolving color presentation")?;
-
-        Ok(proto::GetColorPresentationResponse {
-            presentations: resolved_color
-                .color_presentations
-                .into_iter()
-                .map(|presentation| proto::ColorPresentation {
-                    label: presentation.label.to_string(),
-                    text_edit: presentation.text_edit.map(serialize_lsp_edit),
-                    additional_text_edits: presentation
-                        .additional_text_edits
-                        .into_iter()
-                        .map(serialize_lsp_edit)
-                        .collect(),
-                })
-                .collect(),
+        let document_colors_task = self.request_filtered_lsp_locally(
+            buffer,
+            None::<usize>,
+            GetDocumentColor,
+            for_servers.as_ref(),
+            cx,
+        );
+        cx.background_spawn(async move {
+            Ok(Some(
+                document_colors_task
+                    .await
+                    .into_iter()
+                    .fold(HashMap::default(), |mut acc, (server_id, colors)| {
+                        acc.entry(server_id)
+                            .or_insert_with(HashSet::default)
+                            .extend(colors);
+                        acc
+                    })
+                    .into_iter()
+                    .collect(),
+            ))
         })
     }
 }

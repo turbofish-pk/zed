@@ -21,42 +21,18 @@ doctest = false
 test = false
 
 [features]
-test-support = ["channel/test-support", "gpui/test-support", "rpc/test-support"]
 
-[dependencies.anyhow]
-version = "1.0.86"
-
-[dependencies.channel]
-path = "../channel"
-
-[dependencies.client]
-path = "../client"
 
 [dependencies.futures-lite]
 version = "2"
-
-[dependencies.component]
-path = "../component"
 
 [dependencies.gpui]
 path = "../gpui"
 default-features = false
 
-[dependencies.rpc]
-path = "../rpc"
-
-[dependencies.sum_tree]
-path = "../sum_tree"
-
-[dependencies.time]
-version = "0.3"
-features = ["macros", "parsing", "serde", "serde-well-known", "formatting", "local-offset"]
-
 [dependencies.ui]
 path = "../ui"
 
-[dependencies.util]
-path = "../util"
 
 [dependencies.workspace]
 path = "../workspace"

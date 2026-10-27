@@ -156,7 +156,7 @@ fn create_editor(
         editor.set_use_modal_editing(false);
         editor.set_show_gutter(false, cx);
         editor.hide_minimap_by_default(window, cx);
-        editor.set_show_edit_predictions(Some(false), window, cx);
+
         editor.set_soft_wrap_mode(SoftWrap::None, cx);
         editor.set_placeholder_text(tab.empty_message(), window, cx);
         editor
@@ -401,7 +401,7 @@ impl WatcherDebug {
         let watcher = recording.snapshot();
         let worktree_scan_exclusions = worktree_exclusions(&self.app_state, cx);
         let zed_version = AppVersion::global(cx).to_string();
-        let os_name = client::telemetry::os_name();
+        let os_name = "Linux".into();
         let directory = std::env::home_dir().unwrap_or_default();
         let path = cx.prompt_for_new_path(&directory, Some("filesystem-watcher.json"));
         let fs = self.app_state.fs.clone();
@@ -417,7 +417,7 @@ impl WatcherDebug {
                     let export = Export {
                         zed_version,
                         os_name,
-                        os_version: client::telemetry::os_version(),
+                        os_version: "Linux".into(),
                         watcher,
                         worktree_scan_exclusions,
                         exclusion_scope: EXCLUSION_SCOPE,

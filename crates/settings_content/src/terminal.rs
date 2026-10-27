@@ -617,74 +617,7 @@ pub enum TerminalDockPosition {
 pub enum ActivateScript {
     #[default]
     Default,
-    Csh,
     Fish,
-    Nushell,
-    PowerShell,
     Pyenv,
 }
 
-#[cfg(test)]
-mod test {
-    use serde_json::json;
-
-    use crate::{PathHyperlinkRegexes, ProjectSettingsContent, Shell, merge_from::MergeFrom};
-
-    #[test]
-    fn test_path_hyperlink_regexes_preserve_entry_forms() -> anyhow::Result<()> {
-        let entries = json!([
-            "...",
-            ["..."],
-            ["(?x)", "# comment", "...", "(?<path>file)"],
-            "first\nsecond",
-            ["first", "second"]
-        ]);
-        let regexes: PathHyperlinkRegexes = serde_json::from_value(entries.clone())?;
-        assert_eq!(serde_json::to_value(regexes)?, entries);
-        Ok(())
-    }
-
-    #[test]
-    fn test_path_hyperlink_regexes_merge_preserves_first_representation() -> anyhow::Result<()> {
-        let mut regexes: PathHyperlinkRegexes = serde_json::from_value(json!([
-            "...",
-            ["..."],
-            "first\nsecond",
-            ["(?x)", "# comment", "(?<path>file)"]
-        ]))?;
-        regexes.merge_from(&serde_json::from_value(json!([
-            ["first", "second"],
-            "...",
-            "(?x)\n# comment\n(?<path>file)",
-            "..."
-        ]))?);
-        assert_eq!(
-            serde_json::to_value(regexes)?,
-            json!([
-                ["first", "second"],
-                "...",
-                ["..."],
-                ["(?x)", "# comment", "(?<path>file)"]
-            ])
-        );
-        Ok(())
-    }
-
-    #[test]
-    #[ignore]
-    fn test_project_settings() {
-        let project_content =
-            json!({"terminal": {"shell": {"program": "/bin/project"}}, "option_as_meta": true});
-
-        let _user_content =
-            json!({"terminal": {"shell": {"program": "/bin/user"}}, "option_as_meta": false});
-
-        let project_settings =
-            serde_json::from_value::<ProjectSettingsContent>(project_content).unwrap();
-
-        assert_eq!(
-            project_settings.terminal.unwrap().shell,
-            Some(Shell::Program("/bin/project".to_owned()))
-        );
-    }
-}

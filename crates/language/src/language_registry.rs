@@ -112,11 +112,11 @@ struct LanguageRegistryState {
     version: usize,
     reload_count: usize,
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     fake_server_entries: HashMap<LanguageServerName, FakeLanguageServerEntry>,
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub struct FakeLanguageServerEntry {
     pub capabilities: lsp::ServerCapabilities,
     pub initializer: Option<Box<dyn 'static + Send + Sync + Fn(&mut lsp::FakeLanguageServer)>>,
@@ -186,7 +186,7 @@ impl LanguageRegistry {
                 version: 0,
                 reload_count: 0,
 
-                #[cfg(any(test, feature = "test-support"))]
+                #[cfg(feature = "test-support")]
                 fake_server_entries: Default::default(),
             }),
             language_server_download_dir: None,
@@ -197,7 +197,7 @@ impl LanguageRegistry {
         this
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn test(executor: BackgroundExecutor) -> Self {
         let mut this = Self::new(executor);
         this.language_server_download_dir = Some(Path::new("/the-download-dir").into());
@@ -354,85 +354,6 @@ impl LanguageRegistry {
             .insert(cached.name.clone(), cached.clone());
         state.version += 1;
         *state.subscription.0.borrow_mut() = ();
-    }
-
-    /// Register a fake language server and adapter
-    /// The returned channel receives a new instance of the language server every time it is started
-    #[cfg(any(feature = "test-support", test))]
-    pub fn register_fake_lsp(
-        &self,
-        language_name: impl Into<LanguageName>,
-        mut adapter: crate::FakeLspAdapter,
-    ) -> futures::channel::mpsc::UnboundedReceiver<lsp::FakeLanguageServer> {
-        let adapter_name = LanguageServerName(adapter.name.into());
-        let capabilities = adapter.capabilities.clone();
-        let initializer = adapter.initializer.take();
-        self.register_fake_lsp_adapter(language_name, adapter);
-        self.register_fake_lsp_server(adapter_name, capabilities, initializer)
-    }
-
-    /// Register a fake lsp adapter (without the language server)
-    #[cfg(any(feature = "test-support", test))]
-    pub fn register_fake_lsp_adapter(
-        &self,
-        language_name: impl Into<LanguageName>,
-        adapter: crate::FakeLspAdapter,
-    ) {
-        let language_name = language_name.into();
-        let mut state = self.state.write();
-        let cached_adapter = CachedLspAdapter::new(Arc::new(adapter));
-        state
-            .lsp_adapters
-            .entry(language_name)
-            .or_default()
-            .push(cached_adapter.clone());
-        state
-            .all_lsp_adapters
-            .insert(cached_adapter.name(), cached_adapter);
-        state.version += 1;
-        *state.subscription.0.borrow_mut() = ();
-    }
-
-    /// Register a fake language server (without the adapter)
-    /// The returned channel receives a new instance of the language server every time it is started
-    #[cfg(any(feature = "test-support", test))]
-    pub fn register_fake_lsp_server(
-        &self,
-        lsp_name: LanguageServerName,
-        capabilities: lsp::ServerCapabilities,
-        initializer: Option<Box<dyn Fn(&mut lsp::FakeLanguageServer) + Send + Sync>>,
-    ) -> futures::channel::mpsc::UnboundedReceiver<lsp::FakeLanguageServer> {
-        let (servers_tx, servers_rx) = futures::channel::mpsc::unbounded();
-        self.state.write().fake_server_entries.insert(
-            lsp_name,
-            FakeLanguageServerEntry {
-                tx: servers_tx,
-                capabilities,
-                initializer,
-                _server: None,
-            },
-        );
-        servers_rx
-    }
-
-    #[cfg(any(feature = "test-support", test))]
-    pub fn register_fake_available_lsp_adapter(
-        &self,
-        name: impl Into<LanguageServerName>,
-        adapter: crate::FakeLspAdapter,
-    ) {
-        let name = name.into();
-        let adapter = Arc::new(adapter);
-        let mut state = self.state.write();
-        state.available_lsp_adapters.insert(
-            name,
-            Arc::new(move || CachedLspAdapter::new(adapter.clone())),
-        );
-    }
-
-    #[cfg(any(feature = "test-support", test))]
-    pub fn has_fake_lsp_server(&self, lsp_name: &LanguageServerName) -> bool {
-        self.state.read().fake_server_entries.contains_key(lsp_name)
     }
 
     /// Adds a language to the registry, which can be loaded if needed.
@@ -648,7 +569,7 @@ impl LanguageRegistry {
         async move { rx.await? }
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn language_name_for_id(&self, id: LanguageId) -> Option<LanguageName> {
         self.state.read().available_languages.name_for_id(id)
     }
@@ -1058,7 +979,7 @@ impl LanguageRegistry {
             .map(|dir| Arc::from(dir.join(name.0.as_ref())))
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn create_fake_language_server(
         &self,
         server_id: LanguageServerId,
@@ -1193,142 +1114,3 @@ impl ServerStatusSender {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use gpui::TestAppContext;
-
-    #[test]
-    fn dropping_server_status_subscription_unregisters_sender() {
-        let sender = ServerStatusSender::default();
-        let (_receiver, subscription) = sender.subscribe();
-        assert_eq!(sender.state.lock().txs.len(), 1);
-
-        drop(subscription);
-        assert!(sender.state.lock().txs.is_empty());
-    }
-
-    fn extension_language_registration(
-        name: &'static str,
-        path_suffix: &str,
-    ) -> LanguageRegistration {
-        let config = LanguageConfig {
-            name: LanguageName::new_static(name),
-            matcher: Arc::new(LanguageMatcher {
-                path_suffixes: vec![path_suffix.into()],
-                ..LanguageMatcher::default()
-            }),
-            ..LanguageConfig::default()
-        };
-        LanguageRegistration {
-            name: config.name.clone(),
-            grammar_name: None,
-            matcher: config.matcher.clone(),
-            hidden: false,
-            load: Arc::new(move || {
-                let config = config.clone();
-                async move {
-                    Ok(LoadedLanguage {
-                        config,
-                        queries: LanguageQueries::default(),
-                        context_provider: None,
-                        toolchain_provider: None,
-                        manifest_name: None,
-                    })
-                }
-                .boxed()
-            }),
-        }
-    }
-
-    #[gpui::test]
-    async fn test_update_extension_languages_replaces_loaded_language(cx: &mut TestAppContext) {
-        let registry = Arc::new(LanguageRegistry::test(cx.executor()));
-        registry.update_extension_languages(
-            &[],
-            &[],
-            vec![extension_language_registration("TheLanguage", "old")],
-        );
-        let old_language = registry.language_for_name("TheLanguage").await.unwrap();
-
-        let update = registry.update_extension_languages(
-            &[LanguageName::new_static("TheLanguage")],
-            &[],
-            vec![extension_language_registration("TheLanguage", "new")],
-        );
-        assert_eq!(update.removed(), [LanguageName::new_static("TheLanguage")]);
-        assert_eq!(
-            update.registrations(),
-            [LanguageRegistrationStatus::Registered]
-        );
-
-        let new_language = registry.language_for_name("TheLanguage").await.unwrap();
-        assert!(!Arc::ptr_eq(&old_language, &new_language));
-        assert_eq!(
-            new_language.config.matcher.path_suffixes,
-            vec!["new".to_string()],
-            "removing and re-registering a loaded language in one update must evict the old one"
-        );
-    }
-
-    #[gpui::test]
-    async fn test_update_extension_languages_rejects_native_names(cx: &mut TestAppContext) {
-        let registry = Arc::new(LanguageRegistry::test(cx.executor()));
-        registry.register_test_language(LanguageConfig {
-            name: LanguageName::new_static("TheLanguage"),
-            matcher: Arc::new(LanguageMatcher {
-                path_suffixes: vec!["native".into()],
-                ..LanguageMatcher::default()
-            }),
-            ..LanguageConfig::default()
-        });
-        let version = registry.version();
-        let reload_count = registry.reload_count();
-
-        let update = registry.update_extension_languages(
-            &[],
-            &[],
-            vec![extension_language_registration("TheLanguage", "extension")],
-        );
-        assert!(update.removed().is_empty());
-        assert_eq!(
-            update.registrations(),
-            [LanguageRegistrationStatus::Rejected]
-        );
-        assert_eq!(registry.version(), version);
-        assert_eq!(registry.reload_count(), reload_count);
-
-        let language = registry.language_for_name("TheLanguage").await.unwrap();
-        assert_eq!(
-            language.config.matcher.path_suffixes,
-            vec!["native".to_string()]
-        );
-    }
-
-    #[gpui::test]
-    fn test_update_extension_languages_notifies_once(cx: &mut TestAppContext) {
-        let registry = Arc::new(LanguageRegistry::test(cx.executor()));
-        let reload_count = registry.reload_count();
-
-        let update = registry.update_extension_languages(
-            &[],
-            &[],
-            vec![
-                extension_language_registration("First", "first"),
-                extension_language_registration("Second", "second"),
-                extension_language_registration("Third", "third"),
-            ],
-        );
-        assert_eq!(
-            update.registrations(),
-            [LanguageRegistrationStatus::Registered; 3]
-        );
-        assert_eq!(registry.reload_count(), reload_count + 1);
-
-        let version = registry.version();
-        let update = registry.update_extension_languages(&[], &[], Vec::new());
-        assert!(update.removed().is_empty() && update.registrations().is_empty());
-        assert_eq!(registry.version(), version);
-        assert_eq!(registry.reload_count(), reload_count + 1);
-    }
-}

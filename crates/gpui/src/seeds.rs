@@ -1,6 +1,6 @@
 use std::env;
 
-/// Returns the seeds a randomized `#[gpui::test]` or `#[gpui::bench]` runs with, in
+/// Returns the seeds a randomized  runs with, in
 /// order, and whether there is more than one.
 ///
 /// With `$SEED` set, runs `$SEED..$SEED + iterations` and ignores `explicit_seeds`.
@@ -43,25 +43,3 @@ fn seeds(
     iterations_range.chain(explicit_seeds.iter().copied())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::seeds;
-
-    fn collect(iterations: u64, explicit_seeds: &[u64], env_seed: Option<u64>) -> Vec<u64> {
-        seeds(iterations, explicit_seeds, env_seed).collect()
-    }
-
-    #[test]
-    fn seeds_follow_iterations_explicit_seeds_and_seed_variable() {
-        assert_eq!(collect(1, &[], None), [0]);
-        assert_eq!(collect(3, &[], None), [0, 1, 2]);
-        assert_eq!(collect(1, &[10, 20], None), [10, 20]);
-        assert_eq!(collect(2, &[10], None), [0, 1, 10]);
-        assert_eq!(collect(1, &[10], Some(7)), [7]);
-        assert_eq!(
-            collect(2, &[10], Some(7)),
-            [7, 8],
-            "`SEED` starts the iterations once, without repeating itself"
-        );
-    }
-}

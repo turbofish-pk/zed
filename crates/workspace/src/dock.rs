@@ -92,9 +92,6 @@ pub trait Panel: Focusable + EventEmitter<PanelEvent> + Render + Sized {
     fn enabled(&self, _cx: &App) -> bool {
         true
     }
-    fn is_agent_panel(&self) -> bool {
-        false
-    }
     /// Returns metadata describing how to hide this panel's button from the
     /// status bar by writing to user settings. Implementors should return
     /// `None` if the panel button cannot be hidden through settings.
@@ -132,7 +129,6 @@ pub trait PanelHandle: Send + Sync {
     fn to_any(&self) -> AnyView;
     fn activation_priority(&self, cx: &App) -> u32;
     fn enabled(&self, cx: &App) -> bool;
-    fn is_agent_panel(&self, cx: &App) -> bool;
     fn hide_button_setting(&self, cx: &App) -> Option<HideStatusItem>;
     fn move_to_next_position(&self, window: &mut Window, cx: &mut App) {
         let current_position = self.position(window, cx);
@@ -261,10 +257,6 @@ where
 
     fn enabled(&self, cx: &App) -> bool {
         self.read(cx).enabled(cx)
-    }
-
-    fn is_agent_panel(&self, cx: &App) -> bool {
-        self.read(cx).is_agent_panel()
     }
 
     fn hide_button_setting(&self, cx: &App) -> Option<HideStatusItem> {
@@ -478,7 +470,7 @@ impl Dock {
                 }
                 cx.emit(Event::ZoomChanged);
                 workspace.dismiss_zoomed_items_to_reveal(Some(position), window, cx);
-                workspace.update_active_view_for_followers(window, cx)
+   
             }
         })
         .detach();
@@ -925,12 +917,6 @@ impl Dock {
 
     pub fn panels_len(&self) -> usize {
         self.panel_entries.len()
-    }
-
-    pub fn has_agent_panel(&self, cx: &App) -> bool {
-        self.panel_entries
-            .iter()
-            .any(|entry| entry.panel.is_agent_panel(cx))
     }
 
     pub fn activate_panel(&mut self, panel_ix: usize, window: &mut Window, cx: &mut Context<Self>) {
@@ -1604,164 +1590,5 @@ impl StatusItemView for PanelButtons {
         // Panel buttons are hidden on a per-panel basis through each panel
         // button's own context menu.
         None
-    }
-}
-
-#[cfg(any(test, feature = "test-support"))]
-pub mod test {
-    use super::*;
-    use gpui::{App, Context, Window, actions, div};
-
-    pub struct TestPanel {
-        pub position: DockPosition,
-        pub zoomed: bool,
-        pub active: bool,
-        pub focus_handle: FocusHandle,
-        pub activation_focus_handle: Option<FocusHandle>,
-        pub default_size: Pixels,
-        pub flexible: bool,
-        pub activation_priority: u32,
-    }
-    actions!(test_only, [ToggleTestPanel]);
-
-    impl EventEmitter<PanelEvent> for TestPanel {}
-
-    impl TestPanel {
-        pub fn new(position: DockPosition, activation_priority: u32, cx: &mut App) -> Self {
-            Self {
-                position,
-                zoomed: false,
-                active: false,
-                focus_handle: cx.focus_handle(),
-                activation_focus_handle: None,
-                default_size: px(300.),
-                flexible: false,
-                activation_priority,
-            }
-        }
-
-        pub fn new_flexible(
-            position: DockPosition,
-            activation_priority: u32,
-            cx: &mut App,
-        ) -> Self {
-            Self {
-                flexible: true,
-                ..Self::new(position, activation_priority, cx)
-            }
-        }
-
-        pub fn new_with_activation_child(
-            position: DockPosition,
-            activation_priority: u32,
-            cx: &mut App,
-        ) -> Self {
-            Self {
-                activation_focus_handle: Some(cx.focus_handle()),
-                ..Self::new(position, activation_priority, cx)
-            }
-        }
-    }
-
-    impl Render for TestPanel {
-        fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-            div()
-                .id("test")
-                .track_focus(&self.focus_handle(cx))
-                .children(self.activation_focus_handle.iter().map(|focus_handle| {
-                    div().id("test-activation-child").track_focus(focus_handle)
-                }))
-        }
-    }
-
-    impl Panel for TestPanel {
-        fn activation_focus_handle(&self, cx: &App) -> FocusHandle {
-            self.activation_focus_handle
-                .clone()
-                .unwrap_or_else(|| self.focus_handle(cx))
-        }
-
-        fn persistent_name() -> &'static str {
-            "TestPanel"
-        }
-
-        fn panel_key() -> &'static str {
-            "TestPanel"
-        }
-
-        fn position(&self, _window: &Window, _: &App) -> super::DockPosition {
-            self.position
-        }
-
-        fn position_is_valid(&self, _: super::DockPosition) -> bool {
-            true
-        }
-
-        fn set_position(&mut self, position: DockPosition, _: &mut Window, cx: &mut Context<Self>) {
-            self.position = position;
-            cx.update_global::<SettingsStore, _>(|_, _| {});
-        }
-
-        fn default_size(&self, _window: &Window, _: &App) -> Pixels {
-            self.default_size
-        }
-
-        fn initial_size_state(&self, _window: &Window, _: &App) -> PanelSizeState {
-            PanelSizeState {
-                size: None,
-                flex: None,
-            }
-        }
-
-        fn supports_flexible_size(&self) -> bool {
-            self.flexible
-        }
-
-        fn has_flexible_size(&self, _window: &Window, _: &App) -> bool {
-            self.flexible
-        }
-
-        fn set_flexible_size(
-            &mut self,
-            flexible: bool,
-            _window: &mut Window,
-            _cx: &mut Context<Self>,
-        ) {
-            self.flexible = flexible;
-        }
-
-        fn icon(&self, _window: &Window, _: &App) -> Option<ui::IconName> {
-            None
-        }
-
-        fn icon_tooltip(&self, _window: &Window, _cx: &App) -> Option<&'static str> {
-            None
-        }
-
-        fn toggle_action(&self) -> Box<dyn Action> {
-            ToggleTestPanel.boxed_clone()
-        }
-
-        fn is_zoomed(&self, _window: &Window, _: &App) -> bool {
-            self.zoomed
-        }
-
-        fn set_zoomed(&mut self, zoomed: bool, _window: &mut Window, _cx: &mut Context<Self>) {
-            self.zoomed = zoomed;
-        }
-
-        fn set_active(&mut self, active: bool, _window: &mut Window, _cx: &mut Context<Self>) {
-            self.active = active;
-        }
-
-        fn activation_priority(&self) -> u32 {
-            self.activation_priority
-        }
-    }
-
-    impl Focusable for TestPanel {
-        fn focus_handle(&self, _cx: &App) -> FocusHandle {
-            self.focus_handle.clone()
-        }
     }
 }

@@ -44,12 +44,3 @@ features = ["preserve_order", "raw_value"]
 
 [dependencies.settings]
 path = "../settings"
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]

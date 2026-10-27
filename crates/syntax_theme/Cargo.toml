@@ -14,7 +14,7 @@ workspace = true
 
 [features]
 default = []
-test-support = ["gpui/test-support"]
+
 bundled-themes = ["dep:serde", "dep:serde_json"]
 
 [lib]
@@ -38,4 +38,3 @@ optional = true
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]

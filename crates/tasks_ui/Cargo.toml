@@ -75,20 +75,20 @@ path = "../zed_actions"
 
 [dev-dependencies.editor]
 path = "../editor"
-features = ["test-support"]
+
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.language]
 path = "../language"
-features = ["test-support"]
+
 
 [dev-dependencies.project]
 path = "../project"
-features = ["test-support"]
+
 
 [dev-dependencies.serde_json]
 version = "1.0.144"
@@ -103,4 +103,3 @@ rev = "e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899"
 
 [dev-dependencies.workspace]
 path = "../workspace"
-features = ["test-support"]

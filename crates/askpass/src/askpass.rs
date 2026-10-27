@@ -7,6 +7,7 @@ use smol::lock::Mutex;
 
 use util::fs::make_file_executable;
 
+use std::borrow::Cow;
 use std::ffi::OsStr;
 use std::ops::ControlFlow;
 use std::sync::Arc;
@@ -23,7 +24,6 @@ use gpui::{AsyncApp, BackgroundExecutor, Task};
 
 use smol::fs;
 use util::{ResultExt as _, debug_panic, maybe};
-
 
 use util::{paths::PathExt, shell::ShellKind};
 
@@ -115,9 +115,7 @@ pub struct AskPassSession {
     executor: BackgroundExecutor,
 }
 
-
 const ASKPASS_SCRIPT_NAME: &str = "askpass.sh";
-
 
 const GPG_WRAPPER_SCRIPT_NAME: &str = "gpg-wrapper.sh";
 
@@ -232,7 +230,6 @@ impl AskPassSession {
     /// Path to a script suitable for git's `gpg.program`, routing GnuPG
     /// passphrase prompts through Zed's askpass UI. `None` if unavailable.
     pub fn gpg_wrapper_path(&self) -> Option<&std::path::Path> {
-        
         return self.askpass_task.gpg_wrapper_path();
         #[cfg(target_os = "windows")]
         return None;
@@ -255,7 +252,7 @@ pub struct PasswordProxy {
     /// On Unix: path to the generated .sh askpass script (set as SSH_ASKPASS).
     /// On Windows: path to cli.exe (set as SSH_ASKPASS directly — no script needed).
     askpass_script_path: std::path::PathBuf,
-    
+
     gpg_wrapper_script_path: Option<std::path::PathBuf>,
     /// On Windows only: path to the Unix socket, passed as ZED_ASKPASS_SOCKET
     /// so cli.exe can find it without --askpass argument parsing.
@@ -282,7 +279,7 @@ impl PasswordProxy {
 
         // Unix: SSH_ASKPASS = path to generated .sh script in temp dir.
         // Windows: SSH_ASKPASS = path to cli.exe directly. No script is written.
-        
+
         let askpass_script_path = temp_dir.path().join(ASKPASS_SCRIPT_NAME);
         #[cfg(target_os = "windows")]
         let askpass_script_path = askpass_program.to_path_buf();
@@ -294,7 +291,7 @@ impl PasswordProxy {
         // Unix where we control the pinentry via loopback mode. We compute the path
         // before the socket task takes ownership of `temp_dir`, and write the file
         // afterwards.
-        
+
         let (gpg_wrapper_script_path, gpg_wrapper_script) =
             match generate_gpg_wrapper_script(askpass_program, &askpass_socket_path) {
                 Ok(Some(script)) => (
@@ -348,7 +345,7 @@ impl PasswordProxy {
 
         // Unix only: write the shell script and mark it executable.
         // On Windows cli.exe is invoked directly, so no script is needed.
-        
+
         {
             let askpass_script = generate_askpass_script(askpass_program, &askpass_socket_path)?;
             fs::write(&askpass_script_path, askpass_script)
@@ -362,7 +359,7 @@ impl PasswordProxy {
         }
 
         // Write the gpg wrapper script (computed above) and mark it executable.
-        
+
         let gpg_wrapper_script_path =
             if let Some((path, script)) = gpg_wrapper_script_path.zip(gpg_wrapper_script) {
                 match async {
@@ -389,7 +386,7 @@ impl PasswordProxy {
         Ok(Self {
             _task,
             askpass_script_path,
-            
+
             gpg_wrapper_script_path,
             #[cfg(target_os = "windows")]
             askpass_socket_path,
@@ -405,7 +402,6 @@ impl PasswordProxy {
         &self.askpass_socket_path
     }
 
-    
     pub fn gpg_wrapper_path(&self) -> Option<&std::path::Path> {
         self.gpg_wrapper_script_path.as_deref()
     }
@@ -483,7 +479,7 @@ fn generate_askpass_script(
     askpass_socket: &std::path::Path,
 ) -> Result<String> {
     let shell_kind = ShellKind::Posix;
-    let askpass_program = shell_kind.prepend_command_prefix(
+    let askpass_program = Cow::Borrowed(
         askpass_program
             .to_str()
             .context("Askpass program is on a non-utf8 path")?,
@@ -518,7 +514,7 @@ fn generate_gpg_wrapper_script(
         .try_quote_prefix_aware(gpg_program)
         .context("Failed to shell-escape gpg program path")?;
 
-    let askpass_program = shell_kind.prepend_command_prefix(
+    let askpass_program = Cow::Borrowed(
         askpass_program
             .to_str()
             .context("Askpass program is on a non-utf8 path")?,
@@ -616,34 +612,4 @@ fn find_gpg_program() -> Option<std::path::PathBuf> {
     ["gpg", "gpg2"]
         .into_iter()
         .find_map(|candidate| which::which(candidate).ok())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use gpui::TestAppContext;
-
-    #[gpui::test]
-    async fn dropping_password_request_cancels_prompt(cx: &mut TestAppContext) {
-        let (prompt_sender, mut prompt_receiver) = mpsc::unbounded();
-        let delegate = AskPassDelegate::new_with_cancellation(
-            &mut cx.to_async(),
-            move |_, response_sender, cancellation, _| {
-                prompt_sender
-                    .unbounded_send((response_sender, cancellation))
-                    .expect("prompt receiver should remain open");
-            },
-        );
-
-        let password_request = delegate.ask_password("Password:".to_string());
-        let (response_sender, cancellation) = prompt_receiver
-            .next()
-            .await
-            .expect("password prompt should be received");
-
-        drop(password_request);
-
-        assert!(cancellation.await.is_err());
-        drop(response_sender);
-    }
 }

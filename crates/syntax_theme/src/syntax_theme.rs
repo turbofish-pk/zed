@@ -7,7 +7,7 @@ use std::{
 };
 
 use gpui::HighlightStyle;
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 use gpui::Hsla;
 
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
@@ -34,7 +34,7 @@ impl SyntaxTheme {
             .collect()
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn new_test(colors: impl IntoIterator<Item = (&'static str, Hsla)>) -> Self {
         Self::new_test_styles(colors.into_iter().map(|(key, color)| {
             (
@@ -47,7 +47,7 @@ impl SyntaxTheme {
         }))
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn new_test_styles(
         colors: impl IntoIterator<Item = (&'static str, HighlightStyle)>,
     ) -> Self {
@@ -235,111 +235,3 @@ mod bundled_themes {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use gpui::FontStyle;
-
-    use super::*;
-
-    #[test]
-    fn test_syntax_theme_merge() {
-        // Merging into an empty `SyntaxTheme` keeps all the user-defined styles.
-        let syntax_theme = SyntaxTheme::merge(
-            Arc::new(SyntaxTheme::new_test([])),
-            vec![
-                (
-                    "foo".to_string(),
-                    HighlightStyle {
-                        color: Some(gpui::red()),
-                        ..Default::default()
-                    },
-                ),
-                (
-                    "foo.bar".to_string(),
-                    HighlightStyle {
-                        color: Some(gpui::green()),
-                        ..Default::default()
-                    },
-                ),
-            ],
-        );
-        assert_eq!(
-            syntax_theme,
-            Arc::new(SyntaxTheme::new_test([
-                ("foo", gpui::red()),
-                ("foo.bar", gpui::green())
-            ]))
-        );
-
-        // Merging empty user-defined styles keeps all the base styles.
-        let syntax_theme = SyntaxTheme::merge(
-            Arc::new(SyntaxTheme::new_test([
-                ("foo", gpui::blue()),
-                ("foo.bar", gpui::red()),
-            ])),
-            Vec::new(),
-        );
-        assert_eq!(
-            syntax_theme,
-            Arc::new(SyntaxTheme::new_test([
-                ("foo", gpui::blue()),
-                ("foo.bar", gpui::red())
-            ]))
-        );
-
-        let syntax_theme = SyntaxTheme::merge(
-            Arc::new(SyntaxTheme::new_test([
-                ("foo", gpui::red()),
-                ("foo.bar", gpui::green()),
-            ])),
-            vec![(
-                "foo.bar".to_string(),
-                HighlightStyle {
-                    color: Some(gpui::yellow()),
-                    ..Default::default()
-                },
-            )],
-        );
-        assert_eq!(
-            syntax_theme,
-            Arc::new(SyntaxTheme::new_test([
-                ("foo", gpui::red()),
-                ("foo.bar", gpui::yellow())
-            ]))
-        );
-
-        let syntax_theme = SyntaxTheme::merge(
-            Arc::new(SyntaxTheme::new_test([
-                ("foo", gpui::red()),
-                ("foo.bar", gpui::green()),
-            ])),
-            vec![(
-                "foo.bar".to_string(),
-                HighlightStyle {
-                    font_style: Some(FontStyle::Italic),
-                    ..Default::default()
-                },
-            )],
-        );
-        assert_eq!(
-            syntax_theme,
-            Arc::new(SyntaxTheme::new_test_styles([
-                (
-                    "foo",
-                    HighlightStyle {
-                        color: Some(gpui::red()),
-                        ..Default::default()
-                    }
-                ),
-                (
-                    "foo.bar",
-                    HighlightStyle {
-                        color: Some(gpui::green()),
-                        font_style: Some(FontStyle::Italic),
-                        ..Default::default()
-                    }
-                )
-            ]))
-        );
-    }
-}

@@ -900,7 +900,7 @@ impl BreakpointStore {
         }
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub(crate) fn breakpoint_paths(&self) -> Vec<Arc<Path>> {
         self.breakpoints.keys().cloned().collect()
     }

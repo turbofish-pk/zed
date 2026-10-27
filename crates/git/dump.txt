@@ -1,0 +1,3941 @@
+<project root="/home/pk/Forks/zed/crates/git" files="15">
+<file_list>
+Cargo.toml
+clippy.toml
+src/blame.rs
+src/commit.rs
+src/git.rs
+src/hosting_provider.rs
+src/remote.rs
+src/stash.rs
+src/status.rs
+test_data/blame_incremental_complex
+test_data/blame_incremental_not_committed
+test_data/blame_incremental_simple
+test_data/golden/blame_incremental_complex.json
+test_data/golden/blame_incremental_not_committed.json
+test_data/golden/blame_incremental_simple.json
+</file_list>
+
+<file path="Cargo.toml">
+[package]
+name = "git"
+version = "0.1.0"
+license = "GPL-3.0-or-later"
+
+[package.edition]
+workspace = true
+
+[package.publish]
+workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/git.rs"
+doctest = false
+
+[features]
+
+
+[dependencies.anyhow]
+version = "1.0.86"
+
+[dependencies.askpass]
+path = "../askpass"
+
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.collections]
+path = "../collections"
+version = "0.1.0"
+
+[dependencies.derive_more]
+version = "2.1"
+features = ["deref", "deref_mut", "from_str"]
+
+[dependencies.file_content]
+path = "../file_content"
+
+[dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+[dependencies.http_client]
+path = "../http_client"
+
+[dependencies.itertools]
+version = "0.14.0"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+features = ["std"]
+
+[dependencies.parking_lot]
+version = "0.12.1"
+
+[dependencies.regex]
+version = "1.5"
+default-features = false
+features = ["std", "perf"]
+
+[dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+optional = true
+
+[dependencies.rope]
+path = "../rope"
+
+[dependencies.schemars]
+version = "1.0"
+default-features = false
+features = ["std", "indexmap2"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["rc"]
+
+[dependencies.smallvec]
+version = "1.6"
+features = ["union", "const_new"]
+
+[dependencies.async-channel]
+version = "2.5"
+default-features = false
+
+[dependencies.smol]
+version = "2.0"
+
+[dependencies.sum_tree]
+path = "../sum_tree"
+
+[dependencies.text]
+path = "../text"
+
+[dependencies.thiserror]
+version = "2.0.12"
+
+[dependencies.time]
+version = "0.3"
+features = ["macros", "parsing", "serde", "serde-well-known", "formatting", "local-offset"]
+
+[dependencies.url]
+version = "2.2"
+
+[dependencies.urlencoding]
+version = "2.1.2"
+
+[dependencies.util]
+path = "../util"
+
+[dependencies.uuid]
+version = "1.1"
+features = ["serde"]
+
+[dependencies.futures]
+version = "0.3.34"
+
+[dependencies.ztracing]
+path = "../ztracing"
+
+[dev-dependencies.pretty_assertions]
+version = "1.3.0"
+features = ["unstable"]
+
+[dev-dependencies.serde_json]
+version = "1.0.144"
+features = ["preserve_order", "raw_value"]
+
+[dev-dependencies.text]
+path = "../text"
+
+
+[dev-dependencies.gpui]
+path = "../gpui"
+default-features = false
+
+
+[dev-dependencies.tempfile]
+version = "3.20.0"
+
+[dev-dependencies.rand]
+version = "0.9"
+default-features = false
+features = ["std", "std_rng", "os_rng"]
+</file>
+
+<file path="clippy.toml">
+allow-private-module-inception = true
+avoid-breaking-exported-api = false
+ignore-interior-mutability = [
+    # Suppresses clippy::mutable_key_type, which is a false positive as the Eq
+    # and Hash impls do not use fields with interior mutability.
+    "agent_ui::context::AgentContextKey"
+]
+disallowed-methods = [
+    { path = "std::process::Command::spawn", reason = "Spawning `std::process::Command` can block the current thread for an unknown duration", replacement = "smol::process::Command::spawn" },
+    { path = "std::process::Command::output", reason = "Spawning `std::process::Command` can block the current thread for an unknown duration", replacement = "smol::process::Command::output" },
+    { path = "std::process::Command::status", reason = "Spawning `std::process::Command` can block the current thread for an unknown duration", replacement = "smol::process::Command::status" },
+    { path = "std::process::Command::stdin", reason = "`smol::process::Command::from()` does not preserve stdio configuration", replacement = "smol::process::Command::stdin" },
+    { path = "std::process::Command::stdout", reason = "`smol::process::Command::from()` does not preserve stdio configuration", replacement = "smol::process::Command::stdout" },
+    { path = "std::process::Command::stderr", reason = "`smol::process::Command::from()` does not preserve stdio configuration", replacement = "smol::process::Command::stderr" },
+    { path = "smol::Timer::after", reason = "smol::Timer introduces non-determinism in tests", replacement = "gpui::BackgroundExecutor::timer" },
+    { path = "serde_json::from_reader", reason = "Parsing from a buffer is much slower than first reading the buffer into a Vec/String, see https://github.com/serde-rs/json/issues/160#issuecomment-253446892. Use `serde_json::from_slice` instead." },
+    { path = "serde_json_lenient::from_reader", reason = "Parsing from a buffer is much slower than first reading the buffer into a Vec/String, see https://github.com/serde-rs/json/issues/160#issuecomment-253446892, Use `serde_json_lenient::from_slice` instead." },
+    { path = "cocoa::foundation::NSString::alloc", reason = "NSString must be autoreleased to avoid memory leaks. Use `ns_string()` helper instead." },
+    { path = "smol::process::Command::new", reason = "Git commands must go through `GitBinary::build_command` to ensure security flags like `-c core.fsmonitor=false` are always applied.", replacement = "GitBinary::build_command" },
+    { path = "util::command::new_command", reason = "Git commands must go through `GitBinary::build_command` to ensure security flags like `-c core.fsmonitor=false` are always applied.", replacement = "GitBinary::build_command" },
+    { path = "util::command::Command::new", reason = "Git commands must go through `GitBinary::build_command` to ensure security flags like `-c core.fsmonitor=false` are always applied.", replacement = "GitBinary::build_command" },
+]
+disallowed-types = [
+    # { path = "std::collections::HashMap", replacement = "collections::HashMap" },
+    # { path = "std::collections::HashSet", replacement = "collections::HashSet" },
+    # { path = "indexmap::IndexSet", replacement = "collections::IndexSet" },
+    # { path = "indexmap::IndexMap", replacement = "collections::IndexMap" },
+]
+</file>
+
+<file path="src/blame.rs">
+use crate::Oid;
+use crate::commit::{get_messages, get_tag_names};
+use crate::repository::{GitBinary, RepoPath};
+use anyhow::{Context as _, Result};
+use collections::{HashMap, HashSet};
+use futures::{AsyncWriteExt, TryFutureExt, try_join};
+use serde::{Deserialize, Serialize};
+use smol::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
+use std::ops::Range;
+use text::{LineEnding, Rope};
+use time::OffsetDateTime;
+use time::UtcOffset;
+use time::macros::format_description;
+use util::command::Stdio;
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Blame {
+    pub entries: Vec<BlameEntry>,
+    pub messages: HashMap<Oid, String>,
+    pub tag_names: HashMap<Oid, Vec<String>>,
+}
+
+impl Blame {
+    pub(crate) async fn for_path(
+        git: &GitBinary,
+        path: &RepoPath,
+        content: &Rope,
+        line_ending: LineEnding,
+    ) -> Result<Self> {
+        let entries = run_git_blame(git, path, BlameSource::Contents(content, line_ending)).await?;
+        Self::with_commit_details(git, entries).await
+    }
+
+    pub(crate) async fn for_path_at_revision(
+        git: &GitBinary,
+        path: &RepoPath,
+        revision: Oid,
+    ) -> Result<Self> {
+        let entries = run_git_blame(git, path, BlameSource::Revision(revision)).await?;
+        Self::with_commit_details(git, entries).await
+    }
+
+    async fn with_commit_details(git: &GitBinary, mut entries: Vec<BlameEntry>) -> Result<Self> {
+        let mut unique_shas = HashSet::default();
+
+        for entry in entries.iter_mut() {
+            unique_shas.insert(entry.sha);
+        }
+
+        let shas = unique_shas.into_iter().collect::<Vec<_>>();
+        let (messages, tag_names) = try_join!(
+            get_messages(git, &shas)
+                .map_err(|error| error.context("failed to get commit messages")),
+            async {
+                match get_tag_names(git, &shas).await {
+                    Ok(tag_names) => Ok(tag_names),
+                    Err(error) => {
+                        log::warn!("failed to get commit tag names: {error:#}");
+                        Ok(HashMap::default())
+                    }
+                }
+            },
+        )?;
+
+        entries.sort_unstable_by_key(|entry| entry.range.start);
+        Ok(Self {
+            entries,
+            messages,
+            tag_names,
+        })
+    }
+}
+
+const GIT_BLAME_NO_COMMIT_ERROR: &str = "fatal: no such ref: HEAD";
+const GIT_BLAME_NO_PATH: &str = "fatal: no such path";
+const BLAME_PARSE_YIELD_INTERVAL: usize = 512;
+
+#[derive(Clone, Copy)]
+enum BlameSource<'a> {
+    Contents(&'a Rope, LineEnding),
+    Revision(Oid),
+}
+
+async fn run_git_blame(
+    git: &GitBinary,
+    path: &RepoPath,
+    source: BlameSource<'_>,
+) -> Result<Vec<BlameEntry>> {
+    let mut child = {
+        let span = ztracing::debug_span!("spawning git-blame command", path = path.as_unix_str());
+        let _enter = span.enter();
+        let mut args = vec!["blame", "--incremental"];
+        let revision_string;
+        match source {
+            BlameSource::Contents(..) => args.extend(["--contents", "-"]),
+            BlameSource::Revision(revision) => {
+                revision_string = revision.to_string();
+                args.push(&revision_string);
+            }
+        }
+        args.push("--");
+        git.build_command(&args)
+            .arg(path.as_unix_str())
+            .stdin(if matches!(source, BlameSource::Contents(..)) {
+                Stdio::piped()
+            } else {
+                Stdio::null()
+            })
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true)
+            .spawn()
+            .context("starting git blame process")?
+    };
+
+    let stdin = child.stdin.take();
+    let stdout = child
+        .stdout
+        .take()
+        .context("failed to get stdout from git blame command")?;
+    let stderr = child
+        .stderr
+        .take()
+        .context("failed to get stderr from git blame command")?;
+
+    let write_stdin = async move {
+        if let BlameSource::Contents(contents, line_ending) = source {
+            let mut stdin = stdin.context("failed to get pipe to stdin of git blame command")?;
+            for chunk in text::chunks_with_line_ending(contents, line_ending) {
+                stdin.write_all(chunk.as_bytes()).await?;
+            }
+            stdin.flush().await?;
+        }
+        anyhow::Ok(())
+    };
+
+    let read_stdout = async move {
+        let mut parser = GitBlameParser::new();
+        let mut reader = BufReader::new(stdout);
+        let mut line_buffer = String::new();
+        let mut lines_read = 0;
+
+        loop {
+            line_buffer.clear();
+            let bytes_read = reader
+                .read_line(&mut line_buffer)
+                .await
+                .context("reading git blame stdout")?;
+            if bytes_read == 0 {
+                break;
+            }
+
+            let line = line_buffer.trim_end_matches(&['\r', '\n'][..]);
+            parser.push_line(line)?;
+            lines_read += 1;
+
+            if lines_read % BLAME_PARSE_YIELD_INTERVAL == 0 {
+                smol::future::yield_now().await;
+            }
+        }
+
+        Ok(parser.entries)
+    };
+
+    let read_stderr = async move {
+        let mut stderr_output = String::new();
+        BufReader::new(stderr)
+            .read_to_string(&mut stderr_output)
+            .await
+            .context("reading git blame stderr")?;
+        Result::<String>::Ok(stderr_output)
+    };
+
+    let wait_for_status = async {
+        child
+            .status()
+            .await
+            .context("waiting for git blame process")
+    };
+
+    let ((), entries, stderr, status) =
+        try_join!(write_stdin, read_stdout, read_stderr, wait_for_status)?;
+
+    if !status.success() {
+        let trimmed = stderr.trim();
+        if trimmed == GIT_BLAME_NO_COMMIT_ERROR || trimmed.contains(GIT_BLAME_NO_PATH) {
+            return Ok(Vec::new());
+        }
+        anyhow::bail!("git blame process failed: {stderr}");
+    }
+
+    Ok(entries)
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct BlameEntry {
+    pub sha: Oid,
+
+    pub range: Range<u32>,
+
+    pub original_line_number: u32,
+
+    pub author: Option<String>,
+    pub author_mail: Option<String>,
+    pub author_time: Option<i64>,
+    pub author_tz: Option<String>,
+
+    pub committer_name: Option<String>,
+    pub committer_email: Option<String>,
+    pub committer_time: Option<i64>,
+    pub committer_tz: Option<String>,
+
+    pub summary: Option<String>,
+
+    pub previous: Option<String>,
+    pub filename: String,
+
+    #[serde(default)]
+    pub boundary: bool,
+}
+
+impl BlameEntry {
+    // Returns a BlameEntry by parsing the first line of a `git blame --incremental`
+    // entry. The line MUST have this format:
+    //
+    //     <40-byte-hex-sha1> <sourceline> <resultline> <num-lines>
+    fn new_from_blame_line(line: &str) -> Result<BlameEntry> {
+        let mut parts = line.split_whitespace();
+
+        let sha = parts
+            .next()
+            .and_then(|line| line.parse::<Oid>().ok())
+            .context("parsing sha")?;
+
+        let original_line_number = parts
+            .next()
+            .and_then(|line| line.parse::<u32>().ok())
+            .context("parsing original line number")?;
+        let final_line_number = parts
+            .next()
+            .and_then(|line| line.parse::<u32>().ok())
+            .context("parsing final line number")?;
+
+        let line_count = parts
+            .next()
+            .and_then(|line| line.parse::<u32>().ok())
+            .context("parsing line count")?;
+
+        let start_line = final_line_number.saturating_sub(1);
+        let end_line = start_line + line_count;
+        let range = start_line..end_line;
+
+        Ok(Self {
+            sha,
+            range,
+            original_line_number,
+            author: None,
+            author_mail: None,
+            author_time: None,
+            author_tz: None,
+            committer_name: None,
+            committer_email: None,
+            committer_time: None,
+            committer_tz: None,
+            summary: None,
+            previous: None,
+            filename: String::new(),
+            boundary: false,
+        })
+    }
+
+    pub fn previous_sha_and_filename(&self) -> Option<(Oid, &str)> {
+        let (sha, filename) = self.previous.as_deref()?.split_once(' ')?;
+        Some((sha.parse().ok()?, filename))
+    }
+
+    pub fn revision_target(&self, highlighted_sha: Option<Oid>) -> Option<(Oid, RepoPath)> {
+        if self.sha.is_zero() || Some(self.sha) == highlighted_sha {
+            return None;
+        }
+        Some((self.sha, RepoPath::new(&self.filename).ok()?))
+    }
+
+    pub fn previous_revision_target(&self) -> Option<(Oid, RepoPath)> {
+        let (sha, filename) = self.previous_sha_and_filename()?;
+        Some((sha, RepoPath::new(filename).ok()?))
+    }
+
+    pub fn author_offset_date_time(&self) -> Result<time::OffsetDateTime> {
+        if let (Some(author_time), Some(author_tz)) = (self.author_time, &self.author_tz) {
+            let format = format_description!("[offset_hour][offset_minute]");
+            let offset = UtcOffset::parse(author_tz, &format)?;
+            let date_time_utc = OffsetDateTime::from_unix_timestamp(author_time)?;
+
+            Ok(date_time_utc.to_offset(offset))
+        } else {
+            // Directly return current time in UTC if there's no committer time or timezone
+            Ok(time::OffsetDateTime::now_utc())
+        }
+    }
+}
+
+// GitBlameParser parses the output of `git blame --incremental`, which returns
+// all the blame-entries for a given path incrementally, as it finds them.
+//
+// Each entry *always* starts with:
+//
+//     <40-byte-hex-sha1> <sourceline> <resultline> <num-lines>
+//
+// Each entry *always* ends with:
+//
+//     filename <whitespace-quoted-filename-goes-here>
+//
+// Line numbers are 1-indexed.
+//
+// A `git blame --incremental` entry looks like this:
+//
+//    6ad46b5257ba16d12c5ca9f0d4900320959df7f4 2 2 1
+//    author Joe Schmoe
+//    author-mail <joe.schmoe@example.com>
+//    author-time 1709741400
+//    author-tz +0100
+//    committer Joe Schmoe
+//    committer-mail <joe.schmoe@example.com>
+//    committer-time 1709741400
+//    committer-tz +0100
+//    summary Joe's cool commit
+//    previous 486c2409237a2c627230589e567024a96751d475 index.js
+//    filename index.js
+//
+// If the entry has the same SHA as an entry that was already printed then no
+// signature information is printed:
+//
+//    6ad46b5257ba16d12c5ca9f0d4900320959df7f4 3 4 1
+//    previous 486c2409237a2c627230589e567024a96751d475 index.js
+//    filename index.js
+//
+// More about `--incremental` output: https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-blame.html
+struct GitBlameParser {
+    entries: Vec<BlameEntry>,
+    index: HashMap<Oid, usize>,
+    current_entry: Option<BlameEntry>,
+}
+
+impl GitBlameParser {
+    fn new() -> Self {
+        Self {
+            entries: Vec::new(),
+            index: HashMap::default(),
+            current_entry: None,
+        }
+    }
+
+    fn push_line(&mut self, line: &str) -> Result<()> {
+        let mut done = false;
+
+        match &mut self.current_entry {
+            None => {
+                let mut new_entry = BlameEntry::new_from_blame_line(line)?;
+
+                if let Some(existing_entry) = self
+                    .index
+                    .get(&new_entry.sha)
+                    .and_then(|slot| self.entries.get(*slot))
+                {
+                    new_entry.author.clone_from(&existing_entry.author);
+                    new_entry
+                        .author_mail
+                        .clone_from(&existing_entry.author_mail);
+                    new_entry.author_time = existing_entry.author_time;
+                    new_entry.author_tz.clone_from(&existing_entry.author_tz);
+                    new_entry
+                        .committer_name
+                        .clone_from(&existing_entry.committer_name);
+                    new_entry
+                        .committer_email
+                        .clone_from(&existing_entry.committer_email);
+                    new_entry.committer_time = existing_entry.committer_time;
+                    new_entry
+                        .committer_tz
+                        .clone_from(&existing_entry.committer_tz);
+                    new_entry.summary.clone_from(&existing_entry.summary);
+                    new_entry.boundary = existing_entry.boundary;
+                }
+
+                self.current_entry.replace(new_entry);
+            }
+            Some(entry) => {
+                if line == "boundary" {
+                    entry.boundary = true;
+                    return Ok(());
+                }
+                let Some((key, value)) = line.split_once(' ') else {
+                    return Ok(());
+                };
+                let is_committed = !entry.sha.is_zero();
+                match key {
+                    "filename" => {
+                        entry.filename = unquote_git_path(value);
+                        done = true;
+                    }
+                    "previous" => {
+                        entry.previous = Some(match value.split_once(' ') {
+                            Some((sha, filename)) => {
+                                format!("{sha} {}", unquote_git_path(filename))
+                            }
+                            None => value.into(),
+                        })
+                    }
+
+                    "summary" if is_committed => entry.summary = Some(value.into()),
+                    "author" if is_committed => entry.author = Some(value.into()),
+                    "author-mail" if is_committed => entry.author_mail = Some(value.into()),
+                    "author-time" if is_committed => {
+                        entry.author_time = Some(value.parse::<i64>()?)
+                    }
+                    "author-tz" if is_committed => entry.author_tz = Some(value.into()),
+
+                    "committer" if is_committed => entry.committer_name = Some(value.into()),
+                    "committer-mail" if is_committed => entry.committer_email = Some(value.into()),
+                    "committer-time" if is_committed => {
+                        entry.committer_time = Some(value.parse::<i64>()?)
+                    }
+                    "committer-tz" if is_committed => entry.committer_tz = Some(value.into()),
+                    _ => {}
+                }
+            }
+        };
+
+        if done {
+            self.push_current_entry();
+        }
+
+        Ok(())
+    }
+
+    fn push_current_entry(&mut self) {
+        let Some(entry) = self.current_entry.take() else {
+            return;
+        };
+
+        self.index.insert(entry.sha, self.entries.len());
+
+        // We only want annotations that have a commit.
+        if !entry.sha.is_zero() {
+            self.entries.push(entry);
+        }
+    }
+}
+
+fn unquote_git_path(value: &str) -> String {
+    let Some(quoted) = value
+        .strip_prefix('"')
+        .and_then(|value| value.strip_suffix('"'))
+    else {
+        return value.to_owned();
+    };
+    let mut bytes = Vec::with_capacity(quoted.len());
+    let mut input = quoted.bytes().peekable();
+    while let Some(byte) = input.next() {
+        if byte != b'\\' {
+            bytes.push(byte);
+            continue;
+        }
+        match input.next() {
+            Some(b'a') => bytes.push(0x07),
+            Some(b'b') => bytes.push(0x08),
+            Some(b'f') => bytes.push(0x0c),
+            Some(b'n') => bytes.push(b'\n'),
+            Some(b'r') => bytes.push(b'\r'),
+            Some(b't') => bytes.push(b'\t'),
+            Some(b'v') => bytes.push(0x0b),
+            Some(digit @ b'0'..=b'7') => {
+                let mut octal = u32::from(digit - b'0');
+                for _ in 0..2 {
+                    match input.peek() {
+                        Some(&next @ b'0'..=b'7') if octal * 8 + u32::from(next - b'0') <= 0xff => {
+                            octal = octal * 8 + u32::from(next - b'0');
+                            input.next();
+                        }
+                        _ => break,
+                    }
+                }
+                bytes.push(octal as u8);
+            }
+            Some(other) => bytes.push(other),
+            None => {}
+        }
+    }
+    String::from_utf8_lossy(&bytes).into_owned()
+}
+
+</file>
+
+<file path="src/commit.rs">
+use crate::{
+    BuildCommitPermalinkParams, GitHostingProviderRegistry, GitRemote, Oid, parse_git_remote_url,
+    repository::GitBinary, status::StatusCode,
+};
+use anyhow::{Context as _, Result};
+use collections::{HashMap, HashSet};
+use gpui::SharedString;
+use std::{str::FromStr, sync::Arc};
+
+#[derive(Clone, Debug, Default)]
+pub struct ParsedCommitMessage {
+    pub message: SharedString,
+    pub permalink: Option<url::Url>,
+    pub pull_request: Option<crate::hosting_provider::PullRequest>,
+    pub remote: Option<GitRemote>,
+}
+
+impl ParsedCommitMessage {
+    pub fn parse(
+        sha: String,
+        message: String,
+        remote_url: Option<&str>,
+        provider_registry: Option<Arc<GitHostingProviderRegistry>>,
+    ) -> Self {
+        if let Some((hosting_provider, remote)) = provider_registry
+            .and_then(|reg| remote_url.and_then(|url| parse_git_remote_url(reg, url)))
+        {
+            let pull_request = hosting_provider.extract_pull_request(&remote, &message);
+            Self {
+                message: message.into(),
+                permalink: Some(
+                    hosting_provider
+                        .build_commit_permalink(&remote, BuildCommitPermalinkParams { sha: &sha }),
+                ),
+                pull_request,
+                remote: Some(GitRemote {
+                    host: hosting_provider,
+                    owner: remote.owner.into(),
+                    repo: remote.repo.into(),
+                }),
+            }
+        } else {
+            Self {
+                message: message.into(),
+                ..Default::default()
+            }
+        }
+    }
+}
+
+pub(crate) async fn get_messages(git: &GitBinary, shas: &[Oid]) -> Result<HashMap<Oid, String>> {
+    if shas.is_empty() {
+        return Ok(HashMap::default());
+    }
+
+    let output = if cfg!(windows) {
+        // Windows has a maximum invocable command length, so we chunk the input.
+        // Actual max is 32767, but we leave some room for the rest of the command as we aren't in precise control of what std might do here
+        const MAX_CMD_LENGTH: usize = 30000;
+        // 40 bytes of hash, 2 quotes and a separating space
+        const SHA_LENGTH: usize = 40 + 2 + 1;
+        const MAX_ENTRIES_PER_INVOCATION: usize = MAX_CMD_LENGTH / SHA_LENGTH;
+
+        let mut result = vec![];
+        for shas in shas.chunks(MAX_ENTRIES_PER_INVOCATION) {
+            let partial = get_messages_impl(git, shas).await?;
+            result.extend(partial);
+        }
+        result
+    } else {
+        get_messages_impl(git, shas).await?
+    };
+
+    Ok(shas
+        .iter()
+        .cloned()
+        .zip(output)
+        .collect::<HashMap<Oid, String>>())
+}
+
+pub(crate) async fn get_tag_names(
+    git: &GitBinary,
+    shas: &[Oid],
+) -> Result<HashMap<Oid, Vec<String>>> {
+    if shas.is_empty() {
+        return Ok(HashMap::default());
+    }
+
+    let output = git
+        .build_command(&[
+            "for-each-ref",
+            "refs/tags",
+            "--sort=-creatordate",
+            "--format=%(objectname)%00%(*objectname)%00%(refname:short)",
+        ])
+        .output()
+        .await
+        .context("starting git for-each-ref process")?;
+    anyhow::ensure!(
+        output.status.success(),
+        "'git for-each-ref' failed with error {:?}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    Ok(parse_tag_names(
+        &String::from_utf8_lossy(&output.stdout),
+        shas,
+    ))
+}
+
+fn parse_tag_names(output: &str, shas: &[Oid]) -> HashMap<Oid, Vec<String>> {
+    let shas = shas.iter().copied().collect::<HashSet<_>>();
+    let mut result = HashMap::<Oid, Vec<String>>::default();
+
+    for line in output.lines() {
+        let mut fields = line.split('\0');
+        let object_sha = fields.next();
+        let peeled_sha = fields.next().filter(|sha| !sha.is_empty());
+        let Some(sha) = peeled_sha
+            .or(object_sha)
+            .and_then(|sha| Oid::from_str(sha).ok())
+        else {
+            continue;
+        };
+        let Some(tag_name) = fields.next().filter(|tag_name| !tag_name.is_empty()) else {
+            continue;
+        };
+        result.entry(sha).or_default().push(tag_name.to_string());
+    }
+
+    result.retain(|sha, _| shas.contains(sha));
+    result
+}
+
+async fn get_messages_impl(git: &GitBinary, shas: &[Oid]) -> Result<Vec<String>> {
+    const MARKER: &str = "<MARKER>";
+    let output = git
+        .build_command(&["show"])
+        .arg("-s")
+        .arg(format!("--format=%B{}", MARKER))
+        .args(shas.iter().map(ToString::to_string))
+        .output()
+        .await
+        .context("starting git show process")?;
+    anyhow::ensure!(
+        output.status.success(),
+        "'git show' failed with error {:?}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .split_terminator(MARKER)
+        .map(|str| str.trim().replace("<", "&lt;").replace(">", "&gt;"))
+        .collect::<Vec<_>>())
+}
+
+pub(crate) const GITLINK_MODE: &str = "160000";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CommitDiffObjectKind {
+    Blob,
+    Gitlink,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct CommitDiffObject<'a> {
+    pub oid: &'a str,
+    pub kind: CommitDiffObjectKind,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct CommitDiffEntry<'a> {
+    pub path: &'a str,
+    pub status: StatusCode,
+    pub old_object: Option<CommitDiffObject<'a>>,
+    pub new_object: Option<CommitDiffObject<'a>>,
+}
+
+/// Parses the output of `git diff --raw --no-abbrev -z`.
+pub(crate) fn parse_git_diff_raw(
+    content: &str,
+) -> impl Iterator<Item = Result<CommitDiffEntry<'_>>> {
+    let mut parts = content.split('\0');
+    std::iter::from_fn(move || {
+        let metadata = parts.next()?;
+        if metadata.is_empty() {
+            return None;
+        }
+
+        let path = match parts.next() {
+            Some(path) => path,
+            None => return Some(Err(anyhow::anyhow!("raw diff is missing the path"))),
+        };
+        Some(parse_git_diff_raw_entry(metadata, path))
+    })
+}
+
+fn parse_git_diff_raw_entry<'a>(metadata: &'a str, path: &'a str) -> Result<CommitDiffEntry<'a>> {
+    let mut fields = metadata
+        .strip_prefix(':')
+        .context("raw diff metadata is missing its ':' prefix")?
+        .split_ascii_whitespace();
+    let old_mode = fields.next().context("raw diff is missing the old mode")?;
+    let new_mode = fields.next().context("raw diff is missing the new mode")?;
+    let old_oid = fields
+        .next()
+        .context("raw diff is missing the old object ID")?;
+    let new_oid = fields
+        .next()
+        .context("raw diff is missing the new object ID")?;
+    let status = match fields.next() {
+        Some("M") => StatusCode::Modified,
+        Some("T") => StatusCode::TypeChanged,
+        Some("A") => StatusCode::Added,
+        Some("D") => StatusCode::Deleted,
+        Some(status) => anyhow::bail!("unsupported raw diff status {status}"),
+        None => anyhow::bail!("raw diff is missing the status"),
+    };
+
+    Ok(CommitDiffEntry {
+        path,
+        status,
+        old_object: (!old_oid.bytes().all(|byte| byte == b'0')).then(|| CommitDiffObject {
+            oid: old_oid,
+            kind: if old_mode == GITLINK_MODE {
+                CommitDiffObjectKind::Gitlink
+            } else {
+                CommitDiffObjectKind::Blob
+            },
+        }),
+        new_object: (!new_oid.bytes().all(|byte| byte == b'0')).then(|| CommitDiffObject {
+            oid: new_oid,
+            kind: if new_mode == GITLINK_MODE {
+                CommitDiffObjectKind::Gitlink
+            } else {
+                CommitDiffObjectKind::Blob
+            },
+        }),
+    })
+}
+
+</file>
+
+<file path="src/git.rs">
+pub mod blame;
+pub mod commit;
+mod hosting_provider;
+mod remote;
+pub mod repository;
+pub mod stash;
+pub mod status;
+
+pub use crate::hosting_provider::*;
+pub use crate::remote::*;
+use anyhow::Result;
+use gpui::{Action, actions};
+pub use repository::RemoteCommandOutput;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use std::fmt::{self, Write as _};
+use std::str::FromStr;
+
+pub const DOT_GIT: &str = ".git";
+pub const GITIGNORE: &str = ".gitignore";
+pub const FSMONITOR_DAEMON: &str = "fsmonitor--daemon";
+pub const LFS_DIR: &str = "lfs";
+pub const OBJECTS_DIR: &str = "objects";
+pub const REFS_DIR: &str = "refs";
+pub const REFTABLE_DIR: &str = "reftable";
+pub const HOOKS_DIR: &str = "hooks";
+pub const LOGS_DIR: &str = "logs";
+pub const LOGS_REF_STASH: &str = "logs/refs/stash";
+pub const REBASE_MERGE_DIR: &str = "rebase-merge";
+pub const REBASE_APPLY_DIR: &str = "rebase-apply";
+pub const SEQUENCER_DIR: &str = "sequencer";
+pub const COMMIT_MESSAGE: &str = "COMMIT_EDITMSG";
+pub const FETCH_HEAD: &str = "FETCH_HEAD";
+pub const ORIG_HEAD: &str = "ORIG_HEAD";
+pub const BISECT_LOG: &str = "BISECT_LOG";
+pub const GC_PID: &str = "gc.pid";
+pub const INFO_DIR: &str = "info";
+pub const REPO_EXCLUDE: &str = "info/exclude";
+
+actions!(
+  git,
+  [
+    // per-hunk
+    /// Toggles the staged state of the hunk or status entry at cursor.
+    ToggleStaged,
+    /// Stage status entries between an anchor entry and the cursor.
+    StageRange,
+    /// Stages the current hunk and moves to the next one.
+    StageAndNext,
+    /// Unstages the current hunk and moves to the next one.
+    UnstageAndNext,
+    /// Restores the selected hunks to their original state.
+    #[action(deprecated_aliases = ["editor::RevertSelectedHunks"])]
+    Restore,
+    /// Restores the selected hunks to their original state and moves to the
+    /// next one.
+    RestoreAndNext,
+    // per-file
+    /// Shows git blame information for the current file.
+    #[action(deprecated_aliases = ["editor::ToggleGitBlame"])]
+    Blame,
+    /// Shows the git history for the selected file, folder, or project.
+    FileHistory,
+    /// Opens a permalink for the selected file on its Git hosting provider.
+    OpenFilePermalink,
+    /// Copies a permalink for the selected file on its Git hosting provider.
+    CopyFilePermalink,
+    /// Opens the selected file in the editor without a diff view.
+    ViewFile,
+    /// Stages the current file.
+    StageFile,
+    /// Unstages the current file.
+    UnstageFile,
+    // per-section
+    /// Stages every entry in the section containing the selected entry.
+    StageSection,
+    /// Unstages every entry in the section containing the selected entry.
+    UnstageSection,
+    // repo-wide
+    /// Stages all changes in the repository.
+    StageAll,
+    /// Unstages all changes in the repository.
+    UnstageAll,
+    /// Stashes all changes in the repository, including untracked files.
+    StashAll,
+    /// Stashes tracked changes in the repository, leaving untracked files in place.
+    StashTracked,
+    /// Stashes staged changes in the repository, leaving unstaged changes in place.
+    StashStaged,
+    /// Pops the most recent stash.
+    StashPop,
+    /// Apply the most recent stash.
+    StashApply,
+    /// Restores all tracked files to their last committed state.
+    RestoreTrackedFiles,
+    /// Moves all untracked files to trash.
+    TrashUntrackedFiles,
+    /// Undoes the last commit, keeping changes in the working directory.
+    Uncommit,
+    /// Pushes commits to the remote repository.
+    Push,
+    /// Pushes commits to a specific remote branch.
+    PushTo,
+    /// Force pushes commits to the remote repository.
+    ForcePush,
+    /// Pulls changes from the remote repository.
+    Pull,
+    /// Pulls changes from the remote repository with rebase.
+    PullRebase,
+    /// Fetches changes from the remote repository.
+    Fetch,
+    /// Fetches changes from a specific remote.
+    FetchFrom,
+    /// Creates a new commit with staged changes.
+    Commit,
+    /// Runs the next commit with `git commit --no-verify`.
+    SkipHooks,
+    /// Amends the last commit with staged changes.
+    Amend,
+    /// Enable the --signoff option.
+    Signoff,
+    /// Cancels the current git operation.
+    Cancel,
+    /// Expands the commit message editor.
+    ExpandCommitEditor,
+    /// Toggles whether the commit message editor fills all the available
+    /// vertical space within the git panel.
+    ToggleFillCommitEditor,
+    /// Toggles whether the commit message editor is shown in the git panel.
+    ToggleCommitEditor,
+    /// Generates a commit message using AI.
+    GenerateCommitMessage,
+    /// Initializes a new git repository.
+    Init,
+    /// Opens all modified files in the editor.
+    OpenModifiedFiles,
+    /// Opens the current file in a solo diff view.
+    OpenFileDiff,
+    /// Clones a repository.
+    Clone,
+    ViewCommit,
+    /// Adds a file to .gitignore.
+    AddToGitignore,
+    /// Adds a file to the repository's .git/info/exclude.
+    AddToGitInfoExclude,
+    /// Copies the current branch name to the clipboard.
+    CopyBranchName,
+    /// Creates a tag at HEAD.
+    CreateTagAtHead,
+  ]
+);
+
+/// Renames a git branch.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, JsonSchema, Action)]
+#[action(namespace = git)]
+#[serde(deny_unknown_fields)]
+pub struct RenameBranch {
+  /// The branch to rename.
+  ///
+  /// Default: the current branch.
+  #[serde(default)]
+  pub branch: Option<String>,
+}
+
+/// Restores a file to its last committed state, discarding local changes.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, JsonSchema, Action)]
+#[action(namespace = git, deprecated_aliases = ["editor::RevertFile"])]
+#[serde(deny_unknown_fields)]
+pub struct RestoreFile {
+  #[serde(default)]
+  pub skip_prompt: bool,
+}
+
+/// The length of a Git short SHA.
+pub const SHORT_SHA_LENGTH: usize = 7;
+
+const SHA1_BYTE_LENGTH: usize = 20;
+const SHA256_BYTE_LENGTH: usize = 32;
+const SHA1_HEX_LENGTH: usize = SHA1_BYTE_LENGTH * 2;
+const SHA256_HEX_LENGTH: usize = SHA256_BYTE_LENGTH * 2;
+const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+pub struct Oid {
+  bytes: [u8; SHA256_BYTE_LENGTH],
+  format: OidFormat,
+}
+
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+enum OidFormat {
+  Sha1,
+  Sha256,
+}
+
+impl OidFormat {
+  fn byte_len(self) -> usize {
+    match self {
+      Self::Sha1 => SHA1_BYTE_LENGTH,
+      Self::Sha256 => SHA256_BYTE_LENGTH,
+    }
+  }
+
+  fn hex_len(self) -> usize {
+    match self {
+      Self::Sha1 => SHA1_HEX_LENGTH,
+      Self::Sha256 => SHA256_HEX_LENGTH,
+    }
+  }
+}
+
+impl Oid {
+  pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+    let format = match bytes.len() {
+      SHA1_BYTE_LENGTH => OidFormat::Sha1,
+      SHA256_BYTE_LENGTH => OidFormat::Sha256,
+      len => {
+        anyhow::bail!(
+          "invalid git oid byte length: expected {SHA1_BYTE_LENGTH} for SHA-1 or {SHA256_BYTE_LENGTH} for SHA-256, got {len}"
+        );
+      }
+    };
+
+    let mut oid_bytes = [0u8; SHA256_BYTE_LENGTH];
+    oid_bytes[..bytes.len()].copy_from_slice(bytes);
+    Ok(Self {
+      bytes: oid_bytes,
+      format,
+    })
+  }
+
+  #[cfg(any(test, feature = "test-support"))]
+  pub fn random(rng: &mut impl rand::Rng) -> Self {
+    let mut bytes = [0u8; SHA256_BYTE_LENGTH];
+    rng.fill(&mut bytes[..SHA1_BYTE_LENGTH]);
+    Self {
+      bytes,
+      format: OidFormat::Sha1,
+    }
+  }
+
+  pub fn as_bytes(&self) -> &[u8] {
+    &self.bytes[..self.format.byte_len()]
+  }
+
+  pub fn is_zero(&self) -> bool {
+    self.as_bytes().iter().all(|byte| *byte == 0)
+  }
+
+  /// Returns this [`Oid`] as a short SHA.
+  pub fn display_short(&self) -> String {
+    self.hex_string(SHORT_SHA_LENGTH)
+  }
+
+  fn hex_string(&self, len: usize) -> String {
+    let mut string = String::with_capacity(len);
+    for index in 0..len {
+      string.push(self.hex_digit(index));
+    }
+    string
+  }
+
+  fn write_hex(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    for index in 0..self.format.hex_len() {
+      f.write_char(self.hex_digit(index))?;
+    }
+    Ok(())
+  }
+
+  #[inline(always)]
+  fn hex_digit(&self, index: usize) -> char {
+    debug_assert!(index < self.format.hex_len());
+    let byte = self.as_bytes()[index / 2];
+    let nibble = if index & 1 == 0 {
+      byte >> 4
+    } else {
+      byte & 0x0f
+    };
+    char::from(HEX_DIGITS[nibble as usize])
+  }
+}
+
+impl TryFrom<&str> for Oid {
+  type Error = anyhow::Error;
+
+  fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
+    Oid::from_str(value)
+  }
+}
+
+impl FromStr for Oid {
+  type Err = anyhow::Error;
+
+  fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+    let format = match s.len() {
+      1..=SHA1_HEX_LENGTH => OidFormat::Sha1,
+      SHA256_HEX_LENGTH => OidFormat::Sha256,
+      len => {
+        anyhow::bail!(
+          "invalid git oid hex length: expected 1..={SHA1_HEX_LENGTH} for SHA-1 or {SHA256_HEX_LENGTH} for SHA-256, got {len}"
+        );
+      }
+    };
+
+    let mut bytes = [0u8; SHA256_BYTE_LENGTH];
+    for (index, byte) in s.bytes().enumerate() {
+      let digit = decode_hex_digit(byte)
+        .ok_or_else(|| anyhow::anyhow!("invalid hex digit at byte {index} for git oid"))?;
+      if index % 2 == 0 {
+        bytes[index / 2] = digit << 4;
+      } else {
+        bytes[index / 2] |= digit;
+      }
+    }
+
+    Ok(Self { bytes, format })
+  }
+}
+
+fn decode_hex_digit(byte: u8) -> Option<u8> {
+  match byte {
+    b'0'..=b'9' => Some(byte - b'0'),
+    b'a'..=b'f' => Some(byte - b'a' + 10),
+    b'A'..=b'F' => Some(byte - b'A' + 10),
+    _ => None,
+  }
+}
+
+impl fmt::Debug for Oid {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fmt::Display::fmt(self, f)
+  }
+}
+
+impl fmt::Display for Oid {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    self.write_hex(f)
+  }
+}
+
+impl Serialize for Oid {
+  fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+  where
+    S: serde::Serializer,
+  {
+    serializer.serialize_str(&self.hex_string(self.format.hex_len()))
+  }
+}
+
+impl<'de> Deserialize<'de> for Oid {
+  fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+  where
+    D: serde::Deserializer<'de>,
+  {
+    let s = String::deserialize(deserializer)?;
+    s.parse::<Oid>().map_err(serde::de::Error::custom)
+  }
+}
+
+impl From<Oid> for u32 {
+  fn from(oid: Oid) -> Self {
+    let mut u32_bytes = [0u8; 4];
+    u32_bytes.copy_from_slice(&oid.as_bytes()[..4]);
+    u32::from_ne_bytes(u32_bytes)
+  }
+}
+
+impl From<Oid> for usize {
+  fn from(oid: Oid) -> Self {
+    let mut u64_bytes = [0u8; 8];
+    u64_bytes.copy_from_slice(&oid.as_bytes()[..8]);
+    u64::from_ne_bytes(u64_bytes) as usize
+  }
+}
+
+#[repr(i32)]
+#[derive(Copy, Clone, Debug)]
+pub enum RunHook {
+  PreCommit,
+}
+
+impl RunHook {
+  pub fn as_str(&self) -> &str {
+    match self {
+      Self::PreCommit => "pre-commit",
+    }
+  }
+
+  pub fn to_proto(&self) -> i32 {
+    *self as i32
+  }
+
+  pub fn from_proto(value: i32) -> Option<Self> {
+    match value {
+      0 => Some(Self::PreCommit),
+      _ => None,
+    }
+  }
+}
+</file>
+
+<file path="src/hosting_provider.rs">
+use std::{ops::Range, sync::Arc};
+
+use anyhow::Result;
+use async_trait::async_trait;
+use derive_more::{Deref, DerefMut};
+use gpui::{App, Global, SharedString};
+use http_client::HttpClient;
+use itertools::Itertools;
+use parking_lot::RwLock;
+use url::Url;
+
+use crate::repository::RepoPath;
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct PullRequest {
+    pub number: u32,
+    pub url: Url,
+}
+
+#[derive(Clone)]
+pub struct GitRemote {
+    pub host: Arc<dyn GitHostingProvider + Send + Sync + 'static>,
+    pub owner: SharedString,
+    pub repo: SharedString,
+}
+
+impl std::fmt::Debug for GitRemote {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GitRemote")
+            .field("host", &self.host.name())
+            .field("owner", &self.owner)
+            .field("repo", &self.repo)
+            .finish()
+    }
+}
+
+impl GitRemote {
+    pub fn host_supports_avatars(&self) -> bool {
+        self.host.supports_avatars()
+    }
+
+    pub async fn avatar_url(
+        &self,
+        commit: SharedString,
+        author_email: Option<SharedString>,
+        client: Arc<dyn HttpClient>,
+    ) -> Option<Url> {
+        self.host
+            .commit_author_avatar_url(&self.owner, &self.repo, commit, author_email, client)
+            .await
+            .ok()
+            .flatten()
+    }
+}
+
+pub struct BuildCommitPermalinkParams<'a> {
+    pub sha: &'a str,
+}
+
+pub struct BuildPermalinkParams<'a> {
+    pub sha: &'a str,
+    /// URL-escaped path using unescaped `/` as the directory separator.
+    pub path: String,
+    pub selection: Option<Range<u32>>,
+}
+
+impl<'a> BuildPermalinkParams<'a> {
+    pub fn new(sha: &'a str, path: &RepoPath, selection: Option<Range<u32>>) -> Self {
+        Self {
+            sha,
+            path: path.components().map(urlencoding::encode).join("/"),
+            selection,
+        }
+    }
+}
+
+/// A Git hosting provider.
+#[async_trait]
+pub trait GitHostingProvider {
+    /// Returns the name of the provider.
+    fn name(&self) -> String;
+
+    /// Returns the base URL of the provider.
+    fn base_url(&self) -> Url;
+
+    /// Returns a permalink to a Git commit on this hosting provider.
+    fn build_commit_permalink(
+        &self,
+        remote: &ParsedGitRemote,
+        params: BuildCommitPermalinkParams,
+    ) -> Url;
+
+    /// Returns a permalink to a file and/or selection on this hosting provider.
+    fn build_permalink(&self, remote: ParsedGitRemote, params: BuildPermalinkParams) -> Url;
+
+    /// Returns a URL to create a pull request on this hosting provider.
+    fn build_create_pull_request_url(
+        &self,
+        _remote: &ParsedGitRemote,
+        _source_branch: &str,
+    ) -> Option<Url> {
+        None
+    }
+
+    /// Returns whether this provider supports avatars.
+    fn supports_avatars(&self) -> bool;
+
+    /// Returns a URL fragment to the given line selection.
+    fn line_fragment(&self, selection: &Range<u32>) -> String {
+        if selection.start == selection.end {
+            let line = selection.start + 1;
+
+            self.format_line_number(line)
+        } else {
+            let start_line = selection.start + 1;
+            let end_line = selection.end + 1;
+
+            self.format_line_numbers(start_line, end_line)
+        }
+    }
+
+    /// Returns a formatted line number to be placed in a permalink URL.
+    fn format_line_number(&self, line: u32) -> String;
+
+    /// Returns a formatted range of line numbers to be placed in a permalink URL.
+    fn format_line_numbers(&self, start_line: u32, end_line: u32) -> String;
+
+    fn parse_remote_url(&self, url: &str) -> Option<ParsedGitRemote>;
+
+    fn extract_pull_request(
+        &self,
+        _remote: &ParsedGitRemote,
+        _message: &str,
+    ) -> Option<PullRequest> {
+        None
+    }
+
+    async fn commit_author_avatar_url(
+        &self,
+        _repo_owner: &str,
+        _repo: &str,
+        _commit: SharedString,
+        _author_email: Option<SharedString>,
+        _http_client: Arc<dyn HttpClient>,
+    ) -> Result<Option<Url>> {
+        Ok(None)
+    }
+}
+
+#[derive(Default, Deref, DerefMut)]
+struct GlobalGitHostingProviderRegistry(Arc<GitHostingProviderRegistry>);
+
+impl Global for GlobalGitHostingProviderRegistry {}
+
+#[derive(Default)]
+struct GitHostingProviderRegistryState {
+    default_providers: Vec<Arc<dyn GitHostingProvider + Send + Sync + 'static>>,
+    setting_providers: Vec<Arc<dyn GitHostingProvider + Send + Sync + 'static>>,
+}
+
+#[derive(Default)]
+pub struct GitHostingProviderRegistry {
+    state: RwLock<GitHostingProviderRegistryState>,
+}
+
+impl GitHostingProviderRegistry {
+    /// Returns the global [`GitHostingProviderRegistry`].
+    #[track_caller]
+    pub fn global(cx: &App) -> Arc<Self> {
+        cx.global::<GlobalGitHostingProviderRegistry>().0.clone()
+    }
+
+    /// Returns the global [`GitHostingProviderRegistry`], if one is set.
+    pub fn try_global(cx: &App) -> Option<Arc<Self>> {
+        cx.try_global::<GlobalGitHostingProviderRegistry>()
+            .map(|registry| registry.0.clone())
+    }
+
+    /// Returns the global [`GitHostingProviderRegistry`].
+    ///
+    /// Inserts a default [`GitHostingProviderRegistry`] if one does not yet exist.
+    pub fn default_global(cx: &mut App) -> Arc<Self> {
+        cx.default_global::<GlobalGitHostingProviderRegistry>()
+            .0
+            .clone()
+    }
+
+    /// Sets the global [`GitHostingProviderRegistry`].
+    pub fn set_global(registry: Arc<GitHostingProviderRegistry>, cx: &mut App) {
+        cx.set_global(GlobalGitHostingProviderRegistry(registry));
+    }
+
+    /// Returns a new [`GitHostingProviderRegistry`].
+    pub fn new() -> Self {
+        Self {
+            state: RwLock::new(GitHostingProviderRegistryState {
+                setting_providers: Vec::default(),
+                default_providers: Vec::default(),
+            }),
+        }
+    }
+
+    /// Returns the list of all [`GitHostingProvider`]s in the registry.
+    pub fn list_hosting_providers(
+        &self,
+    ) -> Vec<Arc<dyn GitHostingProvider + Send + Sync + 'static>> {
+        let state = self.state.read();
+        state
+            .default_providers
+            .iter()
+            .cloned()
+            .chain(state.setting_providers.iter().cloned())
+            .collect()
+    }
+
+    pub fn set_setting_providers(
+        &self,
+        providers: impl IntoIterator<Item = Arc<dyn GitHostingProvider + Send + Sync + 'static>>,
+    ) {
+        let mut state = self.state.write();
+        state.setting_providers.clear();
+        state.setting_providers.extend(providers);
+    }
+
+    /// Adds the provided [`GitHostingProvider`] to the registry.
+    pub fn register_hosting_provider(
+        &self,
+        provider: Arc<dyn GitHostingProvider + Send + Sync + 'static>,
+    ) {
+        self.state.write().default_providers.push(provider);
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ParsedGitRemote {
+    pub owner: Arc<str>,
+    pub repo: Arc<str>,
+}
+
+pub fn parse_git_remote_url(
+    provider_registry: Arc<GitHostingProviderRegistry>,
+    url: &str,
+) -> Option<(
+    Arc<dyn GitHostingProvider + Send + Sync + 'static>,
+    ParsedGitRemote,
+)> {
+    provider_registry
+        .list_hosting_providers()
+        .into_iter()
+        .find_map(|provider| {
+            provider
+                .parse_remote_url(url)
+                .map(|parsed_remote| (provider, parsed_remote))
+        })
+}
+</file>
+
+<file path="src/remote.rs">
+use std::str::FromStr;
+use std::sync::LazyLock;
+
+use derive_more::Deref;
+use regex::Regex;
+use url::Url;
+
+/// The URL to a Git remote.
+#[derive(Debug, PartialEq, Eq, Clone, Deref)]
+pub struct RemoteUrl(Url);
+
+// Detect the `user@` prefix of an SCP-like remote (e.g. `git@host:path`). The
+// username may contain anything but the `@`/`:`/`/` that delimit the user,
+// host, and path, so match by exclusion rather than an allowlist that misses
+// names like `first.last`.
+static USERNAME_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[^/@:]+@").expect("Failed to create USERNAME_REGEX"));
+
+impl FromStr for RemoteUrl {
+    type Err = url::ParseError;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        if USERNAME_REGEX.is_match(input) {
+            // Rewrite remote URLs like `git@github.com:user/repo.git` to `ssh://git@github.com/user/repo.git`
+            let ssh_url = format!("ssh://{}", input.replacen(':', "/", 1));
+            Ok(RemoteUrl(Url::parse(&ssh_url)?))
+        } else {
+            Ok(RemoteUrl(Url::parse(input)?))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn test_parsing_valid_remote_urls() {
+        let valid_urls = vec![
+            (
+                "https://github.com/octocat/zed.git",
+                "https",
+                "github.com",
+                "/octocat/zed.git",
+            ),
+            (
+                "https://jlannister@github.com/octocat/zed.git",
+                "https",
+                "github.com",
+                "/octocat/zed.git",
+            ),
+            (
+                "git@github.com:octocat/zed.git",
+                "ssh",
+                "github.com",
+                "/octocat/zed.git",
+            ),
+            (
+                "org-000000@github.com:octocat/zed.git",
+                "ssh",
+                "github.com",
+                "/octocat/zed.git",
+            ),
+            (
+                "first.last@gitlab.example.com:group/repo.git",
+                "ssh",
+                "gitlab.example.com",
+                "/group/repo.git",
+            ),
+            (
+                "ssh://git@github.com/octocat/zed.git",
+                "ssh",
+                "github.com",
+                "/octocat/zed.git",
+            ),
+            (
+                "file:///path/to/local/zed",
+                "file",
+                "",
+                "/path/to/local/zed",
+            ),
+        ];
+
+        for (input, expected_scheme, expected_host, expected_path) in valid_urls {
+            let parsed = input.parse::<RemoteUrl>().expect("failed to parse URL");
+            let url = parsed.0;
+            assert_eq!(
+                url.scheme(),
+                expected_scheme,
+                "unexpected scheme for {input:?}",
+            );
+            assert_eq!(
+                url.host_str().unwrap_or(""),
+                expected_host,
+                "unexpected host for {input:?}",
+            );
+            assert_eq!(url.path(), expected_path, "unexpected path for {input:?}");
+        }
+    }
+
+    #[test]
+    fn test_parsing_invalid_remote_urls() {
+        let invalid_urls = vec!["not_a_url", "http://"];
+
+        for url in invalid_urls {
+            assert!(
+                url.parse::<RemoteUrl>().is_err(),
+                "expected \"{url}\" to not parse as a Git remote URL",
+            );
+        }
+    }
+}
+</file>
+
+<file path="src/stash.rs">
+use crate::Oid;
+use anyhow::{Context, Result, anyhow};
+use std::{str::FromStr, sync::Arc};
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub struct StashEntry {
+    pub index: usize,
+    pub oid: Oid,
+    pub message: String,
+    pub branch: Option<String>,
+    pub timestamp: i64,
+}
+
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+pub struct GitStash {
+    pub entries: Arc<[StashEntry]>,
+}
+
+impl GitStash {
+    pub fn apply(&mut self, other: GitStash) {
+        self.entries = other.entries;
+    }
+}
+
+impl FromStr for GitStash {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        if s.trim().is_empty() {
+            return Ok(Self::default());
+        }
+
+        let mut entries = Vec::new();
+        let mut errors = Vec::new();
+
+        for (line_num, line) in s.lines().enumerate() {
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            match parse_stash_line(line) {
+                Ok(entry) => entries.push(entry),
+                Err(e) => {
+                    errors.push(format!("Line {}: {}", line_num + 1, e));
+                }
+            }
+        }
+
+        // If we have some valid entries but also some errors, log the errors but continue
+        if !errors.is_empty() && !entries.is_empty() {
+            log::warn!("Failed to parse some stash entries: {}", errors.join(", "));
+        } else if !errors.is_empty() {
+            return Err(anyhow!(
+                "Failed to parse stash entries: {}",
+                errors.join(", ")
+            ));
+        }
+
+        Ok(Self {
+            entries: entries.into(),
+        })
+    }
+}
+
+/// Parse a single stash line in the format: "stash@{N}\0<oid>\0<timestamp>\0<message>"
+fn parse_stash_line(line: &str) -> Result<StashEntry> {
+    let parts: Vec<&str> = line.splitn(4, '\0').collect();
+
+    if parts.len() != 4 {
+        return Err(anyhow!(
+            "Expected 4 null-separated parts, got {}",
+            parts.len()
+        ));
+    }
+
+    let index = parse_stash_index(parts[0])
+        .with_context(|| format!("Failed to parse stash index from '{}'", parts[0]))?;
+
+    let oid = Oid::from_str(parts[1])
+        .with_context(|| format!("Failed to parse OID from '{}'", parts[1]))?;
+
+    let timestamp = parts[2]
+        .parse::<i64>()
+        .with_context(|| format!("Failed to parse timestamp from '{}'", parts[2]))?;
+
+    let (branch, message) = parse_stash_message(parts[3]);
+
+    Ok(StashEntry {
+        index,
+        oid,
+        message: message.to_string(),
+        branch: branch.map(Into::into),
+        timestamp,
+    })
+}
+
+/// Parse stash index from format "stash@{N}" where N is the index
+fn parse_stash_index(input: &str) -> Result<usize> {
+    let trimmed = input.trim();
+
+    if !trimmed.starts_with("stash@{") || !trimmed.ends_with('}') {
+        return Err(anyhow!(
+            "Invalid stash index format: expected 'stash@{{N}}'"
+        ));
+    }
+
+    let index_str = trimmed
+        .strip_prefix("stash@{")
+        .and_then(|s| s.strip_suffix('}'))
+        .ok_or_else(|| anyhow!("Failed to extract index from stash reference"))?;
+
+    index_str
+        .parse::<usize>()
+        .with_context(|| format!("Invalid stash index number: '{}'", index_str))
+}
+
+/// Parse stash message and extract branch information if present
+///
+/// Handles the following formats:
+/// - "WIP on <branch>: <message>" -> (Some(branch), message)
+/// - "On <branch>: <message>" -> (Some(branch), message)
+/// - "<message>" -> (None, message)
+fn parse_stash_message(input: &str) -> (Option<&str>, &str) {
+    // Handle "WIP on <branch>: <message>" pattern
+    if let Some(stripped) = input.strip_prefix("WIP on ")
+        && let Some(colon_pos) = stripped.find(": ")
+    {
+        let branch = &stripped[..colon_pos];
+        let message = &stripped[colon_pos + 2..];
+        if !branch.is_empty() && !message.is_empty() {
+            return (Some(branch), message);
+        }
+    }
+
+    // Handle "On <branch>: <message>" pattern
+    if let Some(stripped) = input.strip_prefix("On ")
+        && let Some(colon_pos) = stripped.find(": ")
+    {
+        let branch = &stripped[..colon_pos];
+        let message = &stripped[colon_pos + 2..];
+        if !branch.is_empty() && !message.is_empty() {
+            return (Some(branch), message);
+        }
+    }
+
+    // Fallback: treat entire input as message with no branch
+    (None, input)
+}
+
+</file>
+
+<file path="src/status.rs">
+use crate::{Oid, repository::RepoPath};
+use anyhow::{Result, anyhow};
+use collections::HashMap;
+use gpui::SharedString;
+use serde::{Deserialize, Serialize};
+use std::{str::FromStr, sync::Arc};
+use util::{ResultExt, rel_path::RelPath};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum FileStatus {
+    Untracked,
+    Ignored,
+    Unmerged(UnmergedStatus),
+    Tracked(TrackedStatus),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct UnmergedStatus {
+    pub first_head: UnmergedStatusCode,
+    pub second_head: UnmergedStatusCode,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum UnmergedStatusCode {
+    Added,
+    Deleted,
+    Updated,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct TrackedStatus {
+    pub index_status: StatusCode,
+    pub worktree_status: StatusCode,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum StatusCode {
+    Modified,
+    TypeChanged,
+    Added,
+    Deleted,
+    Renamed,
+    Copied,
+    Unmodified,
+}
+
+impl From<UnmergedStatus> for FileStatus {
+    fn from(value: UnmergedStatus) -> Self {
+        FileStatus::Unmerged(value)
+    }
+}
+
+impl From<TrackedStatus> for FileStatus {
+    fn from(value: TrackedStatus) -> Self {
+        FileStatus::Tracked(value)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum StageStatus {
+    Staged,
+    Unstaged,
+    PartiallyStaged,
+}
+
+impl StageStatus {
+    pub const fn is_fully_staged(&self) -> bool {
+        matches!(self, StageStatus::Staged)
+    }
+
+    pub const fn is_fully_unstaged(&self) -> bool {
+        matches!(self, StageStatus::Unstaged)
+    }
+
+    pub const fn has_staged(&self) -> bool {
+        matches!(self, StageStatus::Staged | StageStatus::PartiallyStaged)
+    }
+
+    pub const fn has_unstaged(&self) -> bool {
+        matches!(self, StageStatus::Unstaged | StageStatus::PartiallyStaged)
+    }
+
+    pub const fn as_bool(self) -> Option<bool> {
+        match self {
+            StageStatus::Staged => Some(true),
+            StageStatus::Unstaged => Some(false),
+            StageStatus::PartiallyStaged => None,
+        }
+    }
+}
+
+impl FileStatus {
+    pub const fn worktree(worktree_status: StatusCode) -> Self {
+        FileStatus::Tracked(TrackedStatus {
+            index_status: StatusCode::Unmodified,
+            worktree_status,
+        })
+    }
+
+    pub const fn index(index_status: StatusCode) -> Self {
+        FileStatus::Tracked(TrackedStatus {
+            worktree_status: StatusCode::Unmodified,
+            index_status,
+        })
+    }
+
+    /// Generate a FileStatus Code from a byte pair, as described in
+    /// https://git-scm.com/docs/git-status#_output
+    ///
+    /// NOTE: That instead of '', we use ' ' to denote no change
+    fn from_bytes(bytes: [u8; 2]) -> anyhow::Result<Self> {
+        let status = match bytes {
+            [b'?', b'?'] => FileStatus::Untracked,
+            [b'!', b'!'] => FileStatus::Ignored,
+            [b'A', b'A'] => UnmergedStatus {
+                first_head: UnmergedStatusCode::Added,
+                second_head: UnmergedStatusCode::Added,
+            }
+            .into(),
+            [b'D', b'D'] => UnmergedStatus {
+                first_head: UnmergedStatusCode::Added,
+                second_head: UnmergedStatusCode::Added,
+            }
+            .into(),
+            [x, b'U'] => UnmergedStatus {
+                first_head: UnmergedStatusCode::from_byte(x)?,
+                second_head: UnmergedStatusCode::Updated,
+            }
+            .into(),
+            [b'U', y] => UnmergedStatus {
+                first_head: UnmergedStatusCode::Updated,
+                second_head: UnmergedStatusCode::from_byte(y)?,
+            }
+            .into(),
+            [x, y] => TrackedStatus {
+                index_status: StatusCode::from_byte(x)?,
+                worktree_status: StatusCode::from_byte(y)?,
+            }
+            .into(),
+        };
+        Ok(status)
+    }
+
+    pub fn staging(self) -> StageStatus {
+        match self {
+            FileStatus::Untracked | FileStatus::Ignored | FileStatus::Unmerged { .. } => {
+                StageStatus::Unstaged
+            }
+            FileStatus::Tracked(tracked) => match (tracked.index_status, tracked.worktree_status) {
+                (StatusCode::Unmodified, _) => StageStatus::Unstaged,
+                (_, StatusCode::Unmodified) => StageStatus::Staged,
+                _ => StageStatus::PartiallyStaged,
+            },
+        }
+    }
+
+    pub fn is_conflicted(self) -> bool {
+        matches!(self, FileStatus::Unmerged { .. })
+    }
+
+    pub fn is_ignored(self) -> bool {
+        matches!(self, FileStatus::Ignored)
+    }
+
+    pub fn has_changes(&self) -> bool {
+        self.is_modified()
+            || self.is_created()
+            || self.is_deleted()
+            || self.is_untracked()
+            || self.is_conflicted()
+    }
+
+    pub fn is_modified(self) -> bool {
+        match self {
+            FileStatus::Tracked(tracked) => matches!(
+                (tracked.index_status, tracked.worktree_status),
+                (StatusCode::Modified, _) | (_, StatusCode::Modified)
+            ),
+            _ => false,
+        }
+    }
+
+    pub fn is_created(self) -> bool {
+        match self {
+            FileStatus::Tracked(tracked) => matches!(
+                (tracked.index_status, tracked.worktree_status),
+                (StatusCode::Added, _) | (_, StatusCode::Added)
+            ),
+            FileStatus::Untracked => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_deleted(self) -> bool {
+        let FileStatus::Tracked(tracked) = self else {
+            return false;
+        };
+        tracked.index_status == StatusCode::Deleted && tracked.worktree_status != StatusCode::Added
+            || tracked.worktree_status == StatusCode::Deleted
+    }
+
+    pub fn is_untracked(self) -> bool {
+        matches!(self, FileStatus::Untracked)
+    }
+
+    pub fn summary(self) -> GitSummary {
+        match self {
+            FileStatus::Ignored => GitSummary::UNCHANGED,
+            FileStatus::Untracked => GitSummary::UNTRACKED,
+            FileStatus::Unmerged(_) => GitSummary::CONFLICT,
+            FileStatus::Tracked(TrackedStatus {
+                index_status,
+                worktree_status,
+            }) => GitSummary {
+                index: index_status.to_summary(),
+                worktree: worktree_status.to_summary(),
+                conflict: 0,
+                untracked: 0,
+                count: 1,
+            },
+        }
+    }
+}
+
+impl StatusCode {
+    fn from_byte(byte: u8) -> anyhow::Result<Self> {
+        match byte {
+            b'M' => Ok(StatusCode::Modified),
+            b'T' => Ok(StatusCode::TypeChanged),
+            b'A' => Ok(StatusCode::Added),
+            b'D' => Ok(StatusCode::Deleted),
+            b'R' => Ok(StatusCode::Renamed),
+            b'C' => Ok(StatusCode::Copied),
+            b' ' => Ok(StatusCode::Unmodified),
+            _ => anyhow::bail!("Invalid status code: {byte}"),
+        }
+    }
+
+    fn to_summary(self) -> TrackedSummary {
+        match self {
+            StatusCode::Modified | StatusCode::TypeChanged => TrackedSummary {
+                modified: 1,
+                ..TrackedSummary::UNCHANGED
+            },
+            StatusCode::Added => TrackedSummary {
+                added: 1,
+                ..TrackedSummary::UNCHANGED
+            },
+            StatusCode::Deleted => TrackedSummary {
+                deleted: 1,
+                ..TrackedSummary::UNCHANGED
+            },
+            StatusCode::Renamed | StatusCode::Copied | StatusCode::Unmodified => {
+                TrackedSummary::UNCHANGED
+            }
+        }
+    }
+
+    pub fn index(self) -> FileStatus {
+        FileStatus::Tracked(TrackedStatus {
+            index_status: self,
+            worktree_status: StatusCode::Unmodified,
+        })
+    }
+
+    pub fn worktree(self) -> FileStatus {
+        FileStatus::Tracked(TrackedStatus {
+            index_status: StatusCode::Unmodified,
+            worktree_status: self,
+        })
+    }
+}
+
+impl UnmergedStatusCode {
+    fn from_byte(byte: u8) -> anyhow::Result<Self> {
+        match byte {
+            b'A' => Ok(UnmergedStatusCode::Added),
+            b'D' => Ok(UnmergedStatusCode::Deleted),
+            b'U' => Ok(UnmergedStatusCode::Updated),
+            _ => anyhow::bail!("Invalid unmerged status code: {byte}"),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Copy, PartialEq, Eq)]
+pub struct TrackedSummary {
+    pub added: usize,
+    pub modified: usize,
+    pub deleted: usize,
+}
+
+impl TrackedSummary {
+    pub const UNCHANGED: Self = Self {
+        added: 0,
+        modified: 0,
+        deleted: 0,
+    };
+
+    pub const ADDED: Self = Self {
+        added: 1,
+        modified: 0,
+        deleted: 0,
+    };
+
+    pub const MODIFIED: Self = Self {
+        added: 0,
+        modified: 1,
+        deleted: 0,
+    };
+
+    pub const DELETED: Self = Self {
+        added: 0,
+        modified: 0,
+        deleted: 1,
+    };
+}
+
+impl std::ops::AddAssign for TrackedSummary {
+    fn add_assign(&mut self, rhs: Self) {
+        self.added += rhs.added;
+        self.modified += rhs.modified;
+        self.deleted += rhs.deleted;
+    }
+}
+
+impl std::ops::Add for TrackedSummary {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        TrackedSummary {
+            added: self.added + rhs.added,
+            modified: self.modified + rhs.modified,
+            deleted: self.deleted + rhs.deleted,
+        }
+    }
+}
+
+impl std::ops::Sub for TrackedSummary {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        TrackedSummary {
+            added: self.added - rhs.added,
+            modified: self.modified - rhs.modified,
+            deleted: self.deleted - rhs.deleted,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Copy, PartialEq, Eq)]
+pub struct GitSummary {
+    pub index: TrackedSummary,
+    pub worktree: TrackedSummary,
+    pub conflict: usize,
+    pub untracked: usize,
+    pub count: usize,
+}
+
+impl GitSummary {
+    pub const CONFLICT: Self = Self {
+        conflict: 1,
+        count: 1,
+        ..Self::UNCHANGED
+    };
+
+    pub const UNTRACKED: Self = Self {
+        untracked: 1,
+        count: 1,
+        ..Self::UNCHANGED
+    };
+
+    pub const UNCHANGED: Self = Self {
+        index: TrackedSummary::UNCHANGED,
+        worktree: TrackedSummary::UNCHANGED,
+        conflict: 0,
+        untracked: 0,
+        count: 0,
+    };
+}
+
+impl From<FileStatus> for GitSummary {
+    fn from(status: FileStatus) -> Self {
+        status.summary()
+    }
+}
+
+impl sum_tree::ContextLessSummary for GitSummary {
+    fn zero() -> Self {
+        Default::default()
+    }
+
+    fn add_summary(&mut self, rhs: &Self) {
+        *self += *rhs;
+    }
+}
+
+impl std::ops::Add<Self> for GitSummary {
+    type Output = Self;
+
+    fn add(mut self, rhs: Self) -> Self {
+        self += rhs;
+        self
+    }
+}
+
+impl std::ops::AddAssign for GitSummary {
+    fn add_assign(&mut self, rhs: Self) {
+        self.index += rhs.index;
+        self.worktree += rhs.worktree;
+        self.conflict += rhs.conflict;
+        self.untracked += rhs.untracked;
+        self.count += rhs.count;
+    }
+}
+
+impl std::ops::Sub for GitSummary {
+    type Output = GitSummary;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        GitSummary {
+            index: self.index - rhs.index,
+            worktree: self.worktree - rhs.worktree,
+            conflict: self.conflict - rhs.conflict,
+            untracked: self.untracked - rhs.untracked,
+            count: self.count - rhs.count,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct GitStatus {
+    pub entries: Arc<[(RepoPath, FileStatus)]>,
+}
+
+impl FromStr for GitStatus {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let mut entries = s
+            .split('\0')
+            .filter_map(|entry| {
+                let sep = entry.get(2..3)?;
+                if sep != " " {
+                    return None;
+                };
+                let path = &entry[3..];
+                // The git status output includes untracked directories as well as untracked files.
+                // We do our own processing to compute the "summary" status of each directory,
+                // so just skip any directories in the output, since they'll otherwise interfere
+                // with our handling of nested repositories.
+                if path.ends_with('/') {
+                    return None;
+                }
+                let status = entry.as_bytes()[0..2].try_into().unwrap();
+                let status = FileStatus::from_bytes(status).log_err()?;
+                // git-status outputs `/`-delimited repo paths, even on Windows.
+                let path = RepoPath::from_rel_path(RelPath::from_unix_str(path).log_err()?);
+                Some((path, status))
+            })
+            .collect::<Vec<_>>();
+        entries.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
+        // When a file exists in HEAD, is deleted in the index, and exists again in the working copy,
+        // git produces two lines for it, one reading `D ` (deleted in index, unmodified in working copy)
+        // and the other reading `??` (untracked). Merge these two into the equivalent of `DA`.
+        entries.dedup_by(|(a, a_status), (b, b_status)| {
+            const INDEX_DELETED: FileStatus = FileStatus::index(StatusCode::Deleted);
+            if a.ne(&b) {
+                return false;
+            }
+            match (*a_status, *b_status) {
+                (INDEX_DELETED, FileStatus::Untracked) | (FileStatus::Untracked, INDEX_DELETED) => {
+                    *b_status = TrackedStatus {
+                        index_status: StatusCode::Deleted,
+                        worktree_status: StatusCode::Added,
+                    }
+                    .into();
+                }
+                (x, y) if x == y => {}
+                _ => {
+                    log::warn!(
+                        "Unexpected duplicated status entries: {a_status:?} and {b_status:?}"
+                    );
+                }
+            }
+            true
+        });
+        Ok(Self {
+            entries: entries.into(),
+        })
+    }
+}
+
+impl Default for GitStatus {
+    fn default() -> Self {
+        Self {
+            entries: Arc::new([]),
+        }
+    }
+}
+
+pub enum DiffTreeType {
+    MergeBase {
+        base: SharedString,
+        head: SharedString,
+    },
+    MergeBaseWithWorktree {
+        base: SharedString,
+    },
+    Since {
+        base: SharedString,
+        head: SharedString,
+    },
+}
+
+#[derive(Debug, PartialEq)]
+pub struct TreeDiff {
+    pub entries: HashMap<RepoPath, TreeDiffStatus>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TreeDiffStatus {
+    Added,
+    Modified { old: Oid },
+    Deleted { old: Oid },
+}
+
+impl FromStr for TreeDiff {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let mut fields = s.split('\0');
+        let mut parsed = HashMap::default();
+        while let Some((status, path)) = fields.next().zip(fields.next()) {
+            let path = RepoPath::from_rel_path(RelPath::from_unix_str(path)?);
+
+            let mut fields = status.split(" ").skip(2);
+            let old_sha = fields
+                .next()
+                .ok_or_else(|| anyhow!("expected to find old_sha"))?
+                .to_owned()
+                .parse()?;
+            let _new_sha = fields
+                .next()
+                .ok_or_else(|| anyhow!("expected to find new_sha"))?;
+            let status = fields
+                .next()
+                .and_then(|s| {
+                    if s.len() == 1 {
+                        s.as_bytes().first()
+                    } else {
+                        None
+                    }
+                })
+                .ok_or_else(|| anyhow!("expected to find status"))?;
+
+            let result = match StatusCode::from_byte(*status)? {
+                StatusCode::Modified => TreeDiffStatus::Modified { old: old_sha },
+                StatusCode::Added => TreeDiffStatus::Added,
+                StatusCode::Deleted => TreeDiffStatus::Deleted { old: old_sha },
+                _status => continue,
+            };
+
+            parsed.insert(path, result);
+        }
+
+        Ok(Self { entries: parsed })
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct DiffStat {
+    pub added: u32,
+    pub deleted: u32,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct GitDiffStat {
+    pub entries: Arc<[(RepoPath, DiffStat)]>,
+}
+
+/// Parses the output of `git diff --numstat` where output looks like:
+///
+/// ```text
+/// 24   12   dir/file.txt
+/// ```
+pub fn parse_numstat(output: &str) -> GitDiffStat {
+    let mut entries = Vec::new();
+    for line in output.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let mut parts = line.splitn(3, '\t');
+        let (Some(added_str), Some(deleted_str), Some(path_str)) =
+            (parts.next(), parts.next(), parts.next())
+        else {
+            continue;
+        };
+        let Ok(added) = added_str.parse::<u32>() else {
+            continue;
+        };
+        let Ok(deleted) = deleted_str.parse::<u32>() else {
+            continue;
+        };
+        let Ok(path) = RepoPath::new(path_str) else {
+            continue;
+        };
+        entries.push((path, DiffStat { added, deleted }));
+    }
+    entries.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
+    entries.dedup_by(|(a, _), (b, _)| a == b);
+
+    GitDiffStat {
+        entries: entries.into(),
+    }
+}
+
+</file>
+
+<file path="test_data/blame_incremental_complex">
+5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206 6 6 3
+author Mahdy M. Karam
+author-mail <64036912+mmkaram@users.noreply.github.com>
+author-time 1708621949
+author-tz -0800
+committer GitHub
+committer-mail <noreply@github.com>
+committer-time 1708621949
+committer-tz -0700
+summary Add option to either use system clipboard or vim clipboard (#7936)
+previous c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206 12 12 2
+previous c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206 18 18 1
+previous c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206 21 21 7
+previous c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206 31 31 1
+previous c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206 34 34 1
+previous c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206 86 86 16
+previous c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 1 1 2
+author Conrad Irwin
+author-mail <conrad@zed.dev>
+author-time 1707520689
+author-tz -0700
+committer GitHub
+committer-mail <noreply@github.com>
+committer-time 1707520689
+committer-tz -0700
+summary Highlight selections on vim yank (#7638)
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 4 4 1
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 7 10 2
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 10 14 4
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 15 19 2
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 19 28 3
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 22 32 2
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 25 35 2
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 31 41 1
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 57 67 5
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+3635d2dcedd83f1b6702f33ca2673317f7fa4695 78 102 18
+previous efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+b65cf6d2d9576171edb407f5bbaa231c33af1f71 3 5 1
+author Max Brunsfeld
+author-mail <maxbrunsfeld@gmail.com>
+author-time 1705619094
+author-tz -0800
+committer Max Brunsfeld
+committer-mail <maxbrunsfeld@gmail.com>
+committer-time 1705619205
+committer-tz -0800
+summary Merge branch 'main' into language-api-docs
+previous 6457ccf9ece3b36a37e675783abee9748a443115 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+b65cf6d2d9576171edb407f5bbaa231c33af1f71 51 121 8
+previous 6457ccf9ece3b36a37e675783abee9748a443115 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+b02bd9bce1db3a68dcd606718fa02709020860af 29 61 1
+author Conrad Irwin
+author-mail <conrad@zed.dev>
+author-time 1694798044
+author-tz -0600
+committer Conrad Irwin
+committer-mail <conrad@zed.dev>
+committer-time 1694798044
+committer-tz -0600
+summary Fix Y on last line with no trailing new line
+previous 7c77baa7c17eea106330622e70513ea9389d50a1 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+b02bd9bce1db3a68dcd606718fa02709020860af 33 65 1
+previous 7c77baa7c17eea106330622e70513ea9389d50a1 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+e4794e3134b6449e36ed2771a8849046489cc252 13 45 1
+author Conrad Irwin
+author-mail <conrad@zed.dev>
+author-time 1692855942
+author-tz -0600
+committer Conrad Irwin
+committer-mail <conrad@zed.dev>
+committer-time 1692856812
+committer-tz -0600
+summary vim: Fix linewise copy of last line with no trailing newline
+previous 26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+e4794e3134b6449e36ed2771a8849046489cc252 21 53 8
+previous 26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+e4794e3134b6449e36ed2771a8849046489cc252 29 62 3
+previous 26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+e4794e3134b6449e36ed2771a8849046489cc252 33 66 1
+previous 26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+e4794e3134b6449e36ed2771a8849046489cc252 37 75 3
+previous 26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+33d7fe02ee560f6ed57d1425c43e60aef3b66e64 10 43 1
+author Conrad Irwin
+author-mail <conrad@zed.dev>
+author-time 1692644159
+author-tz -0600
+committer Conrad Irwin
+committer-mail <conrad@zed.dev>
+committer-time 1692732477
+committer-tz -0600
+summary Rewrite paste
+previous 31db5e4f62e8fca75aa0870f903ae044524c3580 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+33d7fe02ee560f6ed57d1425c43e60aef3b66e64 14 47 6
+previous 31db5e4f62e8fca75aa0870f903ae044524c3580 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+868c46062008bb0bcab2d41a38b4295996b9b958 20 81 1
+author Max Brunsfeld
+author-mail <maxbrunsfeld@gmail.com>
+author-time 1659072896
+author-tz -0700
+committer Max Brunsfeld
+committer-mail <maxbrunsfeld@gmail.com>
+committer-time 1659073230
+committer-tz -0700
+summary :art: Rename and simplify some autoindent stuff
+previous 7a26fa18c7fee3fe031b991e18b55fd8f9c4eb1b crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+e93c49f4f02b3edaddae6a6a4cc0ac433f242357 5 37 1
+author Kaylee Simmons
+author-mail <kay@the-simmons.net>
+author-time 1653424557
+author-tz -0700
+committer Kaylee Simmons
+committer-mail <kay@the-simmons.net>
+committer-time 1653609725
+committer-tz -0700
+summary Unify visual line_mode and non line_mode operators
+previous 11569a869a72f786a9798c53266e28c05c79f824 crates/vim/src/utils.rs
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 1 3 1
+author Kaylee Simmons
+author-mail <kay@the-simmons.net>
+author-time 1653007350
+author-tz -0700
+committer Kaylee Simmons
+committer-mail <kay@the-simmons.net>
+committer-time 1653609725
+committer-tz -0700
+summary Enable copy and paste in vim mode
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 4 9 1
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 7 38 3
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 10 42 1
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 11 44 1
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 14 46 1
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 15 72 3
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 18 78 3
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 21 82 4
+filename crates/vim/src/utils.rs
+082036161fd3815c831ceedfd28ba15b0ed6eb9f 26 120 1
+filename crates/vim/src/utils.rs
+</file>
+
+<file path="test_data/blame_incremental_not_committed">
+0000000000000000000000000000000000000000 4 4 3
+author External file (--contents)
+author-mail <external.file>
+author-time 1710764166
+author-tz +0100
+committer External file (--contents)
+committer-mail <external.file>
+committer-time 1710764166
+committer-tz +0100
+summary Version of file_b.txt from file_b_memory.txt
+previous 4aaba34cb86b12f3a749dd6ddbf185de88de6527 file_b.txt
+filename file_b.txt
+0000000000000000000000000000000000000000 10 10 1
+previous 4aaba34cb86b12f3a749dd6ddbf185de88de6527 file_b.txt
+filename file_b.txt
+0000000000000000000000000000000000000000 15 15 2
+previous 4aaba34cb86b12f3a749dd6ddbf185de88de6527 file_b.txt
+filename file_b.txt
+4aaba34cb86b12f3a749dd6ddbf185de88de6527 4 7 2
+author Thorsten Ball
+author-mail <mrnugget@gmail.com>
+author-time 1710764113
+author-tz +0100
+committer Thorsten Ball
+committer-mail <mrnugget@gmail.com>
+committer-time 1710764113
+committer-tz +0100
+summary Another commit
+previous b2f6b0d982a9e7654bbb6d979c9ccb00b1d2e913 file_b.txt
+filename file_b.txt
+4aaba34cb86b12f3a749dd6ddbf185de88de6527 11 17 2
+previous b2f6b0d982a9e7654bbb6d979c9ccb00b1d2e913 file_b.txt
+filename file_b.txt
+b2f6b0d982a9e7654bbb6d979c9ccb00b1d2e913 6 9 1
+author Thorsten Ball
+author-mail <mrnugget@gmail.com>
+author-time 1710764087
+author-tz +0100
+committer Thorsten Ball
+committer-mail <mrnugget@gmail.com>
+committer-time 1710764087
+committer-tz +0100
+summary Another commit
+previous 7aef8a9a211ebc86824769c89f48e4f64aa6183f file_b.txt
+filename file_b.txt
+b2f6b0d982a9e7654bbb6d979c9ccb00b1d2e913 7 11 2
+previous 7aef8a9a211ebc86824769c89f48e4f64aa6183f file_b.txt
+filename file_b.txt
+e6d34e8fb494fe2b576d16037c61ba9d10722ba3 1 1 3
+author Thorsten Ball
+author-mail <mrnugget@gmail.com>
+author-time 1709299737
+author-tz +0100
+committer Thorsten Ball
+committer-mail <mrnugget@gmail.com>
+committer-time 1709299737
+committer-tz +0100
+summary Initial
+boundary
+filename file_b.txt
+e6d34e8fb494fe2b576d16037c61ba9d10722ba3 9 13 2
+filename file_b.txt
+e6d34e8fb494fe2b576d16037c61ba9d10722ba3 13 19 1
+filename file_b.txt
+</file>
+
+<file path="test_data/blame_incremental_simple">
+0000000000000000000000000000000000000000 3 3 1
+author Not Committed Yet
+author-mail <not.committed.yet>
+author-time 1709895274
+author-tz +0100
+committer Not Committed Yet
+committer-mail <not.committed.yet>
+committer-time 1709895274
+committer-tz +0100
+summary Version of index.js from index.js
+previous a7037b4567dd171bfe563c761354ec9236c803b3 index.js
+filename index.js
+0000000000000000000000000000000000000000 7 7 2
+previous a7037b4567dd171bfe563c761354ec9236c803b3 index.js
+filename index.js
+c8d34ae30c87e59aaa5eb65f6c64d6206f525d7c 7 6 1
+author Thorsten Ball
+author-mail <mrnugget@example.com>
+author-time 1709808710
+author-tz +0100
+committer Thorsten Ball
+committer-mail <mrnugget@example.com>
+committer-time 1709808710
+committer-tz +0100
+summary Make a commit
+previous 6ad46b5257ba16d12c5ca9f0d4900320959df7f4 index.js
+filename index.js
+6ad46b5257ba16d12c5ca9f0d4900320959df7f4 2 2 1
+author Joe Schmoe
+author-mail <joe.schmoe@example.com>
+author-time 1709741400
+author-tz +0100
+committer Joe Schmoe
+committer-mail <joe.schmoe@example.com>
+committer-time 1709741400
+committer-tz +0100
+summary Joe's cool commit
+previous 486c2409237a2c627230589e567024a96751d475 index.js
+filename index.js
+6ad46b5257ba16d12c5ca9f0d4900320959df7f4 3 4 1
+previous 486c2409237a2c627230589e567024a96751d475 index.js
+filename index.js
+6ad46b5257ba16d12c5ca9f0d4900320959df7f4 13 9 1
+previous 486c2409237a2c627230589e567024a96751d475 index.js
+filename index.js
+486c2409237a2c627230589e567024a96751d475 3 1 1
+author Thorsten Ball
+author-mail <mrnugget@example.com>
+author-time 1709129122
+author-tz +0100
+committer Thorsten Ball
+committer-mail <mrnugget@example.com>
+committer-time 1709129122
+committer-tz +0100
+summary Get to a state where eslint would change code and imports
+previous 504065e448b467e79920040f22153e9d2ea0fd6e index.js
+filename index.js
+504065e448b467e79920040f22153e9d2ea0fd6e 3 5 1
+author Thorsten Ball
+author-mail <mrnugget@example.com>
+author-time 1709128963
+author-tz +0100
+committer Thorsten Ball
+committer-mail <mrnugget@example.com>
+committer-time 1709128963
+committer-tz +0100
+summary Add some stuff
+filename index.js
+504065e448b467e79920040f22153e9d2ea0fd6e 21 10 1
+filename index.js
+</file>
+
+<file path="test_data/golden/blame_incremental_complex.json">
+[
+  {
+    "sha": "5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206",
+    "range": {
+      "start": 5,
+      "end": 8
+    },
+    "original_line_number": 6,
+    "author": "Mahdy M. Karam",
+    "author_mail": "<64036912+mmkaram@users.noreply.github.com>",
+    "author_time": 1708621949,
+    "author_tz": "-0800",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1708621949,
+    "committer_tz": "-0700",
+    "summary": "Add option to either use system clipboard or vim clipboard (#7936)",
+    "previous": "c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206",
+    "range": {
+      "start": 11,
+      "end": 13
+    },
+    "original_line_number": 12,
+    "author": "Mahdy M. Karam",
+    "author_mail": "<64036912+mmkaram@users.noreply.github.com>",
+    "author_time": 1708621949,
+    "author_tz": "-0800",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1708621949,
+    "committer_tz": "-0700",
+    "summary": "Add option to either use system clipboard or vim clipboard (#7936)",
+    "previous": "c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206",
+    "range": {
+      "start": 17,
+      "end": 18
+    },
+    "original_line_number": 18,
+    "author": "Mahdy M. Karam",
+    "author_mail": "<64036912+mmkaram@users.noreply.github.com>",
+    "author_time": 1708621949,
+    "author_tz": "-0800",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1708621949,
+    "committer_tz": "-0700",
+    "summary": "Add option to either use system clipboard or vim clipboard (#7936)",
+    "previous": "c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206",
+    "range": {
+      "start": 20,
+      "end": 27
+    },
+    "original_line_number": 21,
+    "author": "Mahdy M. Karam",
+    "author_mail": "<64036912+mmkaram@users.noreply.github.com>",
+    "author_time": 1708621949,
+    "author_tz": "-0800",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1708621949,
+    "committer_tz": "-0700",
+    "summary": "Add option to either use system clipboard or vim clipboard (#7936)",
+    "previous": "c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206",
+    "range": {
+      "start": 30,
+      "end": 31
+    },
+    "original_line_number": 31,
+    "author": "Mahdy M. Karam",
+    "author_mail": "<64036912+mmkaram@users.noreply.github.com>",
+    "author_time": 1708621949,
+    "author_tz": "-0800",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1708621949,
+    "committer_tz": "-0700",
+    "summary": "Add option to either use system clipboard or vim clipboard (#7936)",
+    "previous": "c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206",
+    "range": {
+      "start": 33,
+      "end": 34
+    },
+    "original_line_number": 34,
+    "author": "Mahdy M. Karam",
+    "author_mail": "<64036912+mmkaram@users.noreply.github.com>",
+    "author_time": 1708621949,
+    "author_tz": "-0800",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1708621949,
+    "committer_tz": "-0700",
+    "summary": "Add option to either use system clipboard or vim clipboard (#7936)",
+    "previous": "c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "5c4f3c0ceaa0b2270c8f4fc8ee32b85c70810206",
+    "range": {
+      "start": 85,
+      "end": 101
+    },
+    "original_line_number": 86,
+    "author": "Mahdy M. Karam",
+    "author_mail": "<64036912+mmkaram@users.noreply.github.com>",
+    "author_time": 1708621949,
+    "author_tz": "-0800",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1708621949,
+    "committer_tz": "-0700",
+    "summary": "Add option to either use system clipboard or vim clipboard (#7936)",
+    "previous": "c6826a61a0a947acf09d65ada568c9c4e4494cb2 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 0,
+      "end": 2
+    },
+    "original_line_number": 1,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 3,
+      "end": 4
+    },
+    "original_line_number": 4,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 9,
+      "end": 11
+    },
+    "original_line_number": 7,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 13,
+      "end": 17
+    },
+    "original_line_number": 10,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 18,
+      "end": 20
+    },
+    "original_line_number": 15,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 27,
+      "end": 30
+    },
+    "original_line_number": 19,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 31,
+      "end": 33
+    },
+    "original_line_number": 22,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 34,
+      "end": 36
+    },
+    "original_line_number": 25,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 40,
+      "end": 41
+    },
+    "original_line_number": 31,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 66,
+      "end": 71
+    },
+    "original_line_number": 57,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "3635d2dcedd83f1b6702f33ca2673317f7fa4695",
+    "range": {
+      "start": 101,
+      "end": 119
+    },
+    "original_line_number": 78,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1707520689,
+    "author_tz": "-0700",
+    "committer_name": "GitHub",
+    "committer_email": "<noreply@github.com>",
+    "committer_time": 1707520689,
+    "committer_tz": "-0700",
+    "summary": "Highlight selections on vim yank (#7638)",
+    "previous": "efe23ebfcdd653b13be79132b1e2925bcd7bde45 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "b65cf6d2d9576171edb407f5bbaa231c33af1f71",
+    "range": {
+      "start": 4,
+      "end": 5
+    },
+    "original_line_number": 3,
+    "author": "Max Brunsfeld",
+    "author_mail": "<maxbrunsfeld@gmail.com>",
+    "author_time": 1705619094,
+    "author_tz": "-0800",
+    "committer_name": "Max Brunsfeld",
+    "committer_email": "<maxbrunsfeld@gmail.com>",
+    "committer_time": 1705619205,
+    "committer_tz": "-0800",
+    "summary": "Merge branch 'main' into language-api-docs",
+    "previous": "6457ccf9ece3b36a37e675783abee9748a443115 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "b65cf6d2d9576171edb407f5bbaa231c33af1f71",
+    "range": {
+      "start": 120,
+      "end": 128
+    },
+    "original_line_number": 51,
+    "author": "Max Brunsfeld",
+    "author_mail": "<maxbrunsfeld@gmail.com>",
+    "author_time": 1705619094,
+    "author_tz": "-0800",
+    "committer_name": "Max Brunsfeld",
+    "committer_email": "<maxbrunsfeld@gmail.com>",
+    "committer_time": 1705619205,
+    "committer_tz": "-0800",
+    "summary": "Merge branch 'main' into language-api-docs",
+    "previous": "6457ccf9ece3b36a37e675783abee9748a443115 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "b02bd9bce1db3a68dcd606718fa02709020860af",
+    "range": {
+      "start": 60,
+      "end": 61
+    },
+    "original_line_number": 29,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1694798044,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1694798044,
+    "committer_tz": "-0600",
+    "summary": "Fix Y on last line with no trailing new line",
+    "previous": "7c77baa7c17eea106330622e70513ea9389d50a1 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "b02bd9bce1db3a68dcd606718fa02709020860af",
+    "range": {
+      "start": 64,
+      "end": 65
+    },
+    "original_line_number": 33,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1694798044,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1694798044,
+    "committer_tz": "-0600",
+    "summary": "Fix Y on last line with no trailing new line",
+    "previous": "7c77baa7c17eea106330622e70513ea9389d50a1 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "e4794e3134b6449e36ed2771a8849046489cc252",
+    "range": {
+      "start": 44,
+      "end": 45
+    },
+    "original_line_number": 13,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1692855942,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1692856812,
+    "committer_tz": "-0600",
+    "summary": "vim: Fix linewise copy of last line with no trailing newline",
+    "previous": "26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "e4794e3134b6449e36ed2771a8849046489cc252",
+    "range": {
+      "start": 52,
+      "end": 60
+    },
+    "original_line_number": 21,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1692855942,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1692856812,
+    "committer_tz": "-0600",
+    "summary": "vim: Fix linewise copy of last line with no trailing newline",
+    "previous": "26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "e4794e3134b6449e36ed2771a8849046489cc252",
+    "range": {
+      "start": 61,
+      "end": 64
+    },
+    "original_line_number": 29,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1692855942,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1692856812,
+    "committer_tz": "-0600",
+    "summary": "vim: Fix linewise copy of last line with no trailing newline",
+    "previous": "26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "e4794e3134b6449e36ed2771a8849046489cc252",
+    "range": {
+      "start": 65,
+      "end": 66
+    },
+    "original_line_number": 33,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1692855942,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1692856812,
+    "committer_tz": "-0600",
+    "summary": "vim: Fix linewise copy of last line with no trailing newline",
+    "previous": "26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "e4794e3134b6449e36ed2771a8849046489cc252",
+    "range": {
+      "start": 74,
+      "end": 77
+    },
+    "original_line_number": 37,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1692855942,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1692856812,
+    "committer_tz": "-0600",
+    "summary": "vim: Fix linewise copy of last line with no trailing newline",
+    "previous": "26c3312049a9c73bc3350528c1defd3820a7a8c7 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "33d7fe02ee560f6ed57d1425c43e60aef3b66e64",
+    "range": {
+      "start": 42,
+      "end": 43
+    },
+    "original_line_number": 10,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1692644159,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1692732477,
+    "committer_tz": "-0600",
+    "summary": "Rewrite paste",
+    "previous": "31db5e4f62e8fca75aa0870f903ae044524c3580 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "33d7fe02ee560f6ed57d1425c43e60aef3b66e64",
+    "range": {
+      "start": 46,
+      "end": 52
+    },
+    "original_line_number": 14,
+    "author": "Conrad Irwin",
+    "author_mail": "<conrad@zed.dev>",
+    "author_time": 1692644159,
+    "author_tz": "-0600",
+    "committer_name": "Conrad Irwin",
+    "committer_email": "<conrad@zed.dev>",
+    "committer_time": 1692732477,
+    "committer_tz": "-0600",
+    "summary": "Rewrite paste",
+    "previous": "31db5e4f62e8fca75aa0870f903ae044524c3580 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "868c46062008bb0bcab2d41a38b4295996b9b958",
+    "range": {
+      "start": 80,
+      "end": 81
+    },
+    "original_line_number": 20,
+    "author": "Max Brunsfeld",
+    "author_mail": "<maxbrunsfeld@gmail.com>",
+    "author_time": 1659072896,
+    "author_tz": "-0700",
+    "committer_name": "Max Brunsfeld",
+    "committer_email": "<maxbrunsfeld@gmail.com>",
+    "committer_time": 1659073230,
+    "committer_tz": "-0700",
+    "summary": ":art: Rename and simplify some autoindent stuff",
+    "previous": "7a26fa18c7fee3fe031b991e18b55fd8f9c4eb1b crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "e93c49f4f02b3edaddae6a6a4cc0ac433f242357",
+    "range": {
+      "start": 36,
+      "end": 37
+    },
+    "original_line_number": 5,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653424557,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Unify visual line_mode and non line_mode operators",
+    "previous": "11569a869a72f786a9798c53266e28c05c79f824 crates/vim/src/utils.rs",
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 2,
+      "end": 3
+    },
+    "original_line_number": 1,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 8,
+      "end": 9
+    },
+    "original_line_number": 4,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 37,
+      "end": 40
+    },
+    "original_line_number": 7,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 41,
+      "end": 42
+    },
+    "original_line_number": 10,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 43,
+      "end": 44
+    },
+    "original_line_number": 11,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 45,
+      "end": 46
+    },
+    "original_line_number": 14,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 71,
+      "end": 74
+    },
+    "original_line_number": 15,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 77,
+      "end": 80
+    },
+    "original_line_number": 18,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 81,
+      "end": 85
+    },
+    "original_line_number": 21,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  },
+  {
+    "sha": "082036161fd3815c831ceedfd28ba15b0ed6eb9f",
+    "range": {
+      "start": 119,
+      "end": 120
+    },
+    "original_line_number": 26,
+    "author": "Kaylee Simmons",
+    "author_mail": "<kay@the-simmons.net>",
+    "author_time": 1653007350,
+    "author_tz": "-0700",
+    "committer_name": "Kaylee Simmons",
+    "committer_email": "<kay@the-simmons.net>",
+    "committer_time": 1653609725,
+    "committer_tz": "-0700",
+    "summary": "Enable copy and paste in vim mode",
+    "previous": null,
+    "filename": "crates/vim/src/utils.rs",
+    "boundary": false
+  }
+]
+</file>
+
+<file path="test_data/golden/blame_incremental_not_committed.json">
+[
+  {
+    "sha": "4aaba34cb86b12f3a749dd6ddbf185de88de6527",
+    "range": {
+      "start": 6,
+      "end": 8
+    },
+    "original_line_number": 4,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@gmail.com>",
+    "author_time": 1710764113,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@gmail.com>",
+    "committer_time": 1710764113,
+    "committer_tz": "+0100",
+    "summary": "Another commit",
+    "previous": "b2f6b0d982a9e7654bbb6d979c9ccb00b1d2e913 file_b.txt",
+    "filename": "file_b.txt",
+    "boundary": false
+  },
+  {
+    "sha": "4aaba34cb86b12f3a749dd6ddbf185de88de6527",
+    "range": {
+      "start": 16,
+      "end": 18
+    },
+    "original_line_number": 11,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@gmail.com>",
+    "author_time": 1710764113,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@gmail.com>",
+    "committer_time": 1710764113,
+    "committer_tz": "+0100",
+    "summary": "Another commit",
+    "previous": "b2f6b0d982a9e7654bbb6d979c9ccb00b1d2e913 file_b.txt",
+    "filename": "file_b.txt",
+    "boundary": false
+  },
+  {
+    "sha": "b2f6b0d982a9e7654bbb6d979c9ccb00b1d2e913",
+    "range": {
+      "start": 8,
+      "end": 9
+    },
+    "original_line_number": 6,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@gmail.com>",
+    "author_time": 1710764087,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@gmail.com>",
+    "committer_time": 1710764087,
+    "committer_tz": "+0100",
+    "summary": "Another commit",
+    "previous": "7aef8a9a211ebc86824769c89f48e4f64aa6183f file_b.txt",
+    "filename": "file_b.txt",
+    "boundary": false
+  },
+  {
+    "sha": "b2f6b0d982a9e7654bbb6d979c9ccb00b1d2e913",
+    "range": {
+      "start": 10,
+      "end": 12
+    },
+    "original_line_number": 7,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@gmail.com>",
+    "author_time": 1710764087,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@gmail.com>",
+    "committer_time": 1710764087,
+    "committer_tz": "+0100",
+    "summary": "Another commit",
+    "previous": "7aef8a9a211ebc86824769c89f48e4f64aa6183f file_b.txt",
+    "filename": "file_b.txt",
+    "boundary": false
+  },
+  {
+    "sha": "e6d34e8fb494fe2b576d16037c61ba9d10722ba3",
+    "range": {
+      "start": 0,
+      "end": 3
+    },
+    "original_line_number": 1,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@gmail.com>",
+    "author_time": 1709299737,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@gmail.com>",
+    "committer_time": 1709299737,
+    "committer_tz": "+0100",
+    "summary": "Initial",
+    "previous": null,
+    "filename": "file_b.txt",
+    "boundary": true
+  },
+  {
+    "sha": "e6d34e8fb494fe2b576d16037c61ba9d10722ba3",
+    "range": {
+      "start": 12,
+      "end": 14
+    },
+    "original_line_number": 9,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@gmail.com>",
+    "author_time": 1709299737,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@gmail.com>",
+    "committer_time": 1709299737,
+    "committer_tz": "+0100",
+    "summary": "Initial",
+    "previous": null,
+    "filename": "file_b.txt",
+    "boundary": true
+  },
+  {
+    "sha": "e6d34e8fb494fe2b576d16037c61ba9d10722ba3",
+    "range": {
+      "start": 18,
+      "end": 19
+    },
+    "original_line_number": 13,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@gmail.com>",
+    "author_time": 1709299737,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@gmail.com>",
+    "committer_time": 1709299737,
+    "committer_tz": "+0100",
+    "summary": "Initial",
+    "previous": null,
+    "filename": "file_b.txt",
+    "boundary": true
+  }
+]
+</file>
+
+<file path="test_data/golden/blame_incremental_simple.json">
+[
+  {
+    "sha": "c8d34ae30c87e59aaa5eb65f6c64d6206f525d7c",
+    "range": {
+      "start": 5,
+      "end": 6
+    },
+    "original_line_number": 7,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@example.com>",
+    "author_time": 1709808710,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@example.com>",
+    "committer_time": 1709808710,
+    "committer_tz": "+0100",
+    "summary": "Make a commit",
+    "previous": "6ad46b5257ba16d12c5ca9f0d4900320959df7f4 index.js",
+    "filename": "index.js",
+    "boundary": false
+  },
+  {
+    "sha": "6ad46b5257ba16d12c5ca9f0d4900320959df7f4",
+    "range": {
+      "start": 1,
+      "end": 2
+    },
+    "original_line_number": 2,
+    "author": "Joe Schmoe",
+    "author_mail": "<joe.schmoe@example.com>",
+    "author_time": 1709741400,
+    "author_tz": "+0100",
+    "committer_name": "Joe Schmoe",
+    "committer_email": "<joe.schmoe@example.com>",
+    "committer_time": 1709741400,
+    "committer_tz": "+0100",
+    "summary": "Joe's cool commit",
+    "previous": "486c2409237a2c627230589e567024a96751d475 index.js",
+    "filename": "index.js",
+    "boundary": false
+  },
+  {
+    "sha": "6ad46b5257ba16d12c5ca9f0d4900320959df7f4",
+    "range": {
+      "start": 3,
+      "end": 4
+    },
+    "original_line_number": 3,
+    "author": "Joe Schmoe",
+    "author_mail": "<joe.schmoe@example.com>",
+    "author_time": 1709741400,
+    "author_tz": "+0100",
+    "committer_name": "Joe Schmoe",
+    "committer_email": "<joe.schmoe@example.com>",
+    "committer_time": 1709741400,
+    "committer_tz": "+0100",
+    "summary": "Joe's cool commit",
+    "previous": "486c2409237a2c627230589e567024a96751d475 index.js",
+    "filename": "index.js",
+    "boundary": false
+  },
+  {
+    "sha": "6ad46b5257ba16d12c5ca9f0d4900320959df7f4",
+    "range": {
+      "start": 8,
+      "end": 9
+    },
+    "original_line_number": 13,
+    "author": "Joe Schmoe",
+    "author_mail": "<joe.schmoe@example.com>",
+    "author_time": 1709741400,
+    "author_tz": "+0100",
+    "committer_name": "Joe Schmoe",
+    "committer_email": "<joe.schmoe@example.com>",
+    "committer_time": 1709741400,
+    "committer_tz": "+0100",
+    "summary": "Joe's cool commit",
+    "previous": "486c2409237a2c627230589e567024a96751d475 index.js",
+    "filename": "index.js",
+    "boundary": false
+  },
+  {
+    "sha": "486c2409237a2c627230589e567024a96751d475",
+    "range": {
+      "start": 0,
+      "end": 1
+    },
+    "original_line_number": 3,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@example.com>",
+    "author_time": 1709129122,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@example.com>",
+    "committer_time": 1709129122,
+    "committer_tz": "+0100",
+    "summary": "Get to a state where eslint would change code and imports",
+    "previous": "504065e448b467e79920040f22153e9d2ea0fd6e index.js",
+    "filename": "index.js",
+    "boundary": false
+  },
+  {
+    "sha": "504065e448b467e79920040f22153e9d2ea0fd6e",
+    "range": {
+      "start": 4,
+      "end": 5
+    },
+    "original_line_number": 3,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@example.com>",
+    "author_time": 1709128963,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@example.com>",
+    "committer_time": 1709128963,
+    "committer_tz": "+0100",
+    "summary": "Add some stuff",
+    "previous": null,
+    "filename": "index.js",
+    "boundary": false
+  },
+  {
+    "sha": "504065e448b467e79920040f22153e9d2ea0fd6e",
+    "range": {
+      "start": 9,
+      "end": 10
+    },
+    "original_line_number": 21,
+    "author": "Thorsten Ball",
+    "author_mail": "<mrnugget@example.com>",
+    "author_time": 1709128963,
+    "author_tz": "+0100",
+    "committer_name": "Thorsten Ball",
+    "committer_email": "<mrnugget@example.com>",
+    "committer_time": 1709128963,
+    "committer_tz": "+0100",
+    "summary": "Add some stuff",
+    "previous": null,
+    "filename": "index.js",
+    "boundary": false
+  }
+]
+</file>
+</project>

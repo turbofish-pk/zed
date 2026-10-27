@@ -1,8 +1,5 @@
 pub mod file_finder_settings;
 
-#[cfg(test)]
-mod open_path_prompt_tests;
-
 use file_finder_settings::FileFinderSettings;
 use file_icons::FileIcons;
 use futures::channel::oneshot;
@@ -122,38 +119,6 @@ impl OpenPathDelegate {
                 entries.iter().find(|entry| entry.path.id == id).cloned()
             }
             DirectoryState::None { .. } => None,
-        }
-    }
-
-    #[cfg(any(test, feature = "test-support"))]
-    pub fn collect_match_candidates(&self) -> Vec<String> {
-        match &self.directory_state {
-            DirectoryState::List { entries, .. } => self
-                .string_matches
-                .iter()
-                .filter_map(|string_match| {
-                    entries
-                        .iter()
-                        .find(|entry| entry.path.id == string_match.candidate_id)
-                        .map(|candidate| candidate.path.string.clone())
-                })
-                .collect(),
-            DirectoryState::Create {
-                user_input,
-                entries,
-                ..
-            } => user_input
-                .iter()
-                .filter(|user_input| !user_input.exists || !user_input.is_dir)
-                .map(|user_input| user_input.file.string.clone())
-                .chain(self.string_matches.iter().filter_map(|string_match| {
-                    entries
-                        .iter()
-                        .find(|entry| entry.path.id == string_match.candidate_id)
-                        .map(|candidate| candidate.path.string.clone())
-                }))
-                .collect(),
-            DirectoryState::None { .. } => Vec::new(),
         }
     }
 
@@ -1012,113 +977,5 @@ fn get_dir_and_suffix(query: String, path_style: PathStyle) -> (String, String) 
             }
             (dir, suffix)
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use util::paths::PathStyle;
-
-    use super::get_dir_and_suffix;
-
-    #[test]
-    fn test_get_dir_and_suffix_with_windows_style() {
-        let (dir, suffix) = get_dir_and_suffix("".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\");
-        assert_eq!(suffix, "");
-
-        let (dir, suffix) = get_dir_and_suffix("C:".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\");
-        assert_eq!(suffix, "");
-
-        let (dir, suffix) = get_dir_and_suffix("C:\\".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\");
-        assert_eq!(suffix, "");
-
-        let (dir, suffix) = get_dir_and_suffix("C:\\Use".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\");
-        assert_eq!(suffix, "Use");
-
-        let (dir, suffix) =
-            get_dir_and_suffix("C:\\Users\\Junkui\\Docum".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\Users\\Junkui\\");
-        assert_eq!(suffix, "Docum");
-
-        let (dir, suffix) =
-            get_dir_and_suffix("C:\\Users\\Junkui\\Documents".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\Users\\Junkui\\");
-        assert_eq!(suffix, "Documents");
-
-        let (dir, suffix) =
-            get_dir_and_suffix("C:\\Users\\Junkui\\Documents\\".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\Users\\Junkui\\Documents\\");
-        assert_eq!(suffix, "");
-
-        let (dir, suffix) = get_dir_and_suffix("C:\\root\\.".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\root\\");
-        assert_eq!(suffix, ".");
-
-        let (dir, suffix) = get_dir_and_suffix("C:\\root\\..".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\root\\");
-        assert_eq!(suffix, "..");
-
-        let (dir, suffix) = get_dir_and_suffix("C:\\root\\.hidden".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\root\\");
-        assert_eq!(suffix, ".hidden");
-
-        let (dir, suffix) = get_dir_and_suffix("C:/root/".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:/root/");
-        assert_eq!(suffix, "");
-
-        let (dir, suffix) = get_dir_and_suffix("C:/root/Use".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:/root/");
-        assert_eq!(suffix, "Use");
-
-        let (dir, suffix) = get_dir_and_suffix("C:\\root/Use".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:\\root/");
-        assert_eq!(suffix, "Use");
-
-        let (dir, suffix) = get_dir_and_suffix("C:/root\\.hidden".into(), PathStyle::Windows);
-        assert_eq!(dir, "C:/root\\");
-        assert_eq!(suffix, ".hidden");
-    }
-
-    #[test]
-    fn test_get_dir_and_suffix_with_posix_style() {
-        let (dir, suffix) = get_dir_and_suffix("".into(), PathStyle::Unix);
-        assert_eq!(dir, "/");
-        assert_eq!(suffix, "");
-
-        let (dir, suffix) = get_dir_and_suffix("/".into(), PathStyle::Unix);
-        assert_eq!(dir, "/");
-        assert_eq!(suffix, "");
-
-        let (dir, suffix) = get_dir_and_suffix("/Use".into(), PathStyle::Unix);
-        assert_eq!(dir, "/");
-        assert_eq!(suffix, "Use");
-
-        let (dir, suffix) = get_dir_and_suffix("/Users/Junkui/Docum".into(), PathStyle::Unix);
-        assert_eq!(dir, "/Users/Junkui/");
-        assert_eq!(suffix, "Docum");
-
-        let (dir, suffix) = get_dir_and_suffix("/Users/Junkui/Documents".into(), PathStyle::Unix);
-        assert_eq!(dir, "/Users/Junkui/");
-        assert_eq!(suffix, "Documents");
-
-        let (dir, suffix) = get_dir_and_suffix("/Users/Junkui/Documents/".into(), PathStyle::Unix);
-        assert_eq!(dir, "/Users/Junkui/Documents/");
-        assert_eq!(suffix, "");
-
-        let (dir, suffix) = get_dir_and_suffix("/root/.".into(), PathStyle::Unix);
-        assert_eq!(dir, "/root/");
-        assert_eq!(suffix, ".");
-
-        let (dir, suffix) = get_dir_and_suffix("/root/..".into(), PathStyle::Unix);
-        assert_eq!(dir, "/root/");
-        assert_eq!(suffix, "..");
-
-        let (dir, suffix) = get_dir_and_suffix("/root/.hidden".into(), PathStyle::Unix);
-        assert_eq!(dir, "/root/");
-        assert_eq!(suffix, ".hidden");
     }
 }

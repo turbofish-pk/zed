@@ -52,16 +52,7 @@ pub struct ThemeSettings {
     ///
     /// The terminal font family can be overridden using it's own setting.
     pub buffer_font: Font,
-    /// The agent UI font family. Determines the family of response text in the agent panel.
-    /// Falls back to the UI font family if unset.
-    agent_ui_font_family: Option<SharedString>,
-    /// The agent font size. Determines the size of text in the agent panel. Falls back to the UI font size if unset.
-    agent_ui_font_size: Option<Pixels>,
-    /// The agent buffer font family. Determines the family of user messages in the agent panel.
-    /// Falls back to the buffer font family if unset.
-    agent_buffer_font_family: Option<SharedString>,
-    /// The agent buffer font size. Determines the size of user messages in the agent panel.
-    agent_buffer_font_size: Option<Pixels>,
+
     git_commit_buffer_font_size: Option<Pixels>,
     /// The font family to use for rendering in the markdown preview.
     /// Falls back to the UI font family if unset.
@@ -120,18 +111,6 @@ impl Global for BufferFontSize {}
 pub(crate) struct UiFontSize(Pixels);
 
 impl Global for UiFontSize {}
-
-/// In-memory override for the UI font size in the agent panel.
-#[derive(Default)]
-pub struct AgentUiFontSize(Pixels);
-
-impl Global for AgentUiFontSize {}
-
-/// In-memory override for the buffer font size in the agent panel.
-#[derive(Default)]
-pub struct AgentBufferFontSize(Pixels);
-
-impl Global for AgentBufferFontSize {}
 
 #[derive(Default)]
 pub struct GitCommitBufferFontSize(Pixels);
@@ -393,36 +372,6 @@ impl ThemeSettings {
         clamp_font_size(font_size)
     }
 
-    /// Returns the agent panel font size. Falls back to the UI font size if unset.
-    pub fn agent_ui_font_size(&self, cx: &App) -> Pixels {
-        cx.try_global::<AgentUiFontSize>()
-            .map(|size| size.0)
-            .or(self.agent_ui_font_size)
-            .map(clamp_font_size)
-            .unwrap_or_else(|| self.ui_font_size(cx))
-    }
-
-    pub fn agent_ui_font_family(&self) -> &SharedString {
-        self.agent_ui_font_family
-            .as_ref()
-            .unwrap_or(&self.ui_font.family)
-    }
-
-    /// Returns the agent panel buffer font size.
-    pub fn agent_buffer_font_size(&self, cx: &App) -> Pixels {
-        cx.try_global::<AgentBufferFontSize>()
-            .map(|size| size.0)
-            .or(self.agent_buffer_font_size)
-            .map(clamp_font_size)
-            .unwrap_or_else(|| self.buffer_font_size(cx))
-    }
-
-    pub fn agent_buffer_font_family(&self) -> &SharedString {
-        self.agent_buffer_font_family
-            .as_ref()
-            .unwrap_or(&self.buffer_font.family)
-    }
-
     pub fn git_commit_buffer_font_size(&self, cx: &App) -> Pixels {
         cx.try_global::<GitCommitBufferFontSize>()
             .map(|size| size.0)
@@ -486,22 +435,6 @@ impl ThemeSettings {
     /// Use [`Self::ui_font_size`] to get the real font size.
     pub fn ui_font_size_settings(&self) -> Pixels {
         self.ui_font_size
-    }
-
-    /// Returns the agent font size, read from the settings.
-    ///
-    /// The real agent font size is stored in-memory, to support temporary font size changes.
-    /// Use [`Self::agent_ui_font_size`] to get the real font size.
-    pub fn agent_ui_font_size_settings(&self) -> Option<Pixels> {
-        self.agent_ui_font_size
-    }
-
-    /// Returns the agent buffer font size, read from the settings.
-    ///
-    /// The real agent buffer font size is stored in-memory, to support temporary font size changes.
-    /// Use [`Self::agent_buffer_font_size`] to get the real font size.
-    pub fn agent_buffer_font_size_settings(&self) -> Option<Pixels> {
-        self.agent_buffer_font_size
     }
 
     pub fn git_commit_buffer_font_size_settings(&self) -> Option<Pixels> {
@@ -631,42 +564,6 @@ pub fn reset_ui_font_size(cx: &mut App) {
     }
 }
 
-/// Sets the adjusted font size of agent responses in the agent panel.
-pub fn adjust_agent_ui_font_size(cx: &mut App, f: impl FnOnce(Pixels) -> Pixels) {
-    let agent_ui_font_size = ThemeSettings::get_global(cx).agent_ui_font_size(cx);
-    let adjusted_size = cx
-        .try_global::<AgentUiFontSize>()
-        .map_or(agent_ui_font_size, |adjusted_size| adjusted_size.0);
-    cx.set_global(AgentUiFontSize(clamp_font_size(f(adjusted_size))));
-    cx.refresh_windows();
-}
-
-/// Resets the agent response font size in the agent panel to the default value.
-pub fn reset_agent_ui_font_size(cx: &mut App) {
-    if cx.has_global::<AgentUiFontSize>() {
-        cx.remove_global::<AgentUiFontSize>();
-        cx.refresh_windows();
-    }
-}
-
-/// Sets the adjusted font size of user messages in the agent panel.
-pub fn adjust_agent_buffer_font_size(cx: &mut App, f: impl FnOnce(Pixels) -> Pixels) {
-    let agent_buffer_font_size = ThemeSettings::get_global(cx).agent_buffer_font_size(cx);
-    let adjusted_size = cx
-        .try_global::<AgentBufferFontSize>()
-        .map_or(agent_buffer_font_size, |adjusted_size| adjusted_size.0);
-    cx.set_global(AgentBufferFontSize(clamp_font_size(f(adjusted_size))));
-    cx.refresh_windows();
-}
-
-/// Resets the user message font size in the agent panel to the default value.
-pub fn reset_agent_buffer_font_size(cx: &mut App) {
-    if cx.has_global::<AgentBufferFontSize>() {
-        cx.remove_global::<AgentBufferFontSize>();
-        cx.refresh_windows();
-    }
-}
-
 pub fn adjust_git_commit_buffer_font_size(cx: &mut App, f: impl FnOnce(Pixels) -> Pixels) {
     let git_commit_buffer_font_size = ThemeSettings::get_global(cx).git_commit_buffer_font_size(cx);
     let adjusted_size = cx
@@ -751,16 +648,6 @@ impl settings::Settings for ThemeSettings {
             buffer_line_height: buffer_line_height_from_settings(
                 content.buffer_line_height.unwrap(),
             ),
-            agent_ui_font_family: content
-                .agent_ui_font_family
-                .as_ref()
-                .map(|font| font.0.clone().into()),
-            agent_ui_font_size: content.agent_ui_font_size.map(|s| s.into_gpui()),
-            agent_buffer_font_family: content
-                .agent_buffer_font_family
-                .as_ref()
-                .map(|font| font.0.clone().into()),
-            agent_buffer_font_size: content.agent_buffer_font_size.map(|s| s.into_gpui()),
             git_commit_buffer_font_size: content.git_commit_buffer_font_size.map(|s| s.into_gpui()),
             markdown_preview_font_family: markdown_preview
                 .and_then(|preview| preview.font_family.as_ref())
@@ -792,100 +679,3 @@ impl settings::Settings for ThemeSettings {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn theme_with_colors(colors: ::settings::ThemeColorsContent) -> Theme {
-        crate::refine_theme(&crate::ThemeContent {
-            name: "Test".into(),
-            appearance: ::theme::AppearanceContent::Dark,
-            style: ::settings::ThemeStyleContent {
-                colors,
-                ..Default::default()
-            },
-        })
-    }
-
-    fn style_with_colors(colors: ::settings::ThemeColorsContent) -> ::settings::ThemeStyleContent {
-        ::settings::ThemeStyleContent {
-            colors,
-            ..Default::default()
-        }
-    }
-
-    #[test]
-    fn code_lens_foreground_from_theme_survives_text_muted_override() {
-        let magenta = ::theme::try_parse_color("#ff00ff").unwrap();
-        let green = ::theme::try_parse_color("#00ff00").unwrap();
-        let mut test_theme = theme_with_colors(::settings::ThemeColorsContent {
-            editor_code_lens_foreground: Some("#ff00ff".into()),
-            ..Default::default()
-        });
-
-        ThemeSettings::modify_theme(
-            &mut test_theme,
-            &style_with_colors(::settings::ThemeColorsContent {
-                text_muted: Some("#00ff00".into()),
-                ..Default::default()
-            }),
-        );
-
-        assert_eq!(
-            test_theme.styles.colors.editor_code_lens_foreground,
-            Some(magenta)
-        );
-        assert_eq!(test_theme.styles.colors.text_muted, green);
-    }
-
-    #[test]
-    fn code_lens_foreground_from_earlier_override_survives_later_muted_override() {
-        let magenta = ::theme::try_parse_color("#ff00ff").unwrap();
-        let green = ::theme::try_parse_color("#00ff00").unwrap();
-        let mut test_theme = theme_with_colors(Default::default());
-
-        ThemeSettings::modify_theme(
-            &mut test_theme,
-            &style_with_colors(::settings::ThemeColorsContent {
-                editor_code_lens_foreground: Some("#ff00ff".into()),
-                ..Default::default()
-            }),
-        );
-        ThemeSettings::modify_theme(
-            &mut test_theme,
-            &style_with_colors(::settings::ThemeColorsContent {
-                text_muted: Some("#00ff00".into()),
-                ..Default::default()
-            }),
-        );
-
-        assert_eq!(
-            test_theme.styles.colors.editor_code_lens_foreground,
-            Some(magenta)
-        );
-        assert_eq!(test_theme.styles.colors.text_muted, green);
-    }
-
-    #[test]
-    fn code_lens_foreground_follows_effective_text_muted_without_explicit_color() {
-        let green = ::theme::try_parse_color("#00ff00").unwrap();
-        let mut test_theme = theme_with_colors(Default::default());
-
-        ThemeSettings::modify_theme(
-            &mut test_theme,
-            &style_with_colors(::settings::ThemeColorsContent {
-                text_muted: Some("#00ff00".into()),
-                ..Default::default()
-            }),
-        );
-
-        assert_eq!(test_theme.styles.colors.editor_code_lens_foreground, None);
-        assert_eq!(
-            test_theme
-                .styles
-                .colors
-                .color(::theme::ThemeColorField::EditorCodeLensForeground),
-            green
-        );
-    }
-}

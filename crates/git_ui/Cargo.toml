@@ -9,8 +9,6 @@ workspace = true
 [package.publish]
 workspace = true
 
-[package.metadata.cargo-shear]
-ignored = ["component", "remote_connection", "tracing"]
 
 [lints]
 workspace = true
@@ -21,11 +19,7 @@ path = "src/git_ui.rs"
 doctest = false
 
 [features]
-test-support = ["multi_buffer/test-support", "remote_connection/test-support"]
-call = ["dep:call"]
-
-[dependencies.agent_settings]
-path = "../agent_settings"
+call = []
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -40,19 +34,9 @@ default-features = false
 [dependencies.buffer_diff]
 path = "../buffer_diff"
 
-[dependencies.call]
-path = "../call"
-optional = true
-
-[dependencies.client]
-path = "../client"
-
 [dependencies.collections]
 path = "../collections"
 version = "0.1.0"
-
-[dependencies.component]
-path = "../component"
 
 [dependencies.db]
 path = "../db"
@@ -88,9 +72,6 @@ version = "0.14.0"
 [dependencies.language]
 path = "../language"
 
-[dependencies.language_model]
-path = "../language_model"
-
 [dependencies.log]
 version = "0.4"
 default-features = false
@@ -114,9 +95,6 @@ path = "../picker"
 [dependencies.project]
 path = "../project"
 
-[dependencies.prompt_store]
-path = "../prompt_store"
-
 [dependencies.rand]
 version = "0.9"
 default-features = false
@@ -124,9 +102,6 @@ features = ["std", "std_rng", "os_rng"]
 
 [dependencies.release_channel]
 path = "../release_channel"
-
-[dependencies.remote_connection]
-path = "../remote_connection"
 
 [dependencies.schemars]
 version = "1.0"
@@ -160,8 +135,6 @@ features = ["system"]
 [dependencies.task]
 path = "../task"
 
-[dependencies.telemetry]
-path = "../telemetry"
 
 [dependencies.terminal]
 path = "../terminal"
@@ -178,9 +151,6 @@ features = ["macros", "parsing", "serde", "serde-well-known", "formatting", "loc
 
 [dependencies.time_format]
 path = "../time_format"
-
-[dependencies.tracing]
-version = "0.1.40"
 
 [dependencies.ui]
 path = "../ui"
@@ -205,75 +175,3 @@ path = "../zed_actions"
 
 [dependencies.ztracing]
 path = "../ztracing"
-
-[dev-dependencies.ctor]
-version = "1.0.12"
-
-[dev-dependencies.db]
-path = "../db"
-features = ["test-support"]
-
-[dev-dependencies.editor]
-path = "../editor"
-features = ["test-support"]
-
-[dev-dependencies.fs]
-path = "../fs"
-features = ["test-support"]
-
-[dev-dependencies.git]
-path = "../git"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.indoc]
-version = "2"
-
-[dev-dependencies.language]
-path = "../language"
-features = ["test-support"]
-
-[dev-dependencies.pretty_assertions]
-version = "1.3.0"
-features = ["unstable"]
-
-[dev-dependencies.project]
-path = "../project"
-features = ["test-support"]
-
-[dev-dependencies.rand]
-version = "0.9"
-default-features = false
-features = ["std", "std_rng", "os_rng"]
-
-[dev-dependencies.remote_connection]
-path = "../remote_connection"
-features = ["test-support"]
-
-[dev-dependencies.search]
-path = "../search"
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]
-
-[dev-dependencies.task]
-path = "../task"
-
-[dev-dependencies.tree-sitter-md]
-git = "https://github.com/zed-industries/tree-sitter-markdown"
-rev = "b596e737286780d7bfa9fcddceaeeb754574b352"
-
-[dev-dependencies.unindent]
-version = "0.2.0"
-
-[dev-dependencies.workspace]
-path = "../workspace"
-features = ["test-support"]
-
-[dev-dependencies.zlog]
-path = "../zlog"

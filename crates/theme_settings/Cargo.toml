@@ -14,7 +14,7 @@ workspace = true
 
 [features]
 default = []
-test-support = ["gpui/test-support", "settings/test-support", "theme/test-support"]
+
 
 [lib]
 path = "src/theme_settings.rs"
@@ -77,8 +77,7 @@ features = ["serde"]
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.settings]
 path = "../settings"
-features = ["test-support"]

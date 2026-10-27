@@ -17,7 +17,7 @@ path = "src/settings.rs"
 doctest = false
 
 [features]
-test-support = ["gpui/test-support", "fs/test-support"]
+
 
 [dependencies.anyhow]
 version = "1.0.86"
@@ -94,12 +94,12 @@ path = "../util"
 
 [dev-dependencies.fs]
 path = "../fs"
-features = ["test-support"]
+
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.zlog]
 path = "../zlog"

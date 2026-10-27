@@ -33,8 +33,3 @@ version = "1.0.9"
 version = "2.0"
 default-features = false
 features = ["proc-macro", "full", "extra-traits", "visit-mut"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["inspector"]

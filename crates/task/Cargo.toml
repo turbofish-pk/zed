@@ -10,7 +10,7 @@ workspace = true
 workspace = true
 
 [features]
-test-support = ["gpui/test-support", "util/test-support"]
+
 
 [lib]
 path = "src/task.rs"
@@ -79,7 +79,7 @@ path = "../zed_actions"
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.pretty_assertions]
 version = "1.3.0"

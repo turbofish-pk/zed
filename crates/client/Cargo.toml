@@ -16,53 +16,8 @@ workspace = true
 path = "src/client.rs"
 doctest = false
 
-[features]
-test-support = ["clock/test-support", "collections/test-support", "gpui/test-support", "rpc/test-support"]
-
 [dependencies.anyhow]
 version = "1.0.86"
-
-[dependencies.async-channel]
-version = "2.5"
-default-features = false
-
-[dependencies.async-tungstenite]
-version = "0.33"
-features = ["tokio", "tokio-rustls-manual-roots"]
-
-[dependencies.chrono]
-version = "0.4"
-default-features = false
-features = ["std", "serde"]
-
-[dependencies.clock]
-path = "../clock"
-
-[dependencies.cloud_api_client]
-path = "../cloud_api_client"
-
-[dependencies.cloud_api_types]
-path = "../cloud_api_types"
-
-[dependencies.cloud_llm_client]
-path = "../cloud_llm_client"
-
-[dependencies.collections]
-path = "../collections"
-version = "0.1.0"
-
-[dependencies.credentials_provider]
-path = "../credentials_provider"
-
-[dependencies.derive_more]
-version = "2.1"
-features = ["deref", "deref_mut", "from_str"]
-
-[dependencies.feature_flags]
-path = "../feature_flags"
-
-[dependencies.fs]
-path = "../fs"
 
 [dependencies.futures]
 version = "0.3.34"
@@ -71,14 +26,8 @@ version = "0.3.34"
 path = "../gpui"
 default-features = false
 
-[dependencies.gpui_tokio]
-path = "../gpui_tokio"
-
 [dependencies.http_client]
 path = "../http_client"
-
-[dependencies.http_client_tls]
-path = "../http_client_tls"
 
 [dependencies.log]
 version = "0.4"
@@ -88,29 +37,10 @@ features = ["std"]
 [dependencies.parking_lot]
 version = "0.12.1"
 
-[dependencies.paths]
-path = "../paths"
-
 [dependencies.postage]
 version = "0.5"
 default-features = false
-
-[dependencies.proxy_handshake]
-path = "../proxy_handshake"
-features = ["tokio"]
-
-[dependencies.rand]
-version = "0.9"
-default-features = false
-features = ["std", "std_rng", "os_rng"]
-
-[dependencies.regex]
-version = "1.5"
-default-features = false
-features = ["std", "perf"]
-
-[dependencies.release_channel]
-path = "../release_channel"
+features = ["futures-traits"]
 
 [dependencies.rpc]
 path = "../rpc"
@@ -120,109 +50,8 @@ features = ["gpui"]
 version = "1.0"
 features = ["rc"]
 
-[dependencies.serde_json]
-version = "1.0.144"
-features = ["preserve_order", "raw_value"]
-
-[dependencies.serde_urlencoded]
-version = "0.7"
-
 [dependencies.settings]
 path = "../settings"
 
-[dependencies.sha2]
-version = "0.10"
-
-[dependencies.smol]
-version = "2.0"
-
-[dependencies.telemetry]
-path = "../telemetry"
-
-[dependencies.telemetry_events]
-path = "../telemetry_events"
-
-[dependencies.text]
-path = "../text"
-
-[dependencies.thiserror]
-version = "2.0.12"
-
-[dependencies.time]
-version = "0.3"
-features = ["macros", "parsing", "serde", "serde-well-known", "formatting", "local-offset"]
-
-[dependencies.tiny_http]
-version = "0.12"
-
-[dependencies.tokio]
-version = "1"
-
 [dependencies.url]
 version = "2.2"
-
-[dependencies.util]
-path = "../util"
-
-[dependencies.worktree]
-path = "../worktree"
-
-[dependencies.zed_credentials_provider]
-path = "../zed_credentials_provider"
-
-[dev-dependencies.clock]
-path = "../clock"
-features = ["test-support"]
-
-[dev-dependencies.collections]
-path = "../collections"
-version = "0.1.0"
-features = ["test-support"]
-
-[dev-dependencies.fs]
-path = "../fs"
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.http_client]
-path = "../http_client"
-features = ["test-support"]
-
-[dev-dependencies.rpc]
-path = "../rpc"
-features = ["test-support"]
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]
-
-[dev-dependencies.util]
-path = "../util"
-features = ["test-support"]
-
-[target.'cfg(target_os = "windows")'.dependencies.semver]
-version = "1.0"
-features = ["serde"]
-
-[target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.62"
-features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_IO", "Win32_System_LibraryLoader", "Win32_System_Ole", "Win32_System_Threading", "Win32_System_Variant", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Wdk_System_SystemServices", "Win32_System_SystemInformation"]
-
-[target.'cfg(target_os = "macos")'.dependencies.objc2-foundation]
-version = "=0.3.2"
-default-features = false
-features = ["NSArray", "NSAttributedString", "NSBundle", "NSCoder", "NSData", "NSDate", "NSDictionary", "NSEnumerator", "NSError", "NSGeometry", "NSNull", "NSObjCRuntime", "NSObject", "NSProcessInfo", "NSRange", "NSRunLoop", "NSSet", "NSString", "NSURL", "NSValue", "objc2-core-foundation", "std"]
-
-[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
-tokio-native-tls = "0.3"
-
-[target.'cfg(not(any(target_os = "windows", target_os = "macos")))'.dependencies]
-rustls-pki-types = "1.12"
-
-[target.'cfg(not(any(target_os = "windows", target_os = "macos")))'.dependencies.tokio-rustls]
-version = "0.26"
-default-features = false
-features = ["tls12", "ring"]

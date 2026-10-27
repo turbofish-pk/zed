@@ -542,7 +542,7 @@ impl PrettierStore {
         plugins: impl Iterator<Item = Arc<str>>,
         cx: &mut Context<Self>,
     ) {
-        if cfg!(any(test, feature = "test-support")) {
+        if cfg!(feature = "test-support") {
             self.default_prettier.installed_plugins.extend(plugins);
             self.default_prettier.prettier = PrettierInstallation::Installed(PrettierInstance {
                 attempt: 0,

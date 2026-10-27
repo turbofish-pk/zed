@@ -37,9 +37,6 @@ path = "../picker"
 [dependencies.settings]
 path = "../settings"
 
-[dependencies.telemetry]
-path = "../telemetry"
-
 [dependencies.theme]
 path = "../theme"
 
@@ -60,7 +57,7 @@ path = "../zed_actions"
 
 [dev-dependencies.editor]
 path = "../editor"
-features = ["test-support"]
+
 
 [dev-dependencies.project]
 path = "../project"
@@ -71,4 +68,3 @@ features = ["preserve_order", "raw_value"]
 
 [dev-dependencies.theme]
 path = "../theme"
-features = ["test-support"]

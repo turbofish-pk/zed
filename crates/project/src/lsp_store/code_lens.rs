@@ -7,10 +7,10 @@ use futures::{
     FutureExt as _,
     future::{Shared, join_all},
 };
-use gpui::{AppContext as _, AsyncApp, Context, Entity, Task};
+use gpui::{AppContext as _, Context, Entity, Task};
 use language::{Anchor, Buffer};
 use lsp::LanguageServerId;
-use rpc::{TypedEnvelope, proto};
+use rpc::proto;
 use settings::Settings as _;
 use std::time::Duration;
 use text::OffsetRangeExt as _;
@@ -18,10 +18,8 @@ use util::ResultExt as _;
 
 use crate::{
     CodeAction, LspAction, LspStore, LspStoreEvent, Project,
-    lsp_command::{GetCodeLens, LspCommand as _},
-    lsp_store::{
-        RunningFetch, missing_servers_to_query, next_lsp_fetch_id, upstream_lsp_query_server_filter,
-    },
+    lsp_command::GetCodeLens,
+    lsp_store::{RunningFetch, missing_servers_to_query, next_lsp_fetch_id},
     project_settings::ProjectSettings,
 };
 
@@ -276,75 +274,16 @@ impl LspStore {
         for_servers: Option<HashSet<LanguageServerId>>,
         cx: &mut Context<Self>,
     ) -> Task<Result<Option<HashMap<LanguageServerId, Vec<CodeAction>>>>> {
-        if let Some((upstream_client, project_id)) = self.upstream_client() {
-            let request = GetCodeLens;
-            if !self.is_capable_for_proto_request(buffer, &request, cx) {
-                return Task::ready(Ok(None));
-            }
-            let request_timeout = ProjectSettings::get_global(cx)
-                .global_lsp_settings
-                .get_request_timeout();
-            let request_task = upstream_client.request_lsp(
-                project_id,
-                upstream_lsp_query_server_filter(for_servers.as_ref()),
-                request_timeout,
-                cx.background_executor().clone(),
-                request.to_proto(project_id, buffer.read(cx)),
-            );
-            let buffer = buffer.clone();
-            cx.spawn(async move |weak_lsp_store, cx| {
-                let Some(lsp_store) = weak_lsp_store.upgrade() else {
-                    return Ok(None);
-                };
-                let Some(responses) = request_task.await? else {
-                    return Ok(None);
-                };
-
-                let code_lens_actions = join_all(responses.payload.into_iter().map(|response| {
-                    let lsp_store = lsp_store.clone();
-                    let buffer = buffer.clone();
-                    let cx = cx.clone();
-                    async move {
-                        (
-                            LanguageServerId::from_proto(response.server_id),
-                            GetCodeLens
-                                .response_from_proto(response.response, lsp_store, buffer, cx)
-                                .await,
-                        )
-                    }
-                }))
-                .await;
-
-                let mut has_errors = false;
-                let code_lens_actions = code_lens_actions
-                    .into_iter()
-                    .filter_map(|(server_id, code_lens)| match code_lens {
-                        Ok(code_lens) => Some((server_id, code_lens)),
-                        Err(e) => {
-                            has_errors = true;
-                            log::error!("{e:#}");
-                            None
-                        }
-                    })
-                    .collect::<HashMap<_, _>>();
-                anyhow::ensure!(
-                    !has_errors || !code_lens_actions.is_empty(),
-                    "Failed to fetch code lens"
-                );
-                Ok(Some(code_lens_actions))
-            })
-        } else {
-            let code_lens_actions_task = self.request_filtered_lsp_locally(
-                buffer,
-                None::<usize>,
-                GetCodeLens,
-                for_servers.as_ref(),
-                cx,
-            );
-            cx.background_spawn(async move {
-                Ok(Some(code_lens_actions_task.await.into_iter().collect()))
-            })
-        }
+        let code_lens_actions_task = self.request_filtered_lsp_locally(
+            buffer,
+            None::<usize>,
+            GetCodeLens,
+            for_servers.as_ref(),
+            cx,
+        );
+        cx.background_spawn(
+            async move { Ok(Some(code_lens_actions_task.await.into_iter().collect())) },
+        )
     }
 
     /// Resolves a single code lens via `codeLens/resolve`, identified by
@@ -495,7 +434,7 @@ impl LspStore {
         task
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn forget_code_lens_task(&mut self, buffer_id: text::BufferId) -> Option<CodeLensTask> {
         Some(
             self.lsp_data
@@ -506,18 +445,6 @@ impl LspStore {
                 .take()?
                 .task,
         )
-    }
-
-    pub(super) async fn handle_refresh_code_lens(
-        lsp_store: Entity<Self>,
-        envelope: TypedEnvelope<proto::RefreshCodeLens>,
-        mut cx: AsyncApp,
-    ) -> Result<proto::Ack> {
-        lsp_store.update(&mut cx, |lsp_store, cx| {
-            let server_id = envelope.payload.server_id.map(LanguageServerId::from_proto);
-            lsp_store.refresh_code_lens(server_id, cx);
-        });
-        Ok(proto::Ack {})
     }
 }
 

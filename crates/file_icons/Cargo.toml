@@ -28,12 +28,3 @@ path = "../theme"
 
 [dependencies.util]
 path = "../util"
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.theme]
-path = "../theme"
-features = ["test-support"]

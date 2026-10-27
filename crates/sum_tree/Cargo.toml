@@ -27,9 +27,6 @@ version = "1.8"
 [dependencies.ztracing]
 path = "../ztracing"
 
-[dependencies.tracing]
-version = "0.1.40"
-
 [dependencies.proptest]
 version = "1.12.0"
 features = ["attr-macro"]
@@ -56,4 +53,3 @@ features = ["attr-macro"]
 path = "../zlog"
 
 [features]
-test-support = ["proptest"]

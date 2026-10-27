@@ -18,31 +18,19 @@ doctest = false
 
 [features]
 default = []
-test-support = ["call/test-support", "client/test-support", "gpui/test-support", "project/test-support", "remote/test-support", "util/test-support", "workspace/test-support", "recent_projects/test-support"]
+
 
 [dependencies]
 arrayvec = "0.7.6"
 
-[dependencies.agent_settings]
-path = "../agent_settings"
-
 [dependencies.anyhow]
 version = "1.0.86"
-
-[dependencies.auto_update]
-path = "../auto_update"
 
 [dependencies.fs]
 path = "../fs"
 
 [dependencies.platform_title_bar]
 path = "../platform_title_bar"
-
-[dependencies.call]
-path = "../call"
-
-[dependencies.channel]
-path = "../channel"
 
 [dependencies.chrono]
 version = "0.4"
@@ -51,12 +39,6 @@ features = ["std", "serde"]
 
 [dependencies.client]
 path = "../client"
-
-[dependencies.cloud_api_types]
-path = "../cloud_api_types"
-
-[dependencies.command_palette_hooks]
-path = "../command_palette_hooks"
 
 [dependencies.db]
 path = "../db"
@@ -67,13 +49,10 @@ path = "../git_ui_core"
 [dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["screen-capture"]
+features = []
 
 [dependencies.icons]
 path = "../icons"
-
-[dependencies.livekit_client]
-path = "../livekit_client"
 
 [dependencies.path]
 path = "../path"
@@ -83,12 +62,6 @@ path = "../project"
 
 [dependencies.recent_projects]
 path = "../recent_projects"
-
-[dependencies.remote]
-path = "../remote"
-
-[dependencies.remote_connection]
-path = "../remote_connection"
 
 [dependencies.rpc]
 path = "../rpc"
@@ -113,9 +86,6 @@ path = "../settings"
 version = "1.6"
 features = ["union", "const_new"]
 
-[dependencies.telemetry]
-path = "../telemetry"
-
 [dependencies.theme]
 path = "../theme"
 
@@ -131,34 +101,24 @@ path = "../workspace"
 [dependencies.zed_actions]
 path = "../zed_actions"
 
-[dev-dependencies.call]
-path = "../call"
-features = ["test-support"]
 
 [dev-dependencies.client]
 path = "../client"
-features = ["test-support"]
+
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
 
 [dev-dependencies.project]
 path = "../project"
-features = ["test-support"]
+
 
 [dev-dependencies.recent_projects]
 path = "../recent_projects"
-features = ["test-support"]
-
-[dev-dependencies.remote]
-path = "../remote"
-features = ["test-support"]
 
 [dev-dependencies.rpc]
 path = "../rpc"
-features = ["test-support"]
 
 [dev-dependencies.semver]
 version = "1.0"
@@ -166,15 +126,14 @@ features = ["serde"]
 
 [dev-dependencies.settings]
 path = "../settings"
-features = ["test-support"]
+
 
 [dev-dependencies.theme_settings]
 path = "../theme_settings"
 
 [dev-dependencies.util]
 path = "../util"
-features = ["test-support"]
+
 
 [dev-dependencies.workspace]
 path = "../workspace"
-features = ["test-support"]

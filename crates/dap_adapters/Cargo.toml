@@ -10,7 +10,7 @@ workspace = true
 workspace = true
 
 [features]
-test-support = ["dap/test-support", "gpui/test-support", "task/test-support", "util/test-support"]
+
 
 [lints]
 workspace = true
@@ -68,34 +68,3 @@ path = "../task"
 
 [dependencies.util]
 path = "../util"
-
-[dev-dependencies.dap]
-path = "../dap"
-features = ["test-support"]
-
-[dev-dependencies.fs]
-path = "../fs"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.http_client]
-path = "../http_client"
-
-[dev-dependencies.node_runtime]
-path = "../node_runtime"
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]
-
-[dev-dependencies.task]
-path = "../task"
-features = ["test-support"]
-
-[dev-dependencies.util]
-path = "../util"
-features = ["test-support"]

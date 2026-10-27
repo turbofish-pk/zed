@@ -10,9 +10,6 @@ workspace = true
 [package.publish]
 workspace = true
 
-[features]
-test-support = []
-
 [lints]
 workspace = true
 
@@ -36,5 +33,3 @@ default-features = false
 
 [build-dependencies.protox]
 version = "0.9"
-
-[dev-dependencies]

@@ -18,7 +18,3 @@ doctest = false
 
 [dependencies.path]
 path = "../path"
-
-[dev-dependencies.path]
-path = "../path"
-features = ["test-support"]

@@ -769,7 +769,7 @@ impl DapLogView {
             editor.set_input_enabled(false);
             editor.set_use_autoclose(false);
             editor.set_read_only(true);
-            editor.set_show_edit_predictions(Some(false), window, cx);
+
             editor
         });
         let editor_subscription = cx.subscribe(
@@ -996,10 +996,6 @@ impl Item for DapLogView {
         "DAP Logs".into()
     }
 
-    fn telemetry_event_text(&self) -> Option<&'static str> {
-        None
-    }
-
     fn as_searchable(
         &self,
         handle: &Entity<Self>,
@@ -1130,7 +1126,7 @@ impl EventEmitter<Event> for DapLogView {}
 impl EventEmitter<EditorEvent> for DapLogView {}
 impl EventEmitter<SearchEvent> for DapLogView {}
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 impl LogStore {
     pub fn has_projects(&self) -> bool {
         !self.projects.is_empty()

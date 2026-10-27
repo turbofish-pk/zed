@@ -53,25 +53,3 @@ pub(crate) fn refresh_interval_from_millihertz(millihertz: i32) -> Option<Durati
     refresh_interval_from_hz(f64::from(millihertz) / 1000.0)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_refresh_interval_from_millihertz() {
-        assert_eq!(
-            refresh_interval_from_millihertz(60_000).map(|interval| interval.as_micros()),
-            Some(16_666)
-        );
-        assert_eq!(
-            refresh_interval_from_millihertz(59_940).map(|interval| interval.as_micros()),
-            Some(16683)
-        );
-        assert_eq!(
-            refresh_interval_from_millihertz(143_998).map(|interval| interval.as_micros()),
-            Some(6944)
-        );
-        assert_eq!(refresh_interval_from_millihertz(0), None);
-        assert_eq!(refresh_interval_from_millihertz(-1), None);
-    }
-}

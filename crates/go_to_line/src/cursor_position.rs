@@ -196,15 +196,8 @@ impl CursorPosition {
         text.push(')');
     }
 
-    #[cfg(test)]
-    pub(crate) fn selection_stats(&self) -> &SelectionStats {
-        &self.selected_count
-    }
 
-    #[cfg(test)]
-    pub(crate) fn position(&self) -> Option<UserCaretPosition> {
-        self.position
-    }
+
 }
 
 impl Render for CursorPosition {

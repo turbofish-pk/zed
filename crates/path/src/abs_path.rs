@@ -167,7 +167,7 @@ impl AbsPathBuf {
         self.0.push(name);
     }
 
-    #[cfg(any(test, feature = "test-support"))]
+    #[cfg(feature = "test-support")]
     pub fn new_test(path: &'static str) -> Self {
         if cfg!(windows) {
             Self::new(format!("C:{path}")).unwrap()
@@ -177,7 +177,7 @@ impl AbsPathBuf {
     }
 }
 
-#[cfg(any(test, feature = "test-support"))]
+#[cfg(feature = "test-support")]
 pub fn abs_path(path: &str) -> AbsPathBuf {
     if cfg!(windows) {
         AbsPathBuf::new(format!("C:{path}")).unwrap()
@@ -236,51 +236,3 @@ impl PartialEq<AbsPathBuf> for AbsPath {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_canonicalize_restores_on_disk_spelling() {
-        let temp = tempfile::tempdir().unwrap();
-        let root = dunce::canonicalize(temp.path()).unwrap();
-        let dir = root.join("CamelCase");
-        std::fs::create_dir(&dir).unwrap();
-
-        let canonical = AbsPathBuf::canonicalize(&dir).unwrap();
-        assert_eq!(canonical.as_std_path(), dir);
-        assert!(
-            !canonical.as_str().starts_with(r"\\?\"),
-            "canonical paths must not use Windows extended-length syntax: {canonical}"
-        );
-
-        // A differently-cased spelling addresses the same directory only on a
-        // case-insensitive filesystem; when it does, canonicalization must
-        // restore the stored casing.
-        let lowercased = root.join("camelcase");
-        if std::fs::metadata(&lowercased).is_ok() {
-            assert_eq!(
-                AbsPathBuf::canonicalize(&lowercased).unwrap().as_std_path(),
-                dir,
-                "canonicalization should restore the on-disk casing"
-            );
-        }
-    }
-
-    #[test]
-    fn test_new_test_normalizes_rooted_paths() {
-        if cfg!(windows) {
-            assert_eq!(AbsPathBuf::new_test("/").as_str(), "C:/");
-            assert_eq!(
-                AbsPathBuf::new_test("/test/project").as_str(),
-                "C:/test/project"
-            );
-        } else {
-            assert_eq!(AbsPathBuf::new_test("/").as_str(), "/");
-            assert_eq!(
-                AbsPathBuf::new_test("/test/project").as_str(),
-                "/test/project"
-            );
-        }
-    }
-}

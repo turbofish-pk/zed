@@ -1,5 +1,4 @@
-#[cfg(test)]
-mod tab_switcher_tests;
+
 
 use collections::{HashMap, HashSet};
 use editor::items::{

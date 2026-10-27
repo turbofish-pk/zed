@@ -80,12 +80,6 @@ version = "0.9"
 default-features = false
 features = ["std", "std_rng", "os_rng"]
 
-[dependencies.remote]
-path = "../remote"
-
-[dependencies.remote_connection]
-path = "../remote_connection"
-
 [dependencies.serde]
 version = "1.0"
 features = ["rc"]
@@ -120,51 +114,3 @@ version = "1.8"
 
 [dependencies.ztracing]
 path = "../ztracing"
-
-[dev-dependencies.editor]
-path = "../editor"
-features = ["test-support"]
-
-[dev-dependencies.fs]
-path = "../fs"
-features = ["test-support"]
-
-[dev-dependencies.git]
-path = "../git"
-features = ["test-support"]
-
-[dev-dependencies.gpui]
-path = "../gpui"
-default-features = false
-features = ["test-support"]
-
-[dev-dependencies.project]
-path = "../project"
-features = ["test-support"]
-
-[dev-dependencies.remote_connection]
-path = "../remote_connection"
-features = ["test-support"]
-
-[dev-dependencies.settings]
-path = "../settings"
-features = ["test-support"]
-
-[dev-dependencies.task]
-path = "../task"
-
-[dev-dependencies.theme]
-path = "../theme"
-
-[dev-dependencies.theme_settings]
-path = "../theme_settings"
-
-[dev-dependencies.unindent]
-version = "0.2.0"
-
-[dev-dependencies.workspace]
-path = "../workspace"
-features = ["test-support"]
-
-[dev-dependencies.zlog]
-path = "../zlog"

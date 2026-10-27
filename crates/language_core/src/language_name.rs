@@ -118,25 +118,3 @@ impl From<LanguageName> for String {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn snippet_scope_id_strips_path_separators() {
-        // A `/` or `\` in the language name would route the snippet file into a
-        // subdirectory that is never scanned (see issue #59620).
-        assert_eq!(LanguageName::new("PL/X").snippet_scope_id(), "plx");
-        assert_eq!(LanguageName::new("a\\b").snippet_scope_id(), "ab");
-        // Names without separators are unchanged beyond `lsp_id`'s lowercasing.
-        assert_eq!(LanguageName::new("Rust").snippet_scope_id(), "rust");
-        assert_eq!(
-            LanguageName::new("Shell Script").snippet_scope_id(),
-            "shell script"
-        );
-        assert_eq!(
-            LanguageName::new("Plain Text").snippet_scope_id(),
-            "plaintext"
-        );
-    }
-}

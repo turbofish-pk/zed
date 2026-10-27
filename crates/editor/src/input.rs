@@ -481,7 +481,6 @@ impl Editor {
                 );
             }
 
-            let had_active_edit_prediction = this.has_active_edit_prediction();
             this.change_selections(
                 SelectionEffects::scroll(Autoscroll::fit()).completions(false),
                 window,
@@ -504,8 +503,6 @@ impl Editor {
                 this.show_signature_help(&ShowSignatureHelp, window, cx);
             }
 
-            let trigger_in_words =
-                this.show_edit_predictions_in_menu() || !had_active_edit_prediction;
             if this.hard_wrap.is_some() {
                 let latest: Range<Point> = this.selections.newest(&map).range();
                 // Reuse the post-edit snapshot captured in `map` above; the buffer
@@ -527,15 +524,8 @@ impl Editor {
                     )
                 }
             }
-            this.trigger_completion_on_input(&text, trigger_in_words, window, cx);
+            this.trigger_completion_on_input(&text, true, window, cx);
             refresh_linked_ranges(this, window, cx);
-            this.refresh_edit_prediction(
-                true,
-                false,
-                EditPredictionRequestTrigger::BufferEdit,
-                window,
-                cx,
-            );
             jsx_tag_auto_close::handle_from(this, initial_buffer_versions, window, cx);
         });
     }
@@ -780,13 +770,7 @@ impl Editor {
                 .collect();
 
             this.change_selections(Default::default(), window, cx, |s| s.select(new_selections));
-            this.refresh_edit_prediction(
-                true,
-                false,
-                EditPredictionRequestTrigger::BufferEdit,
-                window,
-                cx,
-            );
+
             if let Some(task) = this.trigger_on_type_formatting("\n".to_owned(), window, cx) {
                 task.detach_and_log_err(cx);
             }
@@ -2256,44 +2240,6 @@ impl Editor {
         };
 
         self.insert_snippet(&insertion_ranges, snippet, window, cx)
-    }
-}
-
-#[cfg(any(test, feature = "test-support"))]
-impl Editor {
-    pub fn set_linked_edit_ranges_for_testing(
-        &mut self,
-        ranges: Vec<(Range<Point>, Vec<Range<Point>>)>,
-        cx: &mut Context<Self>,
-    ) -> Option<()> {
-        let Some((buffer, _)) = self
-            .buffer
-            .read(cx)
-            .text_anchor_for_position(self.selections.newest_anchor().start, cx)
-        else {
-            return None;
-        };
-        let buffer = buffer.read(cx);
-        let buffer_id = buffer.remote_id();
-        let mut linked_ranges = Vec::with_capacity(ranges.len());
-        for (base_range, linked_ranges_points) in ranges {
-            let base_anchor =
-                buffer.anchor_before(base_range.start)..buffer.anchor_after(base_range.end);
-            let linked_anchors = linked_ranges_points
-                .into_iter()
-                .map(|range| buffer.anchor_before(range.start)..buffer.anchor_after(range.end))
-                .collect();
-            linked_ranges.push((base_anchor, linked_anchors));
-        }
-        let mut map = HashMap::default();
-        map.insert(buffer_id, linked_ranges);
-        self.linked_edit_ranges = linked_editing_ranges::LinkedEditingRanges(map);
-        Some(())
-    }
-
-    #[cfg(test)]
-    pub(super) fn set_auto_replace_emoji_shortcode(&mut self, auto_replace: bool) {
-        self.auto_replace_emoji_shortcode = auto_replace;
     }
 }
 

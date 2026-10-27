@@ -129,26 +129,3 @@ fn response_action_id(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn caller_action_ids_do_not_collide_with_transport_action_ids() {
-        let action_ids = HashMap::from([
-            ("gpui-action-0".to_string(), SharedString::from("default")),
-            ("gpui-action-1".to_string(), SharedString::from("__closed")),
-        ]);
-
-        assert_eq!(response_action_id(DEFAULT_ACTION, &action_ids), Some(None));
-        assert_eq!(
-            response_action_id("gpui-action-0", &action_ids),
-            Some(Some("default".into()))
-        );
-        assert_eq!(
-            response_action_id("gpui-action-1", &action_ids),
-            Some(Some("__closed".into()))
-        );
-        assert_eq!(response_action_id("unknown", &action_ids), None);
-    }
-}

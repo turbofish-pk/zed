@@ -42,16 +42,13 @@ version = "1.10"
 [dependencies.ztracing]
 path = "../ztracing"
 
-[dependencies.tracing]
-version = "0.1.40"
-
 [dev-dependencies.ctor]
 version = "1.0.12"
 
 [dev-dependencies.gpui]
 path = "../gpui"
 default-features = false
-features = ["test-support"]
+
 
 [dev-dependencies.rand]
 version = "0.9"
@@ -60,15 +57,3 @@ features = ["std", "std_rng", "os_rng"]
 
 [dev-dependencies.util]
 path = "../util"
-features = ["test-support"]
-
-[dev-dependencies.criterion]
-version = "0.8.2"
-features = ["html_reports"]
-
-[dev-dependencies.zlog]
-path = "../zlog"
-
-[[bench]]
-name = "rope_benchmark"
-harness = false

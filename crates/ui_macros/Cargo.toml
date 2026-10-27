@@ -27,6 +27,3 @@ features = ["proc-macro", "derive", "parsing", "printing"]
 
 [dev-dependencies.component]
 path = "../component"
-
-[dev-dependencies.ui]
-path = "../ui"
